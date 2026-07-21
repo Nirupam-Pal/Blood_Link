@@ -3,7 +3,7 @@ import { Document } from "mongoose";
 import { Gender } from "../../common/enums/gender.enum";
 import { Role } from "../../common/enums/role.enum";
 
-@Schema({ timestamps: true })
+@Schema({ timestamps: true, versionKey: false })
 export class User extends Document {
     @Prop({ required: true, unique: true, index: true, trim: true, lowercase: true })
     email!: string;
