@@ -92,4 +92,4 @@ export const BloodBankSchema = SchemaFactory.createForClass(BloodBank);
 BloodBankSchema.index({ state: 1, district: 1, subDivision: 1, city: 1 });
 
 // Compound Index for Regional Verification Filtering
-BloodBankSchema.index({ state: 1, city: 1, verified: 1, isActive: 1 });
+BloodBankSchema.index({ state: 1, city: 1, emailVerified: 1, isActive: 1 });

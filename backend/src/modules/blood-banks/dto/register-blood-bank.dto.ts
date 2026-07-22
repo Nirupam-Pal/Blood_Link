@@ -5,7 +5,6 @@ import {
   IsEmail,
   IsNotEmpty,
   IsNumber,
-  IsPostalCode,
   IsString,
   Length,
   Matches,
@@ -51,7 +50,7 @@ export class RegisterBloodBankDto {
   @Length(5, 50)
   readonly licenseNumber!: string;
 
-  @ApiProperty({ example: "9XXXXXXXXXX" })
+  @ApiProperty({ example: "9XXXXXXXXX" })
   @Matches(REGEX_CONSTANTS.PHONE_NUMBER, {
     message: "Phone number must be exactly 10 digits.",
   })
