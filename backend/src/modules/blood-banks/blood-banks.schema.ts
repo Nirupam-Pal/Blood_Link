@@ -24,19 +24,21 @@ const GeoJSONPointSchema = SchemaFactory.createForClass(GeoJSONPoint);
 
 @Schema({ timestamps: true, versionKey: false })
 export class BloodBank extends Document {
-  @Prop({
-    type: MongooseSchema.Types.ObjectId,
-    ref: 'User',
-    required: true,
-    primaryKey: true,
-  })
-  declare _id: Types.ObjectId;
 
   @Prop({ required: true })
   bloodBankName!: string;
 
+  @Prop({ required: true, unique: true, lowercase: true, trim: true })
+  email!: string;
+
+  @Prop({required: true, select: false})
+  password!: string;
+
   @Prop({ required: true, unique: true, index: true, trim: true })
   licenseNumber!: string;
+
+  @Prop({ required: true, unique: true, trim: true })
+  phoneNumber!: string;
 
   @Prop({ required: true, trim: true })
   address!: string;
@@ -60,10 +62,13 @@ export class BloodBank extends Document {
   location!: GeoJSONPoint;
 
   @Prop({ default: false, index: true })
-  verified!: boolean;
+  emailVerified!: boolean;
 
   @Prop({ default: true })
   isActive!: boolean;
+
+  @Prop({ type: String, default: null, select: false })
+  refreshTokenHash!: string;
 
   @Prop({
         type: {
@@ -78,7 +83,7 @@ export class BloodBank extends Document {
         },
         default: {},
     })
-    inventory!: Record<string, InventoryItem>;
+    inventory!: Record<BloodGroup, InventoryItem>;
 }
 
 export const BloodBankSchema = SchemaFactory.createForClass(BloodBank);
