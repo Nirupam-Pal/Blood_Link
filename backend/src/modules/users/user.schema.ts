@@ -15,7 +15,7 @@ export class User extends Document {
     fullName!: string;
 
     @Prop({ required: true, enum: Gender })
-    gender!: string;
+    gender!: Gender;
 
     @Prop({ required: true, index: true, trim: true })
     state!: string;

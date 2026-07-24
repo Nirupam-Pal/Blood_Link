@@ -27,7 +27,7 @@ export class RegisterUserDto {
   @ApiProperty({ enum: Gender, example: Gender.MALE })
   @IsEnum(Gender)
   @IsNotEmpty()
-  readonly gender!: string
+  readonly gender!: Gender
 
   @ApiProperty({ example: 'Tripura' })
   @IsString()
