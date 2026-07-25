@@ -1,5 +1,11 @@
 import { Request } from 'express';
 
+export type JwtPayload = {
+  sub: string;
+  email: string;
+  role: string;
+}
+
 export type AuthenticatedUser = {
   userId: string;
   email: string;
