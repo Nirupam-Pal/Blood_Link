@@ -32,10 +32,10 @@ export class BaseRepository<T extends Document> {
   }
 
   async findMany(
-    filter: FilterQuery<T>,
+    filter: FilterQuery<T> = {},
     projection?: ProjectionType<T>,
     options?: QueryOptions,
-  ): Promise<T[] | null> {
+  ): Promise<T[]> {
     return this.model.find(filter, projection, options).exec();
   }
 

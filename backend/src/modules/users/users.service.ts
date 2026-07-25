@@ -38,6 +38,9 @@ export class UsersService {
   }
 
   async getUsers(): Promise<User[]> {
-    return this.userRepository.findMany()
+    return this.userRepository.findMany(
+      { isActive: true },
+      '-refreshTokenHash',
+    )
   }
 }
