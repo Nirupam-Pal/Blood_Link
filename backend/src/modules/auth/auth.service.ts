@@ -3,50 +3,52 @@ import { UserRepository } from '../users/repositories/users.repository';
 import { JwtService } from '@nestjs/jwt';
 import { LoginDto } from './dto/login.dto';
 import * as bcrypt from 'bcrypt';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly usersRepository: UserRepository,
     private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
   ) {}
 
   async login(loginDto: LoginDto) {
     const user = await this.usersRepository.findOne(
-        { email: loginDto.email }, 
-        '+password +refreshTokenHash',
+      { email: loginDto.email },
+      '+password +refreshTokenHash',
     );
 
-    if(!user) {
-        throw new UnauthorizedException('Invalid credentials')
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
     }
 
     const isPasswordValid = await bcrypt.compare(
-        loginDto.password,
-        user.password
-    )
+      loginDto.password,
+      user.password,
+    );
 
-    if(!isPasswordValid) {
-        throw new UnauthorizedException('Invalid Credentials');
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Invalid Credentials');
     }
 
     const payload = {
-        sub: user.id,
-        email: user.email,
-        role: user.role
+      sub: user.id,
+      email: user.email,
+      role: user.role,
     };
 
     const accessToken = await this.jwtService.signAsync(payload);
 
-    const refreshToken = await this.jwtService.signAsync(payload as any, {
-      secret: process.env.JWT_REFRESH_SECRET as any,
-      expiresIn: process.env.JWT_REFRESH_EXPIRES_IN as any,
-    } as any);
+    const refreshToken = await this.jwtService.signAsync(payload, {
+      secret: this.configService.getOrThrow('JWT_REFRESH_SECRET'),
+      expiresIn: this.configService.getOrThrow('JWT_REFRESH_EXPIRES_IN'),
+    });
 
     const refreshHash = await bcrypt.hash(refreshToken, 12);
 
     await this.usersRepository.update(user.id, {
-        refreshTokenHash: refreshHash,
+      refreshTokenHash: refreshHash,
     });
 
     const result = user.toObject();
@@ -55,10 +57,9 @@ export class AuthService {
     delete result.refreshTokenHash;
 
     return {
-        user: result,
-        accessToken,
-        refreshToken,
-    }
-    
+      user: result,
+      accessToken,
+      refreshToken,
+    };
   }
 }
