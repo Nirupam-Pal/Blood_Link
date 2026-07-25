@@ -4,15 +4,15 @@ export type JwtPayload = {
   sub: string;
   email: string;
   role: string;
-}
+};
 
 export type AuthenticatedUser = {
-  userId: string;
+  id: string;
   email: string;
   role: string;
 };
 
-export type AuthenticatedRequest = Request & { user: AuthenticatedUser };
+export type AuthenticatedRequest = Request & { user?: AuthenticatedUser };
 
 export type GeoPoint = {
   type: 'Point';

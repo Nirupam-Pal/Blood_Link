@@ -51,13 +51,13 @@ export class AuthService {
       refreshTokenHash: refreshHash,
     });
 
-    const result = user.toObject();
-
-    delete result.password;
-    delete result.refreshTokenHash;
-
     return {
-      user: result,
+      user: {
+        id: user.id,
+        fullName: user.fullName,
+        email: user.email,
+        role: user.role,
+      },
       accessToken,
       refreshToken,
     };
