@@ -9,27 +9,35 @@ import { User } from './user.schema';
 export class UsersService {
   constructor(private readonly userRepository: UserRepository) {}
 
-  async create(
+  async createUsers(
     registerUserDto: RegisterUserDto,
     assignedRole: Role = Role.USER,
   ): Promise<User> {
-    const existingUser = await this.userRepository.findOne({ email: registerUserDto.email });
-    
-    if(existingUser) {
-        throw new ConflictException('This email is already registered within the ecosystem')
+    const existingUser = await this.userRepository.findOne({
+      email: registerUserDto.email,
+    });
+
+    if (existingUser) {
+      throw new ConflictException(
+        'This email is already registered within the ecosystem',
+      );
     }
 
     const salt = await bcrypt.genSalt(12);
     const hashedPassword = await bcrypt.hash(registerUserDto.password, salt);
 
     const createdUser = await this.userRepository.create({
-        ...registerUserDto,
-        password: hashedPassword,
-        role: assignedRole
-    })
+      ...registerUserDto,
+      password: hashedPassword,
+      role: assignedRole,
+    });
 
     const res = createdUser.toObject();
     delete res.password;
     return res as User;
+  }
+
+  async getUsers(): Promise<User[]> {
+    return this.userRepository.findMany()
   }
 }
