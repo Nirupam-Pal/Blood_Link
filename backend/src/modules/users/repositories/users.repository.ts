@@ -5,7 +5,7 @@ import { User } from "../user.schema";
 import { Model } from "mongoose";
 
 @Injectable()
-export class UserRepository extends BaseRepository<User> {
+export class UsersRepository extends BaseRepository<User> {
     constructor(@InjectModel(User.name) private readonly userModel: Model<User>) {
         super(userModel);
     }

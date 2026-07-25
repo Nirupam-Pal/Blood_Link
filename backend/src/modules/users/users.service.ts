@@ -1,5 +1,5 @@
 import { ConflictException, Injectable } from '@nestjs/common';
-import { UserRepository } from './repositories/users.repository';
+import { UsersRepository } from './repositories/users.repository';
 import { RegisterUserDto } from './dto/register-user.dto';
 import { Role } from '../../common/enums/role.enum';
 import * as bcrypt from 'bcrypt';
@@ -7,7 +7,7 @@ import { User } from './user.schema';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly userRepository: UserRepository) {}
+  constructor(private readonly userRepository: UsersRepository) {}
 
   async createUsers(
     registerUserDto: RegisterUserDto,
