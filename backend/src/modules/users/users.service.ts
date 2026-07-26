@@ -76,4 +76,23 @@ export class UsersService {
     
     return updatedUser;
   }
+
+  async deleteUser(id: string): Promise<User> {
+    const user = await this.userRepository.findById(
+      id,
+      '-password -refreshTokenHash'
+    )
+
+    if(!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const deletedUser = await this.userRepository.delete(id)
+
+    if(!deletedUser) {
+      throw new NotFoundException('User not found');
+    }
+
+    return deletedUser;
+  }
 }
