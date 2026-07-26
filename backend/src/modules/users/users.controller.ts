@@ -21,10 +21,12 @@ export class UsersController {
         return this.usersService.getUsers();
     }
 
-    @Get(':id')
+    @Get('m3')
     @UseGuards(JwtAuthGuard)
-    async getUser(@Param('id') id: string) {
-        return this.usersService.getUser(id);
+    async getUser(
+        @CurrentUser() user: User
+    ) {
+        return this.usersService.getUser(user.id);
     }
 
     @Put('me')
@@ -33,7 +35,7 @@ export class UsersController {
         @CurrentUser() user: User,
         @Body() data: UpdateUserDto,
     ){
-        return this.usersService.updateUser(user.id, data)
+        return this.usersService.updateUser(user.id, data);
     }
 
     @Delete('me')
@@ -41,6 +43,6 @@ export class UsersController {
     async deleteUser(
         @CurrentUser() user: User
     ){
-        return this.usersService.deleteUser(user.id)
+        return this.usersService.deleteUser(user.id);
     }
 }
