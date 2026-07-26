@@ -1,9 +1,10 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { UsersRepository } from './repositories/users.repository';
 import { RegisterUserDto } from './dto/register-user.dto';
 import { Role } from '../../common/enums/role.enum';
 import * as bcrypt from 'bcrypt';
 import { User } from './user.schema';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -43,4 +44,30 @@ export class UsersService {
       '-password -refreshTokenHash',
     )
   }
+
+  async getUser(id: string): Promise<User> {
+    const user = await this.userRepository.findById(
+      id,
+      '-password -refreshTokenHash',
+    );
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return user;
+  }
+
+  // async updateUser(id: string, updateUserDto: UpdateUserDto): Promise<User> {
+  //   const user = await this.userRepository.findById(
+  //     id,
+  //     '-password -refreshTokenHash'
+  //   )
+
+  //   if(!user) {
+  //     throw new NotFoundException('User not found');
+  //   }
+
+
+  // }
 }
