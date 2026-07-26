@@ -3,6 +3,8 @@ import { UsersService } from './users.service';
 import { RegisterUserDto } from './dto/register-user.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { User } from './user.schema';
 
 @Controller('users')
 export class UsersController {
@@ -25,20 +27,20 @@ export class UsersController {
         return this.usersService.getUser(id);
     }
 
-    @Put(':id')
+    @Put('me')
     @UseGuards(JwtAuthGuard)
-    async updateUser(
-        @Param('id') id: string,
-        @Body() data: UpdateUserDto
+    async updateProfile(
+        @CurrentUser() user: User,
+        @Body() data: UpdateUserDto,
     ){
-        return this.usersService.updateUser(id, data)
+        return this.usersService.updateUser(user.id, data)
     }
 
-    @Delete(':id')
+    @Delete('me')
     @UseGuards(JwtAuthGuard)
     async deleteUser(
-        @Param('id') id: string
+        @CurrentUser() user: User
     ){
-        return this.usersService.deleteUser(id)
+        return this.usersService.deleteUser(user.id)
     }
 }

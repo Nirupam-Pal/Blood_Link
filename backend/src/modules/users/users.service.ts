@@ -68,7 +68,15 @@ export class UsersService {
       throw new NotFoundException('User not found');
     }
 
-    const updatedUser = await this.userRepository.update(id, updateUserDto);
+    const updatedUser = await this.userRepository.update(
+      id, 
+      updateUserDto,
+      {
+        new: true,
+        projection: '-password -refreshTokenHash',
+        runValidators: true,
+      }
+    );
 
     if(!updatedUser) {
       throw new NotFoundException('User not found')
