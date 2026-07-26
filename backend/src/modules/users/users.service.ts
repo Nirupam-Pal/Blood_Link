@@ -58,16 +58,22 @@ export class UsersService {
     return user;
   }
 
-  // async updateUser(id: string, updateUserDto: UpdateUserDto): Promise<User> {
-  //   const user = await this.userRepository.findById(
-  //     id,
-  //     '-password -refreshTokenHash'
-  //   )
+  async updateUser(id: string, updateUserDto: UpdateUserDto): Promise<User> {
+    const user = await this.userRepository.findById(
+      id,
+      '-password -refreshTokenHash'
+    )
 
-  //   if(!user) {
-  //     throw new NotFoundException('User not found');
-  //   }
+    if(!user) {
+      throw new NotFoundException('User not found');
+    }
 
+    const updatedUser = await this.userRepository.update(id, updateUserDto);
 
-  // }
+    if(!updatedUser) {
+      throw new NotFoundException('User not found')
+    }
+    
+    return updatedUser;
+  }
 }
