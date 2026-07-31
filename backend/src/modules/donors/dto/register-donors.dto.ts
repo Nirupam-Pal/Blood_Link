@@ -16,11 +16,6 @@ export class RegisterDonorDto {
     @ApiProperty({ example: false })
     @IsBoolean()
     @IsNotEmpty()
-    readonly pregnantOrBreastFeeding!: boolean;
-
-    @ApiProperty({ example: false })
-    @IsBoolean()
-    @IsNotEmpty()
     readonly recentTattoo!: boolean;
 
     @ApiProperty({ example: false })
@@ -56,7 +51,7 @@ export class RegisterDonorDto {
     @ApiProperty({ example: true })
     @IsBoolean()
     @IsNotEmpty()
-    readonly consentinformation!: boolean;
+    readonly consentInformation!: boolean;
 
     @ApiProperty({ example: true })
     @IsBoolean()
