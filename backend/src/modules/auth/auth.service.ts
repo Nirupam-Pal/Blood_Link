@@ -3,7 +3,13 @@ import { UsersRepository } from '../users/repositories/users.repository';
 import { JwtService } from '@nestjs/jwt';
 import { LoginDto } from './dto/login.dto';
 import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
 import { ConfigService } from '@nestjs/config';
+import { InjectModel } from '@nestjs/mongoose';
+import { Otp } from './schemas/otp.schema';
+import { Model } from 'mongoose';
+import { EmailService } from '../../common/services/email.service';
+import { SendOtpDto } from './dto/send-otp.dto';
 
 @Injectable()
 export class AuthService {
@@ -11,6 +17,8 @@ export class AuthService {
     private readonly usersRepository: UsersRepository,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    @InjectModel(Otp.name) private readonly otpModel: Model<Otp>,
+    private readonly emailService: EmailService,
   ) {}
 
   async login(loginDto: LoginDto) {
@@ -61,5 +69,28 @@ export class AuthService {
       accessToken,
       refreshToken,
     };
+  }
+
+  async sendOtp(sendOtpDto: SendOtpDto): Promise<{ message: string }> {
+    const email = sendOtpDto.email.toLowerCase();
+
+    const otp = crypto.randomInt(100000, 999999).toString();
+
+    const salt = await bcrypt.genSalt(10);
+    const otpHash = await bcrypt.hash(otp, salt);
+
+    await this.otpModel.findOneAndUpdate(
+      { email },
+      {
+        otpHash,
+        attempts: 0,
+        createdAt: new Date()
+      },
+      { upsert: true, new: true }
+    );
+
+    await this.emailService.sendOtpEmail(email, otp);
+
+    return { message: 'Verification OTP sent successfully to your email.' };
   }
 }
