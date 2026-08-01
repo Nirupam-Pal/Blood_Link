@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { UsersRepository } from '../users/repositories/users.repository';
 import { JwtService } from '@nestjs/jwt';
 import { LoginDto } from './dto/login.dto';
@@ -10,6 +10,8 @@ import { Otp } from './schemas/otp.schema';
 import { Model } from 'mongoose';
 import { EmailService } from '../../common/services/email.service';
 import { SendOtpDto } from './dto/send-otp.dto';
+import { VerifyOtpDto } from './dto/verify-otp.dto';
+import { NotFoundError } from 'rxjs';
 
 @Injectable()
 export class AuthService {
@@ -83,6 +85,7 @@ export class AuthService {
       { email },
       {
         otpHash,
+        isVerified: false,
         attempts: 0,
         createdAt: new Date()
       },
@@ -92,5 +95,42 @@ export class AuthService {
     await this.emailService.sendOtpEmail(email, otp);
 
     return { message: 'Verification OTP sent successfully to your email.' };
+  }
+
+  async verifyOtp(verifyOtpDto: VerifyOtpDto): Promise<{ verified: boolean; message: string }> {
+    const email = verifyOtpDto.email.toLowerCase();
+
+    const otpRecord = await this.otpModel.findOne({ email });
+    if(!otpRecord) {
+      throw new NotFoundException('OTP has expired or was never requested. Please request a new code.');
+    }
+
+    const now = new Date().getTime();
+
+    const otpAge = now - new Date(otpRecord.createdAt).getTime();
+
+    if(otpAge > 10 * 60 * 1000) {
+      await this.otpModel.deleteOne({ _id: otpRecord._id });
+      throw new BadRequestException('OTP has expired. Please request a new one.')
+    }
+
+    if(otpRecord.attempts >= 5) {
+      await this.otpModel.deleteOne({ _id: otpRecord._id });
+      throw new BadRequestException('Too many failed attempts. This OTP has been inivalidated.')
+    }
+
+    const isMatch = await bcrypt.compare(verifyOtpDto.otp, otpRecord.otpHash);
+
+    if(!isMatch) {
+      await this.otpModel.updateOne({ _id: otpRecord._id }, { $inc: { attempts: 1 } });
+      throw new BadRequestException('Invalid OTP code. Please check your email and try again.')
+    }
+
+    await this.otpModel.updateOne({ _id: otpRecord._id }, { $set: { isVerified: true } });
+
+    return {
+      verified: true,
+      message: 'Email verified succesfully.'
+    }
   }
 }

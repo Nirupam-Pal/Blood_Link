@@ -9,6 +9,9 @@ export class Otp extends Document {
   @Prop({ required: true })
   otpHash!: string; //stored as a bcrypt hash for security
 
+  @Prop({ required: true, default: false })
+  isVerified!: boolean;
+
   @Prop({ required: true, default: 0 })
   attempts!: number; // Rate-limiting / anti-brute-force counter
 
