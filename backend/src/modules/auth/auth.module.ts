@@ -6,10 +6,14 @@ import { JwtModule } from '@nestjs/jwt';
 import { UsersModule } from '../users/users.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { MongooseModule } from '@nestjs/mongoose';
+import { Otp, OtpSchema } from './schemas/otp.schema';
+import { EmailService } from '../../common/services/email.service';
 
 @Module({
   imports: [
     PassportModule,
+    MongooseModule.forFeature([{ name: Otp.name, schema: OtpSchema }]),
     UsersModule,
     ConfigModule,
 
@@ -23,7 +27,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
       })
     }),
   ],
-  providers: [AuthService, JwtStrategy],
+  providers: [AuthService, JwtStrategy, EmailService],
   controllers: [AuthController],
   exports: [AuthService]
 })
