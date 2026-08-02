@@ -5,6 +5,7 @@ import { Role } from '../../common/enums/role.enum';
 import * as bcrypt from 'bcrypt';
 import { User } from './user.schema';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { ClientSession } from 'mongoose';
 
 @Injectable()
 export class UsersService {
@@ -13,6 +14,7 @@ export class UsersService {
   async createUsers(
     registerUserDto: RegisterUserDto,
     assignedRole: Role = Role.USER,
+    session?: ClientSession
   ): Promise<User> {
     const existingUser = await this.userRepository.findOne({
       email: registerUserDto.email,
@@ -31,7 +33,9 @@ export class UsersService {
       ...registerUserDto,
       password: hashedPassword,
       role: assignedRole,
-    });
+    },
+    session,
+  );
 
     const res = createdUser.toObject();
     delete res.password;

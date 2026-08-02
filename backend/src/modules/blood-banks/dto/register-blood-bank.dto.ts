@@ -54,7 +54,7 @@ export class RegisterBloodBankDto {
   @Matches(REGEX_CONSTANTS.PHONE_NUMBER, {
     message: "Phone number must be exactly 10 digits.",
   })
-  phoneNumber!: string;
+  readonly phoneNumber!: string;
 
   @ApiProperty({
     example: 'GB Pant Hospital Road, Agartala',

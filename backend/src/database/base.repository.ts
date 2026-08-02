@@ -5,14 +5,18 @@ import {
   ProjectionType,
   QueryOptions,
   UpdateQuery,
+  ClientSession,
 } from 'mongoose';
 
 export class BaseRepository<T extends Document> {
   constructor(protected readonly model: Model<T>) {}
 
-  async create(doc: Partial<unknown>): Promise<T> {
+  async create(
+    doc: Partial<unknown>,
+    session?: ClientSession,
+  ): Promise<T> {
     const createdEntity = new this.model(doc);
-    return createdEntity.save() as Promise<T>;
+    return createdEntity.save({ session }) as Promise<T>;
   }
 
   async findById(
