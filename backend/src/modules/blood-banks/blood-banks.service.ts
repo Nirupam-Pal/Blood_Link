@@ -9,85 +9,85 @@ import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class BloodBanksService {
-  constructor(
-    private readonly bloodBanksRepository: BloodBanksRepository,
-    @InjectModel(Otp.name) private readonly otpModel: Model<Otp>,
-  ) {}
+    constructor(
+        private readonly bloodBanksRepository: BloodBanksRepository,
+        @InjectModel(Otp.name) private readonly otpModel: Model<Otp>,
+    ) {}
 
-  async register(registerBloodBankDto: RegisterBloodBankDto): Promise<Omit<BloodBank, 'password'>> {
-    const email = registerBloodBankDto.email.toLowerCase();
+    async register(registerBloodBankDto: RegisterBloodBankDto): Promise<Omit<BloodBank, 'password'>> {
+        const email = registerBloodBankDto.email.toLowerCase();
 
-    const verifiedOtp = await this.otpModel.findOne({
-        email,
-        isVerified: true
-    });
+        const verifiedOtp = await this.otpModel.findOne({
+            email,
+            isVerified: true
+        });
 
-    if(!verifiedOtp) {
-        throw new BadRequestException(
-            'Email verification required. Please request and verify an OTP before registering'
+        if(!verifiedOtp) {
+            throw new BadRequestException(
+                'Email verification required. Please request and verify an OTP before registering'
+            )
+        }
+
+        const existingEmail = await this.bloodBanksRepository.findOne({ email });
+        if(existingEmail) {
+            throw new ConflictException('A blood bank with this email is already registered.');
+        }
+
+        const existingLicense = await this.bloodBanksRepository.findOne({
+            licenseNumber: registerBloodBankDto.licenseNumber
+        })
+        if(existingLicense) {
+            throw new ConflictException('A blood bank with this license number is already registered')
+        }
+
+        const salt = await bcrypt.genSalt(12);
+        const hashedPassword = await bcrypt.hash(registerBloodBankDto.password, salt);
+
+        const createdBloodBank = await this.bloodBanksRepository.create({
+            bloodBankName: registerBloodBankDto.bloodBankName,
+            email,
+            password: hashedPassword,
+            licenseNumber: registerBloodBankDto.licenseNumber,
+            phoneNumber: registerBloodBankDto.phoneNumber,
+            address: registerBloodBankDto.address,
+            state: registerBloodBankDto.state,
+            district: registerBloodBankDto.district,
+            subDivision: registerBloodBankDto.subDivision,
+            city: registerBloodBankDto.city,
+            pinCode: registerBloodBankDto.pinCode,
+            location: {
+                type: 'Point',
+                coordinates: registerBloodBankDto.location.coordinates
+            },
+            emailVerified: true,
+            isActive: true
+        });
+
+        await this.otpModel.deleteOne({ _id: verifiedOtp._id });
+
+        // Exclude hidden fields from final returned object
+        const result = createdBloodBank.toObject();
+        delete (result as any).password;
+        delete (result as any).refreshTokenHash;
+
+        return result;
+    }
+
+    async getBloodBanks(): Promise<BloodBank[]> {
+        return this.bloodBanksRepository.findMany(
+            { isActive: true },
+            '-password -refreshTokenHash'
         )
     }
 
-    const existingEmail = await this.bloodBanksRepository.findOne({ email });
-    if(existingEmail) {
-        throw new ConflictException('A blood bank with this email is already registered.');
+    async getBloodBank(id: string): Promise<BloodBank> {
+        const bloodBank = await this.bloodBanksRepository.findById(
+            id,
+            '-password -refreshTokenHash'
+        );
+        if (!bloodBank || !bloodBank.isActive) {
+            throw new NotFoundException('Blood Bank record not found or inactive.');
+        }
+        return bloodBank;
     }
-
-    const existingLicense = await this.bloodBanksRepository.findOne({
-        licenseNumber: registerBloodBankDto.licenseNumber
-    })
-    if(existingLicense) {
-        throw new ConflictException('A blood bank with this license number is already registered')
-    }
-
-    const salt = await bcrypt.genSalt(12);
-    const hashedPassword = await bcrypt.hash(registerBloodBankDto.password, salt);
-
-    const createdBloodBank = await this.bloodBanksRepository.create({
-        bloodBankName: registerBloodBankDto.bloodBankName,
-        email,
-        password: hashedPassword,
-        licenseNumber: registerBloodBankDto.licenseNumber,
-        phoneNumber: registerBloodBankDto.phoneNumber,
-        address: registerBloodBankDto.address,
-        state: registerBloodBankDto.state,
-        district: registerBloodBankDto.district,
-        subDivision: registerBloodBankDto.subDivision,
-        city: registerBloodBankDto.city,
-        pinCode: registerBloodBankDto.pinCode,
-        location: {
-            type: 'Point',
-            coordinates: registerBloodBankDto.location.coordinates
-        },
-        emailVerified: true,
-        isActive: true
-    });
-
-    await this.otpModel.deleteOne({ _id: verifiedOtp._id });
-
-    // Exclude hidden fields from final returned object
-    const result = createdBloodBank.toObject();
-    delete (result as any).password;
-    delete (result as any).refreshTokenHash;
-
-    return result;
-  }
-
-  async getBloodBanks(): Promise<BloodBank[]> {
-    return this.bloodBanksRepository.findMany(
-        { isActive: true },
-        '-password -refreshTokenHash'
-    )
-  }
-
-  async getBloodBank(id: string): Promise<BloodBank> {
-    const bloodBank = await this.bloodBanksRepository.findById(
-        id,
-        '-password -refreshTokenHash'
-    );
-    if (!bloodBank || !bloodBank.isActive) {
-      throw new NotFoundException('Blood Bank record not found or inactive.');
-    }
-    return bloodBank;
-  }
 }

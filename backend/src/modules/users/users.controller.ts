@@ -3,7 +3,7 @@ import { UsersService } from './users.service';
 import { RegisterUserDto } from './dto/register-user.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { CurrentUser } from '../../common/decorators/current-account.decorator';
 import { User } from './user.schema';
 
 @Controller('users')

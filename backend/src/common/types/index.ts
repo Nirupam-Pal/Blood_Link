@@ -12,6 +12,7 @@ export type AuthenticatedUser = {
   role: string;
 };
 
+
 export type AuthenticatedRequest = Request & { user?: AuthenticatedUser };
 
 export type GeoPoint = {
