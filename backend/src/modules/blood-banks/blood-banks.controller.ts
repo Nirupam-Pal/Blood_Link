@@ -4,9 +4,10 @@ import { BloodBanksService } from './blood-banks.service';
 import { RegisterBloodBankDto } from './dto/register-blood-bank.dto';
 import { ApiOkResponse, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { Public } from '../../common/decorators/public.decorator';
+import { RolesGuard } from '../../common/guards/roles.guard';
 
 @Controller('blood-banks')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class BloodBanksController {
     constructor(private readonly bloodBanksService: BloodBanksService) {}
 
