@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { BloodBanksService } from './blood-banks.service';
 import { RegisterBloodBankDto } from './dto/register-blood-bank.dto';
@@ -7,6 +7,8 @@ import { Public } from '../../common/decorators/public.decorator';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { CurrentBloodBank } from '../../common/decorators/current-account.decorator';
 import { BloodBank } from './blood-banks.schema';
+import { Role } from '../../common/enums/role.enum';
+import { UpdateInventoryItemDto } from './dto/update-inventory-item.dto';
 
 @Controller('blood-banks')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -46,4 +48,16 @@ export class BloodBanksController {
         return this.bloodBanksService.getBloodBank(id)
     }
 
+    @Patch('inventory')
+    async updateInventory(
+        @CurrentBloodBank('id') id: string,
+        @Body() updateInventoryDto: UpdateInventoryItemDto,
+    ) {
+        const data = await this.bloodBanksService.updateInventory(id, updateInventoryDto)
+
+        return {
+            message: `Inventory units updated successfully for blood group ${updateInventoryDto.bloodGroup}`,
+            data
+        }
+    }
 }
