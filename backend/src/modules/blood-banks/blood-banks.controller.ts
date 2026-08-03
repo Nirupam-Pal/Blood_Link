@@ -28,7 +28,6 @@ export class BloodBanksController {
     }
 
     @Get()
-    @UseGuards(JwtAuthGuard)
     async getBloodbanks() {
         return this.bloodBanksService.getBloodBanks();
     }

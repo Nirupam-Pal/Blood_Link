@@ -4,12 +4,14 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { AuthenticatedUser, JwtPayload } from '../../../common/types';
 import { ConfigService } from '@nestjs/config';
+import { BloodBanksRepository } from '../../blood-banks/repositories/blood-banks.repository';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
     private readonly userRepository: UsersRepository,
     private readonly configService: ConfigService,
+    private readonly bloodBankRepository: BloodBanksRepository
 ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -18,16 +20,20 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: JwtPayload): Promise<AuthenticatedUser> {
-    const user = await this.userRepository.findById(payload.sub);
+    let account: any = await this.userRepository.findById(payload.sub);
 
-    if (!user) {
-      throw new UnauthorizedException();
+    if (!account) {
+      account = await this.bloodBankRepository.findById(payload.sub)
+    }
+
+    if(!account) {
+      throw new UnauthorizedException('Token account no longer exists.')
     }
 
     return {
-      id: user.id,
-      email: user.email,
-      role: user.role,
+      id: account._id,
+      email: account.email,
+      role: payload.role || 'USER',
     };
   }
 }
