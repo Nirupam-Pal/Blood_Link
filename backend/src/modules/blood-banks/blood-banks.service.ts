@@ -6,6 +6,8 @@ import { Model } from 'mongoose';
 import { RegisterBloodBankDto } from './dto/register-blood-bank.dto';
 import { BloodBank } from './blood-banks.schema';
 import * as bcrypt from 'bcrypt';
+import { UpdateBloodBankDto } from './dto/update-blood-bank.dto';
+import { UpdateInventoryItemDto } from './dto/update-inventory-item.dto';
 
 @Injectable()
 export class BloodBanksService {
@@ -89,5 +91,29 @@ export class BloodBanksService {
             throw new NotFoundException('Blood Bank record not found or inactive.');
         }
         return bloodBank;
+    }
+
+    async updateInventory(
+        id: string,
+        updateInventoryDto: UpdateInventoryItemDto,
+    ): Promise<BloodBank> {
+        await this.bloodBanksRepository.findById(id);
+
+        const updatePath = `inventory.${updateInventoryDto.bloodGroup}`
+
+        const updatedBank = await this.bloodBanksRepository.update(id, {
+            $set: {
+                [updatePath]: {
+                    units: updateInventoryDto.units,
+                    lastUpdated: new Date()
+                }
+            }
+        });
+
+        if(!updatedBank) {
+            throw new NotFoundException('Failed to update inventory.');
+        }
+
+        return updatedBank;
     }
 }
