@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { BloodBanksService } from './blood-banks.service';
 import { RegisterBloodBankDto } from './dto/register-blood-bank.dto';
@@ -25,5 +25,11 @@ export class BloodBanksController {
             message: 'BloodBank facility registered successfully',
             data,
         }
+    }
+
+    @Get()
+    @UseGuards(JwtAuthGuard)
+    async getBloodbanks() {
+        return this.bloodBanksService.getBloodBanks();
     }
 }

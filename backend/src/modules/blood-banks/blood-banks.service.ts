@@ -73,8 +73,18 @@ export class BloodBanksService {
     return result;
   }
 
-  async findById(id: string): Promise<BloodBank> {
-    const bloodBank = await this.bloodBanksRepository.findById(id);
+  async getBloodBanks(): Promise<BloodBank[]> {
+    return this.bloodBanksRepository.findMany(
+        { isActive: true },
+        '-password -refreshTokenHash'
+    )
+  }
+
+  async getBloodBank(id: string): Promise<BloodBank> {
+    const bloodBank = await this.bloodBanksRepository.findById(
+        id,
+        '-password -refreshTokenHash'
+    );
     if (!bloodBank || !bloodBank.isActive) {
       throw new NotFoundException('Blood Bank record not found or inactive.');
     }
