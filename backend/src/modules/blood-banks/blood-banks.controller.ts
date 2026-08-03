@@ -5,6 +5,8 @@ import { RegisterBloodBankDto } from './dto/register-blood-bank.dto';
 import { ApiOkResponse, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { Public } from '../../common/decorators/public.decorator';
 import { RolesGuard } from '../../common/guards/roles.guard';
+import { CurrentBloodBank } from '../../common/decorators/current-account.decorator';
+import { BloodBank } from './blood-banks.schema';
 
 @Controller('blood-banks')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -30,5 +32,12 @@ export class BloodBanksController {
     @Get()
     async getBloodbanks() {
         return this.bloodBanksService.getBloodBanks();
+    }
+
+    @Get('me')
+    async getBloodBank(
+        @CurrentBloodBank() bloodBank: BloodBank
+    ) {
+        return this.bloodBanksService.getBloodBank(bloodBank.id);
     }
 }
