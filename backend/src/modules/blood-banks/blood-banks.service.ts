@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { BloodBanksRepository } from './repositories/blood-banks.repository';
 import { InjectModel } from '@nestjs/mongoose';
 import { Otp } from '../auth/schemas/otp.schema';
@@ -71,5 +71,13 @@ export class BloodBanksService {
     delete (result as any).refreshTokenHash;
 
     return result;
+  }
+
+  async findById(id: string): Promise<BloodBank> {
+    const bloodBank = await this.bloodBanksRepository.findById(id);
+    if (!bloodBank || !bloodBank.isActive) {
+      throw new NotFoundException('Blood Bank record not found or inactive.');
+    }
+    return bloodBank;
   }
 }
