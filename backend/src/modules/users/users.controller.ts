@@ -29,6 +29,12 @@ export class UsersController {
         return this.usersService.getUser(user.id);
     }
 
+    @Get(':id')
+    @UseGuards(JwtAuthGuard)
+    async getUserById(@Param('id') id: string) {
+        return this.usersService.getUser(id)
+    }
+
     @Put('me')
     @UseGuards(JwtAuthGuard)
     async updateProfile(
