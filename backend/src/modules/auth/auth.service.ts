@@ -12,11 +12,13 @@ import { EmailService } from '../../common/services/email.service';
 import { SendOtpDto } from './dto/send-otp.dto';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
 import { NotFoundError } from 'rxjs';
+import { BloodBanksRepository } from '../blood-banks/repositories/blood-banks.repository';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly usersRepository: UsersRepository,
+    private readonly bloodBankRepository: BloodBanksRepository,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     @InjectModel(Otp.name) private readonly otpModel: Model<Otp>,
@@ -24,18 +26,31 @@ export class AuthService {
   ) {}
 
   async login(loginDto: LoginDto) {
-    const user = await this.usersRepository.findOne(
-      { email: loginDto.email },
+    const email = loginDto.email.toLowerCase();
+
+    let account: any = await this.usersRepository.findOne(
+      {email},
       '+password +refreshTokenHash',
     );
 
-    if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
+    let role = account?.role || 'USER';
+
+    if(!account) {
+      account = await this.bloodBankRepository.findOne(
+        { email },
+        '+password +refreshTokenHash'
+      );
+      role = 'BLOOD_BANK'
     }
+
+    if(!account) {
+      throw new UnauthorizedException('Invalid Credentials');
+    }
+
 
     const isPasswordValid = await bcrypt.compare(
       loginDto.password,
-      user.password,
+      account.password,
     );
 
     if (!isPasswordValid) {
@@ -43,9 +58,9 @@ export class AuthService {
     }
 
     const payload = {
-      sub: user.id,
-      email: user.email,
-      role: user.role,
+      sub: account._id || account.id,
+      email: account.email,
+      role
     };
 
     const accessToken = await this.jwtService.signAsync(payload);
@@ -57,16 +72,22 @@ export class AuthService {
 
     const refreshHash = await bcrypt.hash(refreshToken, 12);
 
-    await this.usersRepository.update(user.id, {
-      refreshTokenHash: refreshHash,
+   if(role === 'BLOOD_BANK') {
+    await this.bloodBankRepository.update(account._id || account.id, {
+      refreshTokenHash: refreshHash
     });
+   } else {
+    await this.usersRepository.update(account._id || account.id, {
+      refreshTokenHash: refreshHash
+    })
+   }
 
     return {
       user: {
-        id: user.id,
-        fullName: user.fullName,
-        email: user.email,
-        role: user.role,
+        id: account.id || account._id,
+        fullName: account.fullName || account.bloodBankName,
+        email: account.email,
+        role
       },
       accessToken,
       refreshToken,

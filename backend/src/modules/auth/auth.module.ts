@@ -9,12 +9,14 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Otp, OtpSchema } from './schemas/otp.schema';
 import { EmailService } from '../../common/services/email.service';
+import { BloodBanksModule } from '../blood-banks/blood-banks.module';
 
 @Module({
   imports: [
     PassportModule,
     MongooseModule.forFeature([{ name: Otp.name, schema: OtpSchema }]),
     UsersModule,
+    BloodBanksModule,
     ConfigModule,
 
     JwtModule.registerAsync({
