@@ -2,7 +2,7 @@ import { Body, Controller, Get, HttpCode, HttpStatus, Param, Patch, Post, Query,
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { BloodBanksService } from './blood-banks.service';
 import { RegisterBloodBankDto } from './dto/register-blood-bank.dto';
-import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiOkResponse, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { Public } from '../../common/decorators/public.decorator';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { CurrentBloodBank } from '../../common/decorators/current-account.decorator';
@@ -45,16 +45,17 @@ export class BloodBanksController {
         return this.bloodBanksService.getBloodBank(bloodBank.id);
     }
     
-    @Get('search')
+    @Post('search')
     @Roles(Role.USER)
     @ApiBearerAuth()
     @HttpCode(HttpStatus.OK)
     @ApiOperation({ summary: 'Search active blood banks by state and optional filters (Protected)' })
+    @ApiBody({ type: SearchBloodBankDto })
     @ApiResponse({ status: 200, description: 'Matching blood banks retrieved successfully.' })
     @ApiResponse({ status: 401, description: 'Unauthorized: Authentication token missing or invalid.' })
     @ApiResponse({ status: 403, description: 'Forbidden: Requires USER role.' })
-    async searchBloodBank(@Query() queryDto: SearchBloodBankDto) {
-        const data = await this.bloodBanksService.searchBloodBanks(queryDto);
+    async searchBloodBank(@Body() searchDto: SearchBloodBankDto) {
+        const data = await this.bloodBanksService.searchBloodBanks(searchDto);
         
         return {
             message: 'Blood Bank search results retrieved successfully.',

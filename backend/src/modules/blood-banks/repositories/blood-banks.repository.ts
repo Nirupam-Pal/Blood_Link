@@ -15,19 +15,22 @@ export class BloodBanksRepository extends BaseRepository<BloodBank> {
   }
 
   async searchByFilters(filters: SearchBloodBankDto): Promise<BloodBank[]> {
+    const escapeRegex = (text: string) =>
+      text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+
     const query: FilterQuery<BloodBank> = {
       isActive: true,
-      state: new RegExp(`^${filters.state.trim()}$`, 'i'),
+      state: new RegExp(`^${escapeRegex(filters.state.trim())}$`, 'i'),
     };
 
-    if (filters.district) {
-      query.district = new RegExp(`^${filters.district.trim()}$`, 'i');
+    if (filters.district?.trim()) {
+      query.district = new RegExp(`^${escapeRegex(filters.district.trim())}$`, 'i');
     }
-    if (filters.subDivision) {
-      query.district = new RegExp(`^${filters.subDivision.trim()}$`, 'i');
+    if (filters.subDivision?.trim()) {
+      query.subDivision = new RegExp(`^${escapeRegex(filters.subDivision.trim())}$`, 'i');
     }
-    if (filters.city) {
-      query.district = new RegExp(`^${filters.city.trim()}$`, 'i');
+    if (filters.city?.trim()) {
+      query.city = new RegExp(`^${escapeRegex(filters.city.trim())}$`, 'i');
     }
 
     return this.bloodBankModel

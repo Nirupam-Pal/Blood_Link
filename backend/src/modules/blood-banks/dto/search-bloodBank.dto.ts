@@ -10,7 +10,7 @@ export class SearchBloodBankDto {
     @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
     @IsString()
     @IsNotEmpty({ message: 'State filter is required for searching blood banks.' })
-    @Length(2, 50, { message: 'City must be between 2 and 100 characters.' })
+    @Length(2, 50, { message: 'State must be between 2 and 100 characters.' })
     readonly state!: string;
 
     @ApiPropertyOptional({
@@ -30,7 +30,7 @@ export class SearchBloodBankDto {
     @IsOptional()
     @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
     @IsString()
-    @Length(2, 50, { message: 'City must be between 2 and 100 characters.' })
+    @Length(2, 50, { message: 'Sub-Division must be between 2 and 100 characters.' })
     readonly subDivision?: string;
 
     @ApiPropertyOptional({
@@ -40,6 +40,6 @@ export class SearchBloodBankDto {
     @IsOptional()
     @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
     @IsString()
-    @Length(2, 50, { message: 'City must be between 2 and 100 characters.' })
+    @Length(2, 50, { message: 'District must be between 2 and 100 characters.' })
     readonly district?: string;
 }
