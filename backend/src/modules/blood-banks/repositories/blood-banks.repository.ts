@@ -1,12 +1,38 @@
-import { Injectable } from "@nestjs/common";
-import { BaseRepository } from "../../../database/base.repository";
-import { BloodBank } from "../blood-banks.schema";
-import { InjectModel } from "@nestjs/mongoose";
-import { Model } from "mongoose";
+import { Injectable } from '@nestjs/common';
+import { BaseRepository } from '../../../database/base.repository';
+import { BloodBank } from '../blood-banks.schema';
+import { InjectModel } from '@nestjs/mongoose';
+import { FilterQuery, Model } from 'mongoose';
+import { SearchBloodBankDto } from '../dto/search-bloodBank.dto';
 
 @Injectable()
 export class BloodBanksRepository extends BaseRepository<BloodBank> {
-    constructor(@InjectModel(BloodBank.name) private readonly bloodBankModel: Model<BloodBank>) {
-        super(bloodBankModel);
+  constructor(
+    @InjectModel(BloodBank.name)
+    private readonly bloodBankModel: Model<BloodBank>,
+  ) {
+    super(bloodBankModel);
+  }
+
+  async searchByFilters(filters: SearchBloodBankDto): Promise<BloodBank[]> {
+    const query: FilterQuery<BloodBank> = {
+      isActive: true,
+      state: new RegExp(`^${filters.state.trim()}$`, 'i'),
+    };
+
+    if (filters.district) {
+      query.district = new RegExp(`^${filters.district.trim()}$`, 'i');
     }
+    if (filters.subDivision) {
+      query.district = new RegExp(`^${filters.subDivision.trim()}$`, 'i');
+    }
+    if (filters.city) {
+      query.district = new RegExp(`^${filters.city.trim()}$`, 'i');
+    }
+
+    return this.bloodBankModel
+      .find(query)
+      .select('-password -refreshTokenHash')
+      .exec();
+  }
 }

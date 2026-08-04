@@ -12,15 +12,15 @@ class InventoryItem {
 }
 const InventoryItemSchema = SchemaFactory.createForClass(InventoryItem);
 
-@Schema({ _id: false, versionKey: false })
-class GeoJSONPoint {
-  @Prop({ type: String, enum: ['Point'], required: true, default: 'Point' })
-  type!: string;
+// @Schema({ _id: false, versionKey: false })
+// class GeoJSONPoint {
+//   @Prop({ type: String, enum: ['Point'], required: true, default: 'Point' })
+//   type!: string;
 
-  @Prop({ type: [Number], required: true })
-  coordinates!: number[];
-}
-const GeoJSONPointSchema = SchemaFactory.createForClass(GeoJSONPoint);
+//   @Prop({ type: [Number], required: true })
+//   coordinates!: number[];
+// }
+// const GeoJSONPointSchema = SchemaFactory.createForClass(GeoJSONPoint);
 
 @Schema({ timestamps: true, versionKey: false })
 export class BloodBank extends Document {
@@ -43,23 +43,23 @@ export class BloodBank extends Document {
   @Prop({ required: true, trim: true })
   address!: string;
 
-  @Prop({ required: true, index: true })
+  @Prop({ required: true, index: true, trim: true })
   state!: string;
 
-  @Prop({ required: true, index: true })
+  @Prop({ required: true, index: true, trim: true })
   district!: string;
 
-  @Prop({ required: true, index: true })
+  @Prop({ required: true, index: true, trim: true })
   subDivision!: string;
 
-  @Prop({ required: true, index: true })
+  @Prop({ required: true, index: true, trim: true })
   city!: string;
 
-  @Prop({ required: true })
+  @Prop({ required: true, trim: true })
   pinCode!: string;
 
-  @Prop({ type: GeoJSONPointSchema, required: true, index: '2dsphere' })
-  location!: GeoJSONPoint;
+  // @Prop({ type: GeoJSONPointSchema, required: true, index: '2dsphere' })
+  // location!: GeoJSONPoint;
 
   @Prop({ default: false, index: true })
   emailVerified!: boolean;
@@ -89,7 +89,10 @@ export class BloodBank extends Document {
 export const BloodBankSchema = SchemaFactory.createForClass(BloodBank);
 
 // Compound Index for Administrative Region Searches
-BloodBankSchema.index({ state: 1, district: 1, subDivision: 1, city: 1 });
+BloodBankSchema.index({ isActive: 1, state: 1, district: 1, subDivision: 1, city: 1 });
+BloodBankSchema.index({ isActive: 1, state: 1, district: 1 });
+BloodBankSchema.index({ isActive: 1, state: 1, subDivision: 1 });
+BloodBankSchema.index({ isActive: 1, state: 1, city: 1 });
 
 // Compound Index for Regional Verification Filtering
 BloodBankSchema.index({ state: 1, city: 1, emailVerified: 1, isActive: 1 });

@@ -57,10 +57,10 @@ export class BloodBanksService {
             subDivision: registerBloodBankDto.subDivision,
             city: registerBloodBankDto.city,
             pinCode: registerBloodBankDto.pinCode,
-            location: {
-                type: 'Point',
-                coordinates: registerBloodBankDto.location.coordinates
-            },
+            // location: {
+            //     type: 'Point',
+            //     coordinates: registerBloodBankDto.location.coordinates
+            // },
             emailVerified: true,
             isActive: true
         });

@@ -92,7 +92,7 @@ export class RegisterBloodBankDto {
   })
   readonly pinCode!: string;;
 
-  @ValidateNested()
-  @Type(() => GeoJsonPointDto)
-  readonly location!: GeoJsonPointDto;
+  // @ValidateNested()
+  // @Type(() => GeoJsonPointDto)
+  // readonly location!: GeoJsonPointDto;
 }
