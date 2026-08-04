@@ -8,6 +8,7 @@ import { BloodBank } from './blood-banks.schema';
 import * as bcrypt from 'bcrypt';
 import { UpdateBloodBankDto } from './dto/update-blood-bank.dto';
 import { UpdateInventoryItemDto } from './dto/update-inventory-item.dto';
+import { SearchBloodBankDto } from './dto/search-bloodBank.dto';
 
 @Injectable()
 export class BloodBanksService {
@@ -115,5 +116,18 @@ export class BloodBanksService {
         }
 
         return updatedBank;
+    }
+
+    async searchBloodBanks(searchBloodBanksDto: SearchBloodBankDto): Promise<BloodBank[]> {
+        if(!searchBloodBanksDto.state || !searchBloodBanksDto.state.trim()) {
+            throw new BadRequestException('State parameter is required.');
+        }
+
+        return this.bloodBanksRepository.searchByFilters({
+            state: searchBloodBanksDto.state.trim(),
+            city: searchBloodBanksDto.city?.trim(),
+            subDivision: searchBloodBanksDto.subDivision?.trim(),
+            district: searchBloodBanksDto.district?.trim()
+        })
     }
 }
