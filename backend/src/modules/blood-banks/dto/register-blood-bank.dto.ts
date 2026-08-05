@@ -8,20 +8,8 @@ import {
   IsString,
   Length,
   Matches,
-  ValidateNested,
 } from 'class-validator';
-import { GeoJsonPointDto } from './geo-json-point.dto';
 import { REGEX_CONSTANTS } from '../../../common/constants/regex.constants';
-
-class LocationDto {
-  @ApiProperty({
-    example: [-118.2437, 34.0522],
-    description: '[Longitude, Latitude]',
-  })
-  @IsArray()
-  @IsNumber({}, { each: true })
-  readonly coordinates!: number[];
-}
 
 export class RegisterBloodBankDto {
   @ApiProperty({ example: 'Agartala Government Blood Bank' })
@@ -90,9 +78,5 @@ export class RegisterBloodBankDto {
   @Matches(REGEX_CONSTANTS.PINCODE, {
     message: 'Pincode must be exactly 6 numeric digits.',
   })
-  readonly pinCode!: string;;
-
-  // @ValidateNested()
-  // @Type(() => GeoJsonPointDto)
-  // readonly location!: GeoJsonPointDto;
+  readonly pinCode!: string;
 }

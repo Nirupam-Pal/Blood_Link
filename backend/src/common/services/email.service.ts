@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 
@@ -18,7 +22,8 @@ export class EmailService {
       },
     });
   }
-
+  // <p>Hello,</p>
+  // <p>Thank you for registering with BloodLink. Please use the following 6-digit One-Time Password (OTP) to complete your verification:</p>
   async sendOtpEmail(to: string, otp: string): Promise<void> {
     const mailOptions = {
       from: `"BloodLink Ecosystem" <${this.configService.get<string>('SMTP_USER')}>`,
@@ -42,11 +47,13 @@ export class EmailService {
     };
 
     try {
-        await this.transporter.sendMail(mailOptions);
-        this.logger.log(`Verification OTP sent successfully to ${to}`);
+      await this.transporter.sendMail(mailOptions);
+      this.logger.log(`Verification OTP sent successfully to ${to}`);
     } catch (error) {
-        this.logger.error(`Failed to send OTP email to ${to}`, error);
-        throw new InternalServerErrorException('Failed to dispatch verification email. Please try again later.')
+      this.logger.error(`Failed to send OTP email to ${to}`, error);
+      throw new InternalServerErrorException(
+        'Failed to dispatch verification email. Please try again later.',
+      );
     }
   }
 }

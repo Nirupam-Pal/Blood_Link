@@ -130,4 +130,49 @@ export class BloodBanksService {
             district: searchBloodBanksDto.district?.trim()
         })
     }
+
+    async updateProfile(
+        id: string,
+        updateDto: UpdateBloodBankDto
+    ): Promise<BloodBank> {
+        const existingBloodBank = await this.bloodBanksRepository.findById(id);
+
+        if(!existingBloodBank) {
+            throw new NotFoundException('Blood Bank account not found.');
+        }
+
+        if(updateDto.phoneNumber !== existingBloodBank.phoneNumber) {
+            const phoneExists = await this.bloodBanksRepository.findOne({
+                phoneNumber: updateDto.phoneNumber,
+                _id: { $ne: id },
+            });
+
+            if(phoneExists) {
+                throw new ConflictException('Phone number is already in use by another blood bank.');
+            }
+        }
+
+        if(updateDto.licenseNumber !== existingBloodBank.licenseNumber) {
+            const licenseExists = await this.bloodBanksRepository.findOne({
+                licenseNumber: updateDto.licenseNumber,
+                _id: { $ne: id },
+            })
+
+            if(licenseExists) {
+                throw new ConflictException('Another Blood Bank is already registered with this license number')
+            }
+        }
+
+        const updateBank = await this.bloodBanksRepository.update(id, {
+            $set: updateDto,
+        })
+
+        if(!updateBank) {
+            throw new NotFoundException('Failed to update Blood Bank profile');
+        }
+
+        return updateBank;
+    }
+
+    
 }
