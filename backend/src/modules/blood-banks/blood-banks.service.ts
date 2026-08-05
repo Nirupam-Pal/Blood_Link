@@ -174,5 +174,21 @@ export class BloodBanksService {
         return updateBank;
     }
 
-    
+    async deleteProfile(id: string): Promise<BloodBank> {
+        const existingBloodBank = await this.bloodBanksRepository.findById(id);
+
+        if(!existingBloodBank) {
+            throw new NotFoundException('Blood bank not found.');
+        }
+
+        const deletedBloodBank = await this.bloodBanksRepository.delete(id);
+
+        if(!deletedBloodBank) {
+            throw new NotFoundException('Blood bank not found.')
+        }
+
+        return deletedBloodBank;
+    }
+
+
 }
