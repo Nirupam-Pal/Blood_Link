@@ -1,6 +1,7 @@
 import { ApiPropertyOptional } from "@nestjs/swagger";
 import { Transform } from "class-transformer";
-import { IsNotEmpty, IsOptional, IsString, Length } from "class-validator";
+import { IsEnum, IsNotEmpty, IsOptional, IsString, Length } from "class-validator";
+import { BloodGroup } from "../../../common/enums/blood-group.enum";
 
 export class SearchDonorDto {
     @ApiPropertyOptional({
@@ -10,8 +11,17 @@ export class SearchDonorDto {
     @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
     @IsString()
     @IsNotEmpty({ message: 'State filter is required for searching donors' })
-    @Length(2, 50, { message: 'State must be between 2 to 100 characters.' })
+    @Length(2, 50, { message: 'State must be between 2 to 50 characters.' })
     readonly state!: string;
+
+    @ApiPropertyOptional({
+        example: 'A_POSITIVE',
+        enum: BloodGroup,
+        description: 'Blood group filter (optional)'
+    })
+    @IsOptional()
+    @IsEnum(BloodGroup, { message: 'Invalid blood group value.' })
+    readonly bloodGroup?: BloodGroup;
 
     @ApiPropertyOptional({
         example: 'West Tripura',

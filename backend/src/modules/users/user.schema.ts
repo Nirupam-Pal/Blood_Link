@@ -46,4 +46,28 @@ export class User extends Document {
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
-UserSchema.index({ state: 1, district: 1, subDivision: 1, city: 1  })
+UserSchema.index({
+  isActive: 1,
+  isDonor: 1,
+  state: 1,
+  bloodGroup: 1,
+  district: 1,
+  subDivision: 1,
+  city: 1,
+});
+
+UserSchema.index({
+  isActive: 1,
+  isDonor: 1,
+  state: 1,
+  bloodGroup: 1,
+  city: 1,
+});
+
+UserSchema.index({
+  isActive: 1,
+  isDonor: 1,
+  state: 1,
+  bloodGroup: 1,
+  subDivision: 1,
+});
