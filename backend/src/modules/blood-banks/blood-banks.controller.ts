@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { BloodBanksService } from './blood-banks.service';
 import { RegisterBloodBankDto } from './dto/register-blood-bank.dto';
@@ -11,6 +11,7 @@ import { Role } from '../../common/enums/role.enum';
 import { UpdateInventoryItemDto } from './dto/update-inventory-item.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { SearchBloodBankDto } from './dto/search-bloodBank.dto';
+import { UpdateBloodBankDto } from './dto/update-blood-bank.dto';
 
 @Controller('blood-banks')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -38,7 +39,7 @@ export class BloodBanksController {
         return this.bloodBanksService.getBloodBanks();
     }
 
-    @Get('me')
+    @Get('profile')
     async getBloodBank(
         @CurrentBloodBank() bloodBank: BloodBank
     ) {
@@ -79,6 +80,32 @@ export class BloodBanksController {
         return {
             message: `Inventory units updated successfully for blood group ${updateInventoryDto.bloodGroup}`,
             data
+        }
+    }
+
+    @Patch('profile')
+    @Roles(Role.BLOOD_BANK)
+    async updateProfile(
+        @CurrentBloodBank('id') bankId: string,
+        @Body() updateDto: UpdateBloodBankDto,
+    ) {
+        const data = await this.bloodBanksService.updateProfile(bankId, updateDto);
+
+        return {
+            message: 'Blood Bank profile updated successfully,',
+            data
+        };
+    }
+
+    @Delete('profile')
+    @Roles(Role.BLOOD_BANK)
+    async deleteProfile(
+        @CurrentBloodBank('id') bankId: string
+    ) {
+        await this.bloodBanksService.deleteProfile(bankId);
+
+        return {
+            message: 'Blood bank account deleted successfully'
         }
     }
 }
