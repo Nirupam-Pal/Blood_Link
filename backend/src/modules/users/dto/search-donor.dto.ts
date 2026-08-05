@@ -2,26 +2,25 @@ import { ApiPropertyOptional } from "@nestjs/swagger";
 import { Transform } from "class-transformer";
 import { IsNotEmpty, IsOptional, IsString, Length } from "class-validator";
 
-export class SearchBloodBankDto {
+export class SearchDonorDto {
     @ApiPropertyOptional({
         example: 'Tripura',
         description: 'State name (Mandatory)'
     })
     @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
     @IsString()
-    @IsNotEmpty({ message: 'State filter is required for searching blood banks.' })
-    @Length(2, 50, { message: 'State must be between 2 and 100 characters.' })
+    @IsNotEmpty({ message: 'State filter is required for searching donors' })
+    @Length(2, 50, { message: 'State must be between 2 to 100 characters.' })
     readonly state!: string;
 
     @ApiPropertyOptional({
-        example: 'Agartala',
-        description: 'City name (optional)'
+        example: 'West Tripura',
+        description: 'District name (optional)'
     })
-    @IsOptional()
     @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
     @IsString()
-    @Length(2, 50, { message: 'City must be between 2 to 50 characters.' })
-    readonly city?: string;
+    @Length(2, 50, { message: 'District must be between 2 to 50 characters.' })
+    readonly district?: string;
 
     @ApiPropertyOptional({
         example: 'Sadar',
@@ -32,14 +31,14 @@ export class SearchBloodBankDto {
     @IsString()
     @Length(2, 50, { message: 'Sub-Division must be between 2 to 50 characters.' })
     readonly subDivision?: string;
-
+    
     @ApiPropertyOptional({
-        example: 'West Tripura',
-        description: 'District name (optional)'
+        example: 'Agartala',
+        description: 'City name (optional)'
     })
     @IsOptional()
     @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
     @IsString()
-    @Length(2, 50, { message: 'District must be between 2 to 50 characters.' })
-    readonly district?: string;
+    @Length(2, 50, { message: 'City must be between 2 to 50 characters.' })
+    readonly city?: string;
 }

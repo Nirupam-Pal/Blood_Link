@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { UsersRepository } from './repositories/users.repository';
 import { RegisterUserDto } from './dto/register-user.dto';
 import { Role } from '../../common/enums/role.enum';
@@ -6,6 +6,7 @@ import * as bcrypt from 'bcrypt';
 import { User } from './user.schema';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ClientSession } from 'mongoose';
+import { SearchDonorDto } from './dto/search-donor.dto';
 
 @Injectable()
 export class UsersService {
@@ -60,6 +61,19 @@ export class UsersService {
     }
 
     return user;
+  }
+
+  async searchUser(searchDDonorDto: SearchDonorDto): Promise<User[]> {
+    if(!searchDDonorDto.state || !searchDDonorDto.state.trim()) {
+      throw new BadRequestException('State parameter is required')
+    }
+
+    return this.userRepository.searchByFilters({
+      state: searchDDonorDto.state.trim(),
+      city: searchDDonorDto.city?.trim(),
+      subDivision: searchDDonorDto.subDivision?.trim(),
+      district: searchDDonorDto.district?.trim()
+    })
   }
 
   async updateUser(id: string, updateUserDto: UpdateUserDto): Promise<User> {
