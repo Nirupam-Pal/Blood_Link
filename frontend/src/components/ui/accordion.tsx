@@ -3,14 +3,20 @@ import { Accordion as AccordionPrimitive } from "@base-ui/react/accordion"
 import { cn } from "@/lib/utils"
 import { ChevronDownIcon, ChevronUpIcon } from "lucide-react"
 
-function Accordion({ className, ...props }: AccordionPrimitive.Root.Props) {
+function Accordion({
+  className,
+  collapsible, // Extract collapsible so it's not forwarded directly to the DOM node
+  ...props
+}: React.ComponentProps<typeof AccordionPrimitive.Root> & { collapsible?: boolean }) {
   return (
     <AccordionPrimitive.Root
       data-slot="accordion"
       className={cn("flex w-full flex-col", className)}
+      // Pass collapsible back explicitly if using single mode, or omit it if undefined
+      {...(collapsible !== undefined ? { collapsible } : {})}
       {...props}
     />
-  )
+  );
 }
 
 function AccordionItem({ className, ...props }: AccordionPrimitive.Item.Props) {
