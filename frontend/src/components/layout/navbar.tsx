@@ -22,21 +22,20 @@ export function Navbar() {
     <header className="fixed top-0 left-0 right-0 z-50 transition-all duration-300">
       {/* Scroll Progress Indicator */}
       <motion.div
-        className="h-1 bg-gradient-to-r from-crimson-600 to-rose-400 origin-left"
+        className="h-1 bg-linear-to-r from-crimson-600 to-rose-400 origin-left"
         style={{ scaleX }}
       />
 
       <nav
-        className={`mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 transition-all duration-300 ${
-          isScrolled
+        className={`mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 transition-all duration-300 ${isScrolled
             ? 'mt-3 py-3 rounded-2xl bg-slate-900/80 backdrop-blur-md border border-slate-800/80 shadow-2xl shadow-slate-950/50'
             : 'py-5 bg-transparent'
-        }`}
+          }`}
       >
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-crimson-600 to-rose-500 flex items-center justify-center shadow-lg shadow-crimson-600/30 group-hover:scale-105 transition-transform">
+            <div className="h-10 w-10 rounded-xl bg-linear-to-tr from-crimson-600 to-rose-500 flex items-center justify-center shadow-lg shadow-crimson-600/30 group-hover:scale-105 transition-transform">
               <HeartHandshake className="h-5 w-5 text-white" />
             </div>
             <span className="text-xl font-bold tracking-tight text-white">
@@ -54,12 +53,12 @@ export function Navbar() {
 
           {/* Action Buttons */}
           <div className="hidden md:flex items-center gap-3">
-            <Button variant="ghost" className="text-slate-300 hover:text-white hover:bg-slate-800/60 gap-2">
+            <Button variant="ghost" className="text-slate-300 h-10 hover:text-white hover:bg-slate-800/60 gap-2">
               <Search className="h-4 w-4" />
               Find Blood
             </Button>
-            <Button className="bg-gradient-to-r from-crimson-600 to-rose-600 hover:from-crimson-500 hover:to-rose-500 text-white shadow-lg shadow-crimson-600/25 rounded-xl gap-2 font-medium">
-              <UserPlus className="h-4 w-4" />
+            <Button className="relative h-10 px-5 rounded-lg bg-linear-to-r from-red-950 via-rose-800 to-rose-700 text-white font-medium gap-2 transition-all duration-300 hover:scale-[1.03] shadow-md hover:shadow-xl hover:shadow-rose-600/">
+              <UserPlus className="h-4 w-4 transition-transform duration-300 group-hover:scale-110" />
               Become a Donor
             </Button>
           </div>

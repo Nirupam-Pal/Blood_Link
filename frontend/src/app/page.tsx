@@ -7,12 +7,9 @@ import {
   ShieldCheck,
   Activity,
   Clock,
-  Users,
-  Building2,
   MapPin,
   CheckCircle2,
   XCircle,
-  ArrowRight,
   Bell,
   Smartphone,
   UserCheck,
@@ -45,7 +42,7 @@ export default function LandingPage() {
       {/* HERO SECTION */}
       <section className="relative pt-32 pb-20 md:pt-44 md:pb-32 overflow-hidden">
         {/* Animated Background Gradients */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-crimson-600/15 rounded-full blur-[140px] pointer-events-none animate-pulse-slow" />
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-200 h-200 bg-crimson-600/15 rounded-full blur-[140px] pointer-events-none animate-pulse-slow" />
         <div className="absolute top-1/3 right-10 w-[350px] h-[350px] bg-rose-500/10 rounded-full blur-[100px] pointer-events-none" />
 
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
@@ -65,7 +62,7 @@ export default function LandingPage() {
 
               <motion.h1 variants={fadeInUp} className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-white leading-[1.1]">
                 Every Drop Counts. <br />
-                <span className="bg-gradient-to-r from-crimson-500 via-rose-400 to-rose-200 bg-clip-text text-transparent">
+                <span className="bg-linear-to-r  from-rose-900 to-rose-200 bg-clip-text text-transparent">
                   Connecting Lives
                 </span> In Seconds.
               </motion.h1>
@@ -76,7 +73,7 @@ export default function LandingPage() {
 
               {/* CTAs */}
               <motion.div variants={fadeInUp} className="mt-8 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                <Button size="lg" className="h-13 px-8 rounded-xl bg-gradient-to-r from-crimson-600 to-rose-600 hover:from-crimson-500 hover:to-rose-500 text-white font-semibold shadow-xl shadow-crimson-600/30 text-base">
+                <Button size="lg" className="h-13 px-8 rounded-xl bg-linear-to-r from-red-950 to-rose-600 hover:from-crimson-500 hover:to-rose-500 text-white font-semibold shadow-xl shadow-crimson-600/30 text-base">
                   <Heart className="mr-2 h-5 w-5 fill-white" />
                   Become a Donor
                 </Button>
@@ -319,7 +316,7 @@ export default function LandingPage() {
 
       {/* FINAL CALL TO ACTION */}
       <section className="py-24 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-crimson-900/40 via-slate-950 to-slate-950 pointer-events-none" />
+        <div className="absolute inset-0 bg-linear-to-br from-crimson-900/40 via-slate-950 to-slate-950 pointer-events-none" />
         <div className="mx-auto max-w-5xl px-4 text-center relative z-10">
           <h2 className="text-4xl sm:text-6xl font-extrabold text-white tracking-tight">
             Someone Needs Blood Today. <br /> You Can Make The Difference.

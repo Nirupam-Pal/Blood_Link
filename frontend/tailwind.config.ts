@@ -21,7 +21,9 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: ['var(--font-inter)', 'sans-serif'],
+        sans: ['var(--font-geist-sans)', 'var(--font-jakarta)', 'sans-serif'],
+        heading: ['var(--font-jakarta)', 'sans-serif'],
+        mono: ['var(--font-geist-mono)', 'monospace'],
       },
       animation: {
         'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
