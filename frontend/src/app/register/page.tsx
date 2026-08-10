@@ -13,7 +13,7 @@ export default function RegisterSelectionPage() {
       {/* Header */}
       <header className="flex items-center justify-between max-w-7xl w-full mx-auto">
         <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-red-600 to-rose-500 flex items-center justify-center shadow-lg shadow-red-600/30 group-hover:scale-105 transition-transform">
+          <div className="h-10 w-10 rounded-xl bg-linear-to-tr from-red-600 to-rose-500 flex items-center justify-center shadow-lg shadow-red-600/30 group-hover:scale-105 transition-transform">
             <HeartHandshake className="h-5 w-5 text-white" />
           </div>
           <span className="text-xl font-bold tracking-tight text-foreground">
@@ -79,7 +79,7 @@ export default function RegisterSelectionPage() {
               </div>
 
               <Link href="/register/user">
-                <Button className="w-full h-11 bg-gradient-to-r from-red-700 to-rose-600 hover:from-red-800 hover:to-rose-700 text-white font-medium gap-2">
+                <Button className="w-full h-11 bg-linear-to-r from-red-700 to-rose-600 hover:from-red-800 hover:to-rose-700 text-white font-medium gap-2">
                   Continue as Individual
                   <ArrowRight className="h-4 w-4" />
                 </Button>

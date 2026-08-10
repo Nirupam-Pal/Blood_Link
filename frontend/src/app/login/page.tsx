@@ -27,7 +27,7 @@ function LoginFormContent() {
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/auth/login`,
+        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/auth/login`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -143,7 +143,7 @@ function LoginFormContent() {
         <Button
           type="submit"
           disabled={loading}
-          className="w-full h-11 bg-gradient-to-r from-red-700 via-crimson-600 to-rose-600 hover:from-red-800 hover:to-rose-700 text-white font-semibold shadow-lg shadow-crimson-600/25 transition-all"
+          className="w-full h-11 bg-linear-to-r from-red-700 via-crimson-600 to-rose-600 hover:from-red-800 hover:to-rose-700 text-white font-semibold shadow-lg shadow-crimson-600/25 transition-all"
         >
           {loading ? (
             <Loader2 className="h-5 w-5 animate-spin" />
@@ -172,7 +172,7 @@ export default function LoginPage() {
       {/* Top Header */}
       <header className="flex items-center justify-between max-w-7xl w-full mx-auto">
         <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-crimson-600 to-rose-500 flex items-center justify-center shadow-lg shadow-crimson-600/30 group-hover:scale-105 transition-transform">
+          <div className="h-10 w-10 rounded-xl bg-linear-to-tr from-crimson-600 to-rose-500 flex items-center justify-center shadow-lg shadow-crimson-600/30 group-hover:scale-105 transition-transform">
             <HeartHandshake className="h-5 w-5 text-white" />
           </div>
           <span className="text-xl font-bold tracking-tight text-foreground">

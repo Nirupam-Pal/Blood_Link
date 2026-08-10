@@ -17,16 +17,13 @@ export default function RegisterUserPage() {
     fullName: '',
     email: '',
     password: '',
-    phoneNumber: '',
-    bloodGroup: 'O_POSITIVE',
     gender: 'MALE',
-    age: 25,
     state: '',
     district: '',
     subDivision: '',
     city: '',
     pinCode: '',
-    isDonor: true,
+    isDonor: false,
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -38,12 +35,11 @@ export default function RegisterUserPage() {
     setLoading(true);
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/auth/register/user`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/users/register-user`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...formData,
-          age: Number(formData.age),
+          ...formData
         }),
       });
 
@@ -107,24 +103,9 @@ export default function RegisterUserPage() {
                   <label className="text-xs font-medium text-muted-foreground mb-1 block">Password</label>
                   <Input type="password" name="password" placeholder="••••••••" required value={formData.password} onChange={handleChange} />
                 </div>
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground mb-1 block">Phone Number (10 Digits)</label>
-                  <Input name="phoneNumber" placeholder="9876543210" required value={formData.phoneNumber} onChange={handleChange} />
-                </div>
               </div>
 
               <div className="grid sm:grid-cols-3 gap-4">
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground mb-1 block">Blood Group</label>
-                  <Select value={formData.bloodGroup} onValueChange={(val) => setFormData({ ...formData, bloodGroup: val ?? formData.bloodGroup })}>
-                    <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
-                    <SelectContent>
-                      {['A_POSITIVE', 'A_NEGATIVE', 'B_POSITIVE', 'B_NEGATIVE', 'O_POSITIVE', 'O_NEGATIVE', 'AB_POSITIVE', 'AB_NEGATIVE'].map((bg) => (
-                        <SelectItem key={bg} value={bg}>{bg.replace('_', ' ')}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
 
                 <div>
                   <label className="text-xs font-medium text-muted-foreground mb-1 block">Gender</label>
@@ -136,11 +117,6 @@ export default function RegisterUserPage() {
                       <SelectItem value="OTHER">Other</SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
-
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground mb-1 block">Age</label>
-                  <Input type="number" name="age" min={18} max={65} required value={formData.age} onChange={handleChange} />
                 </div>
               </div>
             </div>
