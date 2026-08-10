@@ -116,7 +116,7 @@ export default function RegisterUserPage() {
               <div className="grid sm:grid-cols-3 gap-4">
                 <div>
                   <label className="text-xs font-medium text-muted-foreground mb-1 block">Blood Group</label>
-                  <Select value={formData.bloodGroup} onValueChange={(val) => setFormData({ ...formData, bloodGroup: val })}>
+                  <Select value={formData.bloodGroup} onValueChange={(val) => setFormData({ ...formData, bloodGroup: val ?? formData.bloodGroup })}>
                     <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
                     <SelectContent>
                       {['A_POSITIVE', 'A_NEGATIVE', 'B_POSITIVE', 'B_NEGATIVE', 'O_POSITIVE', 'O_NEGATIVE', 'AB_POSITIVE', 'AB_NEGATIVE'].map((bg) => (
@@ -128,7 +128,7 @@ export default function RegisterUserPage() {
 
                 <div>
                   <label className="text-xs font-medium text-muted-foreground mb-1 block">Gender</label>
-                  <Select value={formData.gender} onValueChange={(val) => setFormData({ ...formData, gender: val })}>
+                  <Select value={formData.gender} onValueChange={(val) => setFormData({ ...formData, gender: val ?? formData.gender })}>
                     <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="MALE">Male</SelectItem>
@@ -182,7 +182,7 @@ export default function RegisterUserPage() {
             <Button 
               type="submit" 
               disabled={loading}
-              className="w-full h-12 bg-gradient-to-r from-red-700 via-crimson-600 to-rose-600 hover:from-red-800 hover:to-rose-700 text-white font-semibold text-base shadow-lg shadow-red-600/25"
+              className="w-full h-12 bg-linear-to-r from-red-700 via-crimson-600 to-rose-600 hover:from-red-800 hover:to-rose-700 text-white font-semibold text-base shadow-lg shadow-red-600/25"
             >
               {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Complete Registration'}
             </Button>

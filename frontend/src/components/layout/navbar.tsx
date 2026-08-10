@@ -23,7 +23,7 @@ export function Navbar() {
     <header className="fixed top-0 left-0 right-0 z-50 transition-all duration-300">
       {/* Scroll Progress Indicator */}
       <motion.div
-        className="h-1 bg-gradient-to-r from-red-600 to-rose-400 origin-left"
+        className="h-1 bg-linear-to-r from-red-600 to-rose-400 origin-left"
         style={{ scaleX }}
       />
 
@@ -37,7 +37,7 @@ export function Navbar() {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-red-600 to-rose-500 flex items-center justify-center shadow-lg shadow-red-600/30 group-hover:scale-105 transition-transform">
+            <div className="h-10 w-10 rounded-xl bg-linear-to-tr from-red-600 to-rose-500 flex items-center justify-center shadow-lg shadow-red-600/30 group-hover:scale-105 transition-transform">
               <HeartHandshake className="h-5 w-5 text-white" />
             </div>
             <span className="text-xl font-bold tracking-tight text-foreground">
@@ -65,7 +65,7 @@ export function Navbar() {
             </Link>
 
             <Link href="/register">
-              <Button className="h-10 px-5 rounded-lg bg-gradient-to-r from-red-950 via-rose-800 to-rose-700 hover:from-rose-800 hover:to-red-900 text-white font-medium text-md gap-2 transition-all duration-300 hover:scale-[1.03] shadow-md hover:shadow-xl active:scale-[0.98] border-none">
+              <Button className="h-10 px-5 rounded-lg bg-linear-to-r from-red-950 via-rose-800 to-rose-700 hover:from-rose-800 hover:to-red-900 text-white font-medium text-md gap-2 transition-all duration-300 hover:scale-[1.03] shadow-md hover:shadow-xl active:scale-[0.98] border-none">
                 <UserPlus className="h-4 w-4" />
                 Register
               </Button>
