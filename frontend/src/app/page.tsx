@@ -274,7 +274,7 @@ export default function LandingPage() {
             <h2 className="text-3xl sm:text-4xl font-bold text-foreground">Frequently Asked Questions</h2>
           </div>
 
-          <Accordion collapsible={true} className="w-full space-y-4">
+          <Accordion className="w-full space-y-4">
             {[
               {
                 q: 'Is BloodLink completely free to use?',

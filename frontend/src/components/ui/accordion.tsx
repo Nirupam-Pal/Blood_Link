@@ -5,15 +5,12 @@ import { ChevronDownIcon, ChevronUpIcon } from "lucide-react"
 
 function Accordion({
   className,
-  collapsible, // Extract collapsible so it's not forwarded directly to the DOM node
   ...props
-}: React.ComponentProps<typeof AccordionPrimitive.Root> & { collapsible?: boolean }) {
+}: React.ComponentProps<typeof AccordionPrimitive.Root>) {
   return (
     <AccordionPrimitive.Root
       data-slot="accordion"
       className={cn("flex w-full flex-col", className)}
-      // Pass collapsible back explicitly if using single mode, or omit it if undefined
-      {...(collapsible !== undefined ? { collapsible } : {})}
       {...props}
     />
   );
