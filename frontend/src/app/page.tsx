@@ -58,14 +58,14 @@ export default function LandingPage() {
                 Real-Time Emergency Blood Ecosystem
               </motion.div>
 
-              <motion.h1 variants={fadeInUp} className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight text-foreground leading-[1.1]">
+              <motion.h1 variants={fadeInUp} className="text-4xl sm:text-6xl lg:text-7xl font-semibold tracking-[0.02em] text-foreground leading-[1.05] [text-wrap:balance]">
                 Every Drop Counts. <br />
-                <span className="bg-linear-to-r from-crimson-600 via-rose-500 to-rose-400 bg-clip-text text-transparent">
+                <span className="bg-linear-to-r from-red-950 via-rose-500 to-rose-400 bg-clip-text text-transparent">
                   Connecting Lives
                 </span> In Seconds.
               </motion.h1>
 
-              <motion.p variants={fadeInUp} className="mt-6 text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto lg:mx-0 font-normal leading-relaxed">
+              <motion.p variants={fadeInUp} className="mt-6 text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto lg:mx-0 font-normal leading-relaxed tracking-[0.01em]">
                 BloodLink bridges the critical gap between donors, patients, and blood banks using intelligent real-time matching. Reliable, fast, and accessible 24/7.
               </motion.p>
 
@@ -185,8 +185,8 @@ export default function LandingPage() {
       <section id="how-it-works" className="py-24 relative">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2 className="text-xs font-bold uppercase tracking-wider text-crimson-600 dark:text-crimson-400 mb-3">Seamless Workflow</h2>
-            <p className="text-3xl sm:text-5xl font-bold text-foreground">How BloodLink Saves Lives</p>
+            <h2 className="text-xs font-semibold uppercase tracking-[0.3em] text-crimson-600 dark:text-crimson-400 mb-3">Seamless Workflow</h2>
+            <p className="text-3xl sm:text-5xl font-semibold text-foreground tracking-[0.01em] [text-wrap:balance]">How BloodLink Saves Lives</p>
           </div>
 
           <div className="grid md:grid-cols-4 gap-8">
@@ -211,8 +211,8 @@ export default function LandingPage() {
       <section id="features" className="py-24 bg-muted/20 border-t border-border">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2 className="text-xs font-bold uppercase tracking-wider text-crimson-600 dark:text-crimson-400 mb-3">Enterprise Capability</h2>
-            <p className="text-3xl sm:text-5xl font-bold text-foreground">Built For Speed & Reliability</p>
+            <h2 className="text-xs font-semibold uppercase tracking-[0.3em] text-crimson-600 dark:text-crimson-400 mb-3">Enterprise Capability</h2>
+            <p className="text-3xl sm:text-5xl font-semibold text-foreground tracking-[0.01em] [text-wrap:balance]">Built For Speed & Reliability</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
@@ -238,7 +238,7 @@ export default function LandingPage() {
       <section id="why-choose" className="py-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-16">
-            <p className="text-3xl sm:text-5xl font-bold text-foreground">Traditional Methods vs BloodLink</p>
+            <p className="text-3xl sm:text-5xl font-semibold text-foreground tracking-[0.01em] [text-wrap:balance]">Traditional Methods vs BloodLink</p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-8">
