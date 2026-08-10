@@ -58,7 +58,7 @@ export default function LandingPage() {
                 Real-Time Emergency Blood Ecosystem
               </motion.div>
 
-              <motion.h1 variants={fadeInUp} className="text-4xl sm:text-6xl lg:text-7xl font-semibold tracking-[0.02em] text-foreground leading-[1.05] [text-wrap:balance]">
+              <motion.h1 variants={fadeInUp} className="text-4xl sm:text-6xl lg:text-7xl font-semibold tracking-[0.02em] text-foreground leading-[1.05] text-balance">
                 Every Drop Counts. <br />
                 <span className="bg-linear-to-r from-red-950 via-rose-500 to-rose-400 bg-clip-text text-transparent">
                   Connecting Lives
@@ -186,7 +186,7 @@ export default function LandingPage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <h2 className="text-xs font-semibold uppercase tracking-[0.3em] text-crimson-600 dark:text-crimson-400 mb-3">Seamless Workflow</h2>
-            <p className="text-3xl sm:text-5xl font-semibold text-foreground tracking-[0.01em] [text-wrap:balance]">How BloodLink Saves Lives</p>
+            <p className="text-3xl sm:text-5xl font-semibold text-foreground tracking-[0.01em] text-balance">How BloodLink Saves Lives</p>
           </div>
 
           <div className="grid md:grid-cols-4 gap-8">
@@ -212,7 +212,7 @@ export default function LandingPage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <h2 className="text-xs font-semibold uppercase tracking-[0.3em] text-crimson-600 dark:text-crimson-400 mb-3">Enterprise Capability</h2>
-            <p className="text-3xl sm:text-5xl font-semibold text-foreground tracking-[0.01em] [text-wrap:balance]">Built For Speed & Reliability</p>
+            <p className="text-3xl sm:text-5xl font-semibold text-foreground tracking-[0.01em] text-balance">Built For Speed & Reliability</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
@@ -238,7 +238,7 @@ export default function LandingPage() {
       <section id="why-choose" className="py-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-16">
-            <p className="text-3xl sm:text-5xl font-semibold text-foreground tracking-[0.01em] [text-wrap:balance]">Traditional Methods vs BloodLink</p>
+            <p className="text-3xl sm:text-5xl font-semibold text-foreground tracking-[0.01em] text-balance">Traditional Methods vs BloodLink</p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-8">
