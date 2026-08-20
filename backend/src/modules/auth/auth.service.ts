@@ -154,4 +154,95 @@ export class AuthService {
       message: 'Email verified succesfully.'
     }
   }
+
+  async validateAccountById(id: string, role?: string) {
+    let account: any = null;
+
+    if(role === 'BLOOD_BANK') {
+      account = await this.bloodBankRepository.findOne(
+        { _id: id },
+        '+refreshTokenHash',
+      );
+      if (account) return { account, role: 'BLOOD_BANK' };
+    } else {
+      account = await this.usersRepository.findOne(
+        { _id: id },
+        '+refreshTokenHash',
+      );
+
+      if (account) return { account, role: account.role || 'USER' };
+    }
+
+    account = await this.usersRepository.findOne({ _id: id }, '+refreshTokenHash');
+    if (account) return { account, role: account.role || 'USER' };
+
+    account = await this.bloodBankRepository.findOne({ _id: id }, '+refreshTokenHash');
+    if (account) return { account, role: 'BLOOD_BANK' };
+
+    throw new UnauthorizedException('Account not found');
+  }
+
+  async refreshToken(refreshToken: string) {
+    try{
+      const payload = this.jwtService.verify(refreshToken, {
+        secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
+      });
+
+      const { account, role } = await this.validateAccountById(
+        payload.sub,
+        payload.role,
+      );
+
+      if(!account.refreshTokenHash) {
+        throw new UnauthorizedException('Access Denied: No active session');
+      }
+
+      const isRefreshTokenValid = await bcrypt.compare(
+        refreshToken,
+        account.refreshTokenHash,
+      )
+
+      if(!isRefreshTokenValid) {
+        throw new UnauthorizedException('Access Denied: Invalid refresh token');
+      }
+
+      const newPayLoad = {
+        sub: account._id || account.id,
+        email: account.email,
+        role
+      };
+
+      const newAccessToken = await this.jwtService.signAsync(newPayLoad);
+
+      const newRefreshToken = await this.jwtService.signAsync(newPayLoad, {
+        secret: this.configService.getOrThrow('JWT_REFRESH_SECRET'),
+        expiresIn: this.configService.getOrThrow('JWT_REFRESH_EXPIRES_IN'),
+      });
+
+      const refreshHash = await bcrypt.hash(newRefreshToken, 12);
+
+      if(role === 'BLOOD_BANK') {
+        await this.bloodBankRepository.update(account._id || account.id, {
+          refreshTokenHash: refreshHash,
+        });
+      } else {
+        await this.usersRepository.update(account._id || account.id, {
+          refreshTokenHash: refreshHash,
+        });
+      }
+
+      return {
+        accessToken: newAccessToken,
+        refreshToken: newRefreshToken,
+        user: {
+          id: account.id || account._id,
+          fullname: account.fullName || account.bloodBankName,
+          email: account.email,
+          role,
+        },
+      };
+    } catch (error) {
+      throw new UnauthorizedException('Invalid or expired refresh token');
+    }
+  }
 }

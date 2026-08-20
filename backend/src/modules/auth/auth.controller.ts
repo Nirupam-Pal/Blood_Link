@@ -4,6 +4,7 @@ import { LoginDto } from './dto/login.dto';
 import { SendOtpDto } from './dto/send-otp.dto';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -28,6 +29,12 @@ export class AuthController {
     @ApiResponse({ status: 200, description: 'OTP verified successfully.' })
     async verifyOtp(@Body() verifyOtpDto: VerifyOtpDto) {
         return this.authService.verifyOtp(verifyOtpDto)
+    }
+
+    @Post('refresh')
+    @HttpCode(HttpStatus.OK)
+    async refreshToken(@Body() refreshTokenDto : RefreshTokenDto) {
+        return this.authService.refreshToken(refreshTokenDto.refreshToken);
     }
 
 }

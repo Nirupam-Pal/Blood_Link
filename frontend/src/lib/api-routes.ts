@@ -5,6 +5,7 @@ export const API_ROUTES = {
         LOGIN: `${API_BASE_URL}/auth/login`,
         REGISTER: `${API_BASE_URL}/users/register-user`,
         REGISTER_BLOOD_BANK: `${API_BASE_URL}/blood-banks/register`,
+        REFRESH: `${API_BASE_URL}/auth/refresh`,
         ME: `${API_BASE_URL}/users/me`
     }
 }
