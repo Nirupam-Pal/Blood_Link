@@ -30,31 +30,31 @@ export default function RegisterUserPage() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+ const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setLoading(true);
 
-    try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/users/register-user`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData
-        }),
-      });
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/auth/register/user`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ...formData
+      }),
+    });
 
-      if (res.ok) {
-        router.push('/login?registered=true');
-      } else {
-        const error = await res.json();
-        alert(error.message || 'Registration failed');
-      }
-    } catch {
-      alert('Could not connect to backend server.');
-    } finally {
-      setLoading(false);
+    if (res.ok) {
+      router.push('/login?registered=true');
+    } else {
+      const error = await res.json();
+      alert(error.message || 'Registration failed');
     }
-  };
+  } catch {
+    alert('Could not connect to backend server.');
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen bg-background text-foreground py-12 px-4 sm:px-6 lg:px-8">
