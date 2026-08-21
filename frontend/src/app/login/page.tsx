@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { useAuthStore } from '@/stores/auth.store';
 
 function LoginFormContent() {
   const router = useRouter();
@@ -18,60 +19,29 @@ function LoginFormContent() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
+
+  // Zustand Selective Subscriptions
+  const login = useAuthStore((state) => state.login);
+  const storeError = useAuthStore((state) => state.error);
+  const clearError = useAuthStore((state) => state.clearError);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setErrorMessage('');
+    clearError();
 
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/auth/login`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password }),
-        }
-      );
+      const user = await login({ email, password });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Invalid email or password.');
-      }
-
-      // Store Auth Tokens
-      if (data.accessToken) {
-        localStorage.setItem('accessToken', data.accessToken);
-        if (data.refreshToken) {
-          localStorage.setItem('refreshToken', data.refreshToken);
-        }
-
-        // Set access token in cookies for Next.js Middleware Edge Checks
-        document.cookie = `accessToken=${data.accessToken}; path=/; max-age=86400; SameSite=Lax`;
-
-        // Store user details if returned by backend
-        if (data.user) {
-          localStorage.setItem('user', JSON.stringify(data.user));
-        }
-      }
-
-      // Route based on user role
-      const userRole = data.user?.role || data.role;
-      if (userRole === 'BLOOD_BANK') {
+      if (user.role === 'BLOOD_BANK') {
         router.push('/dashboard/blood-bank');
-      } else if (userRole === 'ADMIN') {
+      } else if (user.role === 'ADMIN') {
         router.push('/dashboard/admin');
       } else {
         router.push('/dashboard/donor');
       }
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        setErrorMessage(err.message);
-      } else {
-        setErrorMessage('An unexpected error occurred. Please try again.');
-      }
+    } catch {
+      // Error handled by store
     } finally {
       setLoading(false);
     }
@@ -79,7 +49,6 @@ function LoginFormContent() {
 
   return (
     <Card className="p-6 sm:p-8 bg-card border-border shadow-2xl rounded-2xl">
-      {/* Registration Success Banner */}
       {isJustRegistered && (
         <motion.div
           initial={{ opacity: 0, y: -10 }}
@@ -91,15 +60,14 @@ function LoginFormContent() {
         </motion.div>
       )}
 
-      {/* Error Alert */}
-      {errorMessage && (
+      {storeError && (
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           className="mb-6 p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-sm flex items-center gap-3"
         >
           <AlertCircle className="h-5 w-5 shrink-0" />
-          <span>{errorMessage}</span>
+          <span>{storeError}</span>
         </motion.div>
       )}
 
@@ -143,7 +111,7 @@ function LoginFormContent() {
         <Button
           type="submit"
           disabled={loading}
-          className="w-full h-11 bg-linear-to-r from-red-700 via-crimson-600 to-rose-600 hover:from-red-800 hover:to-rose-700 text-white font-semibold shadow-lg shadow-crimson-600/25 transition-all"
+          className="w-full h-11 bg-linear-to-r from-red-700 via-crimson-600 to-rose-600 hover:from-red-800 hover:to-rose-700 text-white font-semibold shadow-lg shadow-crimson-600/25 transition-all border-none"
         >
           {loading ? (
             <Loader2 className="h-5 w-5 animate-spin" />
@@ -169,7 +137,6 @@ function LoginFormContent() {
 export default function LoginPage() {
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col justify-between p-4 sm:p-6 lg:p-8">
-      {/* Top Header */}
       <header className="flex items-center justify-between max-w-7xl w-full mx-auto">
         <Link href="/" className="flex items-center gap-2.5 group">
           <div className="h-10 w-10 rounded-xl bg-linear-to-tr from-crimson-600 to-rose-500 flex items-center justify-center shadow-lg shadow-crimson-600/30 group-hover:scale-105 transition-transform">
@@ -179,11 +146,9 @@ export default function LoginPage() {
             Blood<span className="text-crimson-500">Link</span>
           </span>
         </Link>
-
         <ThemeToggle />
       </header>
 
-      {/* Main Login Box */}
       <main className="max-w-md w-full mx-auto my-12">
         <Link
           href="/"
@@ -205,7 +170,6 @@ export default function LoginPage() {
         </Suspense>
       </main>
 
-      {/* Footer */}
       <footer className="text-center text-xs text-muted-foreground py-4">
         © 2026 BloodLink Ecosystem. All rights reserved.
       </footer>
