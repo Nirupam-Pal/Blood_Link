@@ -1,5 +1,5 @@
 import { authService } from "@/lib/services/auth-service";
-import { LoginDto, RegisterUserDto, User } from "@/types/auth.types";
+import { LoginDto, RegisterDonorDto, RegisterDonorResponse, RegisterUserDto, User } from "@/types/auth.types";
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 
@@ -15,6 +15,7 @@ interface AuthState {
     // Actions
     initialize: () => Promise<void>;
     registerUser: (data: RegisterUserDto) => Promise<User>;
+    registerAsDonor: (data: RegisterDonorDto) => Promise<RegisterDonorResponse>;
     login: (credentials: LoginDto) => Promise<User>;
     logout: () => void;
     setUser: (user: User | null) => void;
@@ -23,7 +24,7 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>()(
     devtools(
-        (set) => ({
+        (set, get) => ({
             user: null,
             status: 'idle',
             isInitializing: true,
@@ -71,6 +72,29 @@ export const useAuthStore = create<AuthState>()(
                     return newUser;
                 } catch (err: unknown) {
                     const message = err instanceof Error ? err.message : 'Registration failed';
+                    set({ error: message });
+                    throw err;
+                } finally {
+                    set({ isSubmitting: false })
+                }
+            },
+
+            registerAsDonor: async (data: RegisterDonorDto) => {
+                set({ error: null, isSubmitting: true });
+                try{
+                    const result = await authService.registerAsDonor(data);
+
+                    if(result.success) {
+                        const currentUser = get().user;
+                        if(currentUser) {
+                            const updatedUser: User ={ ...currentUser, donor: true };
+                            localStorage.setItem('user', JSON.stringify(updatedUser));
+                            set({ user: updatedUser })
+                        }
+                    }
+                    return result;
+                } catch (err: unknown) {
+                    const message = err instanceof Error ? err.message : 'Donor assessment failed';
                     set({ error: message });
                     throw err;
                 } finally {
