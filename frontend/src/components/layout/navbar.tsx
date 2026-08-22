@@ -24,12 +24,6 @@ export function Navbar() {
   // Check if donor is active
   const isDonor = Boolean(user?.donor);
 
-  const handleLogout = () => {
-    logout();
-    setMobileMenuOpen(false);
-    router.push('/');
-  };
-
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
@@ -81,7 +75,7 @@ export function Navbar() {
                 </div>
 
                 <Button
-                  onClick={handleLogout}
+                  onClick={logout}
                   variant="ghost"
                   className="text-muted-foreground hover:text-foreground gap-1.5 text-xs"
                 >
@@ -137,7 +131,7 @@ export function Navbar() {
                       </Button>
                     </Link>
                   )}
-                  <Button onClick={handleLogout} variant="outline" className="w-full text-foreground justify-center gap-2">
+                  <Button onClick={logout} variant="outline" className="w-full text-foreground justify-center gap-2">
                     <LogOut className="h-4 w-4" />
                     Sign Out ({user.fullName || user.email})
                   </Button>
