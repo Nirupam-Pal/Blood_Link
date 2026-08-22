@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, useScroll, useSpring } from 'framer-motion';
-import { HeartHandshake, Menu, X, LogIn, UserPlus, LogOut, User as UserIcon } from 'lucide-react';
+import { HeartHandshake, Menu, X, LogIn, UserPlus, LogOut, User as UserIcon, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { useAuthStore } from '@/stores/auth.store';
@@ -28,7 +28,7 @@ export function Navbar() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 transition-all duration-300">
       <motion.div
-        className="h-1 bg-linear-to-r from-red-600 to-rose-400 origin-left"
+        className="h-1 bg-gradient-to-r from-red-600 to-rose-400 origin-left"
         style={{ scaleX }}
       />
 
@@ -41,7 +41,7 @@ export function Navbar() {
       >
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="h-10 w-10 rounded-xl bg-linear-to-tr from-red-600 to-rose-500 flex items-center justify-center shadow-lg shadow-red-600/30 group-hover:scale-105 transition-transform">
+            <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-red-600 to-rose-500 flex items-center justify-center shadow-lg shadow-red-600/30 group-hover:scale-105 transition-transform">
               <HeartHandshake className="h-5 w-5 text-white" />
             </div>
             <span className="text-xl font-bold tracking-tight text-foreground">
@@ -49,30 +49,30 @@ export function Navbar() {
             </span>
           </Link>
 
-          {/* <div className="hidden md:flex items-center gap-8 text-md font-medium text-muted-foreground">
-            <Link href="/#how-it-works" className="hover:text-foreground transition-colors">How It Works</Link>
-            <Link href="/#features" className="hover:text-foreground transition-colors">Features</Link>
-            <Link href="/#why-choose" className="hover:text-foreground transition-colors">Why BloodLink</Link>
-            <Link href="/#faq" className="hover:text-foreground transition-colors">FAQ</Link>
-          </div> */}
-
           <div className="hidden md:flex items-center gap-3">
             <ThemeToggle />
 
             {status === 'authenticated' && user ? (
-              
               <div className="flex items-center gap-3">
-                <div className='flex items-center px-3 py-1.5 rounded-lg bg-red-900 text-sm font-medium'>
-                  Become a Donor
-                </div>
+                {/* Show 'Become a Donor' CTA if the user is not registered as a donor yet */}
+                {!user.donor && (
+                  <Link href="/register/donor">
+                    <Button className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-red-700 to-crimson-600 hover:from-red-800 hover:to-rose-700 text-white text-xs font-semibold shadow-md shadow-crimson-600/20 border-none">
+                      <Heart className="h-3.5 w-3.5 fill-white" />
+                      Become a Donor
+                    </Button>
+                  </Link>
+                )}
+
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted text-foreground text-sm font-medium">
                   <UserIcon className="h-4 w-4 text-red-600" />
                   <span>{user.fullName || user.email}</span>
                 </div>
+
                 <Button
                   onClick={logout}
                   variant="ghost"
-                  className="text-muted-foreground hover:text-foreground gap-1.5"
+                  className="text-muted-foreground hover:text-foreground gap-1.5 text-xs"
                 >
                   <LogOut className="h-4 w-4" />
                   Sign Out
@@ -81,14 +81,14 @@ export function Navbar() {
             ) : (
               <>
                 <Link href="/login">
-                  <Button variant="ghost" className="text-muted-foreground text-md hover:text-foreground hover:bg-muted gap-2">
+                  <Button variant="ghost" className="text-muted-foreground text-sm hover:text-foreground hover:bg-muted gap-2">
                     <LogIn className="h-4 w-4" />
                     Sign In
                   </Button>
                 </Link>
 
                 <Link href="/register">
-                  <Button className="h-10 px-5 rounded-lg bg-linear-to-r from-red-950 via-rose-800 to-rose-700 hover:from-rose-800 hover:to-red-900 text-white font-medium text-md gap-2 transition-all duration-300 hover:scale-[1.03] shadow-md border-none">
+                  <Button className="h-10 px-5 rounded-lg bg-gradient-to-r from-red-950 via-rose-800 to-rose-700 hover:from-rose-800 hover:to-red-900 text-white font-medium text-sm gap-2 transition-all duration-300 hover:scale-[1.03] shadow-md border-none">
                     <UserPlus className="h-4 w-4" />
                     Register
                   </Button>
@@ -115,16 +115,22 @@ export function Navbar() {
             exit={{ opacity: 0, y: -10 }}
             className="md:hidden mt-4 pt-4 border-t border-border flex flex-col gap-4 text-muted-foreground"
           >
-            <Link href="/#how-it-works" onClick={() => setMobileMenuOpen(false)}>How It Works</Link>
-            <Link href="/#features" onClick={() => setMobileMenuOpen(false)}>Features</Link>
-            <Link href="/#why-choose" onClick={() => setMobileMenuOpen(false)}>Why BloodLink</Link>
-            <Link href="/#faq" onClick={() => setMobileMenuOpen(false)}>FAQ</Link>
-            <div className="flex flex-col gap-2 pt-2 border-t border-border">
+            <div className="flex flex-col gap-2 pt-2">
               {status === 'authenticated' && user ? (
-                <Button onClick={logout} variant="outline" className="w-full text-foreground justify-center gap-2">
-                  <LogOut className="h-4 w-4" />
-                  Sign Out ({user.fullName || user.email})
-                </Button>
+                <>
+                  {!user.donor && (
+                    <Link href="/register/donor" onClick={() => setMobileMenuOpen(false)}>
+                      <Button className="w-full bg-crimson-600 text-white justify-center gap-2 mb-2">
+                        <Heart className="h-4 w-4 fill-white" />
+                        Become a Donor
+                      </Button>
+                    </Link>
+                  )}
+                  <Button onClick={logout} variant="outline" className="w-full text-foreground justify-center gap-2">
+                    <LogOut className="h-4 w-4" />
+                    Sign Out ({user.fullName || user.email})
+                  </Button>
+                </>
               ) : (
                 <>
                   <Link href="/login" onClick={() => setMobileMenuOpen(false)}>

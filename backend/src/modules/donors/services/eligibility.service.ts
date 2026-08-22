@@ -11,7 +11,7 @@ export class EligibilityService {
   evaluateEligibility(registerDonorDto: RegisterDonorDto): IEligibilityResult {
     const reasons: string[] = [];
 
-    if (registerDonorDto.weight < 45) {
+    if (registerDonorDto.weight < 18 || registerDonorDto.weight > 65) {
       reasons.push(
         'Weight parameter falls below minimum required threshold of 45kg.',
       );
