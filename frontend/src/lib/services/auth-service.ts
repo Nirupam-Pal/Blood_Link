@@ -12,7 +12,7 @@ export const authService = {
     },
 
     async registerUser(data: RegisterUserDto): Promise<User> {
-        return apiClient<User>(API_ROUTES.AUTH.REGISTER_USER, {
+        return apiClient<User>(API_ROUTES.USERS.REGISTER_USER, {
             method: 'POST',
             body: JSON.stringify(data),
             requiresAuth: false
@@ -20,7 +20,7 @@ export const authService = {
     },
 
     async getCurrentUser(): Promise<User> {
-        return apiClient<User>(API_ROUTES.AUTH.ME, {
+        return apiClient<User>(API_ROUTES.USERS.ME, {
             method: 'GET',
             requiresAuth: true,
         })

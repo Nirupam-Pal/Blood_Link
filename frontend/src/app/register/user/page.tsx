@@ -3,21 +3,31 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
-import { HeartHandshake, ArrowLeft, Loader2, CheckCircle2 } from 'lucide-react';
+import { HeartHandshake, ArrowLeft, Loader2, EyeOff, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { API_ROUTES } from '@/lib/api-routes';
+import { useAuthStore } from '@/stores/auth.store';
+import { BloodGroup } from '@/types/auth.types';
 
 export default function RegisterUserPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  const registerUser = useAuthStore((state) => state.registerUser);
+  const isSubmitting = useAuthStore((state) => state.isSubmitting);
+  const storeError = useAuthStore((state) => state.error);
+  const clearError = useAuthStore((state) => state.clearError);
+  
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
     password: '',
     gender: 'MALE',
+    bloodGroup: 'A+' as BloodGroup,
     state: '',
     district: '',
     subDivision: '',
@@ -30,36 +40,40 @@ export default function RegisterUserPage() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
- const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setLoading(true);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
 
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/auth/register/user`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        ...formData
-      }),
-    });
+    try {
+      const res = await fetch(API_ROUTES.USERS.REGISTER_USER, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...formData
+        }),
+      });
 
-    if (res.ok) {
-      router.push('/login?registered=true');
-    } else {
-      const error = await res.json();
-      alert(error.message || 'Registration failed');
+      const data = await res.json();
+
+      if (res.ok) {
+        router.push('/login?registered=true');
+      } else {
+        const errorMsg = Array.isArray(data.message)
+          ? data.message.join('\n')
+          : data.message || 'Registration failed';
+        alert(errorMsg);
+      }
+    } catch {
+      alert('Could not connect to backend server at' + API_ROUTES.USERS.REGISTER_USER);
+    } finally {
+      setLoading(false);
     }
-  } catch {
-    alert('Could not connect to backend server.');
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   return (
     <div className="min-h-screen bg-background text-foreground py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-2xl mx-auto">
-        
+
         {/* Back Link */}
         <Link href="/register" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors">
           <ArrowLeft className="h-4 w-4" />
@@ -80,7 +94,7 @@ export default function RegisterUserPage() {
         {/* Form Card */}
         <Card className="p-6 sm:p-8 bg-card border-border shadow-xl rounded-2xl">
           <form onSubmit={handleSubmit} className="space-y-6">
-            
+
             {/* Personal Details */}
             <div className="space-y-4">
               <h2 className="text-sm font-semibold text-red-600 dark:text-red-400 uppercase tracking-wider">
@@ -99,9 +113,32 @@ export default function RegisterUserPage() {
               </div>
 
               <div className="grid sm:grid-cols-2 gap-4">
+                {/* Password Field with Eye Toggle */}
                 <div>
                   <label className="text-xs font-medium text-muted-foreground mb-1 block">Password</label>
-                  <Input type="password" name="password" placeholder="••••••••" required value={formData.password} onChange={handleChange} />
+                  <div className="relative">
+                    <Input
+                      type={showPassword ? 'text' : 'password'}
+                      name="password"
+                      placeholder="SecureP@ss123"
+                      required
+                      value={formData.password}
+                      onChange={handleChange}
+                      className="pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((prev) => !prev)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors focus:outline-none"
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -115,6 +152,22 @@ export default function RegisterUserPage() {
                       <SelectItem value="MALE">Male</SelectItem>
                       <SelectItem value="FEMALE">Female</SelectItem>
                       <SelectItem value="OTHER">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block">Blood Group</label>
+                  <Select value={formData.bloodGroup} onValueChange={(val) => setFormData({ ...formData, bloodGroup: val ?? formData.bloodGroup })}>
+                    <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="A_POSITIVE">A+</SelectItem>
+                      <SelectItem value="A_NEGATIVE">A-</SelectItem>
+                      <SelectItem value="B_POSITIVE">B+</SelectItem>
+                      <SelectItem value="B_NEGATIVE">B-</SelectItem>
+                      <SelectItem value="AB_POSITIVE">AB+</SelectItem>
+                      <SelectItem value="AB_NEGATIVE">AB-</SelectItem>
+                      <SelectItem value="O_POSITIVE">O+</SelectItem>
+                      <SelectItem value="O_NEGATIVE">O-</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -155,8 +208,8 @@ export default function RegisterUserPage() {
             </div>
 
             {/* Submit Button */}
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               disabled={loading}
               className="w-full h-12 bg-linear-to-r from-red-700 via-crimson-600 to-rose-600 hover:from-red-800 hover:to-rose-700 text-white font-semibold text-base shadow-lg shadow-red-600/25"
             >

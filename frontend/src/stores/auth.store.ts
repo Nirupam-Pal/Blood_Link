@@ -1,6 +1,5 @@
 import { authService } from "@/lib/services/auth-service";
-import { LoginDto, User } from "@/types/auth.types";
-import { error } from "console";
+import { LoginDto, RegisterUserDto, User } from "@/types/auth.types";
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 
@@ -10,10 +9,12 @@ interface AuthState {
     user: User | null;
     status: AuthStatus;
     isInitializing: boolean;
+    isSubmitting: boolean;
     error: string | null;
 
     // Actions
     initialize: () => Promise<void>;
+    registerUser: (data: RegisterUserDto) => Promise<User>;
     login: (credentials: LoginDto) => Promise<User>;
     logout: () => void;
     setUser: (user: User | null) => void;
@@ -26,6 +27,7 @@ export const useAuthStore = create<AuthState>()(
             user: null,
             status: 'idle',
             isInitializing: true,
+            isSubmitting: false,
             error: null,
 
             initialize: async () => {
@@ -58,6 +60,21 @@ export const useAuthStore = create<AuthState>()(
                     } else {
                         set({ isInitializing: false });
                     }
+                }
+            },
+
+            registerUser: async (data: RegisterUserDto) => {
+                set({ error: null, isSubmitting: true });
+                try{
+                    const newUser = await authService.registerUser(data);
+                    set({ error: null });
+                    return newUser;
+                } catch (err: unknown) {
+                    const message = err instanceof Error ? err.message : 'Registration failed';
+                    set({ error: message });
+                    throw err;
+                } finally {
+                    set({ isSubmitting: false })
                 }
             },
 

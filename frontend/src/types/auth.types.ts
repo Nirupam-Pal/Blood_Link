@@ -19,6 +19,7 @@ export interface User {
     email: string;
     fullName?: string;
     gender?: Gender;
+    bloodGroup?: BloodGroup;
     state?: string;
     district?: string;
     subDivision?: string;
@@ -50,7 +51,6 @@ export interface RegisterUserDto {
     password: string;
     bloodGroup: BloodGroup;
     gender: Gender;
-    age: number;
     state: string;
     district: string;
     subDivision: string;
