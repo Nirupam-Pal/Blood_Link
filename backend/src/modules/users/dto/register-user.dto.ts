@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsEmail, IsEnum, IsNotEmpty, IsString, Length, Matches } from 'class-validator';
 import { REGEX_CONSTANTS } from '../../../common/constants/regex.constants';
 import { Gender } from '../../../common/enums/gender.enum';
+import { BloodGroup } from '../../../common/enums/blood-group.enum';
 
 export class RegisterUserDto {
   @ApiProperty({ example: 'email@gmail.com' })
@@ -28,6 +29,11 @@ export class RegisterUserDto {
   @IsEnum(Gender)
   @IsNotEmpty()
   readonly gender!: Gender
+
+  @ApiProperty({ enum: BloodGroup, example: BloodGroup.A_POSITIVE })
+  @IsEnum(BloodGroup)
+  @IsNotEmpty()
+  readonly bloodGroup!: BloodGroup;
 
   @ApiProperty({ example: 'Tripura' })
   @IsString()
