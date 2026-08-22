@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { User } from '../../users/user.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model } from 'mongoose';
-import { SearchDonorDto } from '../dto/search-donors.dto';
+import { SearchDonorDto } from '../dto/search-donor.dto';
 import { BaseRepository } from '../../../database/base.repository';
 
 @Injectable()
@@ -20,6 +20,7 @@ export class DonorRepository extends BaseRepository<User> {
 
     const query: FilterQuery<User> = {
         isActive: true,
+        donor: true,
         state: new RegExp(`^${escapeRegex(filters.state.trim())}$`, 'i'),
         bloodGroup: new RegExp(`^${escapeRegex(filters.bloodGroup.trim())}$`, 'i')
     };

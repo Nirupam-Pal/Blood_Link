@@ -7,7 +7,7 @@ import {
 import { RegisterDonorDto } from './dto/register-donors.dto';
 import { SearchBloodBankDto } from '../blood-banks/dto/search-bloodBank.dto';
 import { User } from '../users/user.schema';
-import { SearchDonorDto } from './dto/search-donors.dto';
+import { SearchDonorDto } from './dto/search-donor.dto';
 import { DonorRepository } from './repositories/donor.repository';
 
 @Injectable()
