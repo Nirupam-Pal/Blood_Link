@@ -7,10 +7,12 @@ import { HeartHandshake, Menu, X, LogIn, UserPlus, LogOut, User as UserIcon, Hea
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { useAuthStore } from '@/stores/auth.store';
+import { useRouter } from 'next/navigation';
 
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const router = useRouter();
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30 });
 
@@ -18,6 +20,15 @@ export function Navbar() {
   const user = useAuthStore((state) => state.user);
   const status = useAuthStore((state) => state.status);
   const logout = useAuthStore((state) => state.logout);
+
+  // Check if donor is active
+  const isDonor = Boolean(user?.donor);
+
+  const handleLogout = () => {
+    logout();
+    setMobileMenuOpen(false);
+    router.push('/');
+  };
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -28,7 +39,7 @@ export function Navbar() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 transition-all duration-300">
       <motion.div
-        className="h-1 bg-gradient-to-r from-red-600 to-rose-400 origin-left"
+        className="h-1 bg-linear-to-r from-red-600 to-rose-400 origin-left"
         style={{ scaleX }}
       />
 
@@ -41,7 +52,7 @@ export function Navbar() {
       >
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-red-600 to-rose-500 flex items-center justify-center shadow-lg shadow-red-600/30 group-hover:scale-105 transition-transform">
+            <div className="h-10 w-10 rounded-xl bg-linear-to-tr from-red-600 to-rose-500 flex items-center justify-center shadow-lg shadow-red-600/30 group-hover:scale-105 transition-transform">
               <HeartHandshake className="h-5 w-5 text-white" />
             </div>
             <span className="text-xl font-bold tracking-tight text-foreground">
@@ -54,10 +65,10 @@ export function Navbar() {
 
             {status === 'authenticated' && user ? (
               <div className="flex items-center gap-3">
-                {/* Show 'Become a Donor' CTA if the user is not registered as a donor yet */}
-                {!user.donor && (
+                {/* Only visible when not registered as donor and not a blood bank organization */}
+                {!isDonor && user.role === 'USER' && (
                   <Link href="/register/donor">
-                    <Button className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-red-700 to-crimson-600 hover:from-red-800 hover:to-rose-700 text-white text-xs font-semibold shadow-md shadow-crimson-600/20 border-none">
+                    <Button className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-red-900 hover:bg-red-800 text-white text-xs font-semibold shadow-md shadow-crimson-600/20 border-none">
                       <Heart className="h-3.5 w-3.5 fill-white" />
                       Become a Donor
                     </Button>
@@ -70,7 +81,7 @@ export function Navbar() {
                 </div>
 
                 <Button
-                  onClick={logout}
+                  onClick={handleLogout}
                   variant="ghost"
                   className="text-muted-foreground hover:text-foreground gap-1.5 text-xs"
                 >
@@ -88,7 +99,7 @@ export function Navbar() {
                 </Link>
 
                 <Link href="/register">
-                  <Button className="h-10 px-5 rounded-lg bg-gradient-to-r from-red-950 via-rose-800 to-rose-700 hover:from-rose-800 hover:to-red-900 text-white font-medium text-sm gap-2 transition-all duration-300 hover:scale-[1.03] shadow-md border-none">
+                  <Button className="h-10 px-5 rounded-lg bg-linear-to-r from-red-950 via-rose-800 to-rose-700 hover:from-rose-800 hover:to-red-900 text-white font-medium text-sm gap-2 transition-all duration-300 hover:scale-[1.03] shadow-md border-none">
                     <UserPlus className="h-4 w-4" />
                     Register
                   </Button>
@@ -118,7 +129,7 @@ export function Navbar() {
             <div className="flex flex-col gap-2 pt-2">
               {status === 'authenticated' && user ? (
                 <>
-                  {!user.donor && (
+                  {!isDonor && user.role === 'USER' && (
                     <Link href="/register/donor" onClick={() => setMobileMenuOpen(false)}>
                       <Button className="w-full bg-crimson-600 text-white justify-center gap-2 mb-2">
                         <Heart className="h-4 w-4 fill-white" />
@@ -126,7 +137,7 @@ export function Navbar() {
                       </Button>
                     </Link>
                   )}
-                  <Button onClick={logout} variant="outline" className="w-full text-foreground justify-center gap-2">
+                  <Button onClick={handleLogout} variant="outline" className="w-full text-foreground justify-center gap-2">
                     <LogOut className="h-4 w-4" />
                     Sign Out ({user.fullName || user.email})
                   </Button>

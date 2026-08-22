@@ -126,7 +126,7 @@ export default function DonorDashboardPage() {
       if (selectedState !== 'ALL') searchParams.append('state', selectedState);
       if (selectedBloodGroup !== 'ALL') searchParams.append('bloodGroup', selectedBloodGroup);
 
-      const queryUrl = `${API_ROUTES.USERS.SEARCH_DONORS}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
+      const queryUrl = `${API_ROUTES.DONORS.SEARCH_DONORS}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
       const data = await apiClient<unknown>(queryUrl, {
         method: 'GET',
         requiresAuth: true,
@@ -363,7 +363,7 @@ export default function DonorDashboardPage() {
                   <div className="pt-4 border-t border-border flex gap-2">
                     <Button
                       onClick={() => setSelectedDonor(donor)}
-                      className="w-full h-9 bg-gradient-to-r from-red-700 to-crimson-600 hover:from-red-800 hover:to-rose-700 text-white text-xs font-semibold gap-1.5 shadow-md shadow-crimson-600/20"
+                      className="w-full h-9 bg-linear-to-r from-red-700 to-crimson-600 hover:from-red-800 hover:to-rose-700 text-white text-xs font-semibold gap-1.5 shadow-md shadow-crimson-600/20"
                     >
                       <Phone className="h-3.5 w-3.5" />
                       Contact Donor

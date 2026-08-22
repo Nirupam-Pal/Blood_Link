@@ -87,7 +87,8 @@ export class AuthService {
         id: account.id || account._id,
         fullName: account.fullName || account.bloodBankName,
         email: account.email,
-        role
+        role,
+        donor: account.donor ?? false,
       },
       accessToken,
       refreshToken,
@@ -239,6 +240,7 @@ export class AuthService {
           fullname: account.fullName || account.bloodBankName,
           email: account.email,
           role,
+          donor: account.donor ?? false,
         },
       };
     } catch (error) {

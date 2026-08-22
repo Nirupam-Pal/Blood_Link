@@ -27,7 +27,7 @@ export default function RegisterUserPage() {
     email: '',
     password: '',
     gender: 'MALE',
-    bloodGroup: 'A+' as BloodGroup,
+    bloodGroup: 'A+',
     state: '',
     district: '',
     subDivision: '',
@@ -160,14 +160,14 @@ export default function RegisterUserPage() {
                   <Select value={formData.bloodGroup} onValueChange={(val) => setFormData({ ...formData, bloodGroup: val ?? formData.bloodGroup })}>
                     <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="A_POSITIVE">A+</SelectItem>
-                      <SelectItem value="A_NEGATIVE">A-</SelectItem>
-                      <SelectItem value="B_POSITIVE">B+</SelectItem>
-                      <SelectItem value="B_NEGATIVE">B-</SelectItem>
-                      <SelectItem value="AB_POSITIVE">AB+</SelectItem>
-                      <SelectItem value="AB_NEGATIVE">AB-</SelectItem>
-                      <SelectItem value="O_POSITIVE">O+</SelectItem>
-                      <SelectItem value="O_NEGATIVE">O-</SelectItem>
+                      <SelectItem value="A+">A+</SelectItem>
+                      <SelectItem value="A-">A-</SelectItem>
+                      <SelectItem value="B+">B+</SelectItem>
+                      <SelectItem value="B-">B-</SelectItem>
+                      <SelectItem value="AB+">AB+</SelectItem>
+                      <SelectItem value="AB-">AB-</SelectItem>
+                      <SelectItem value="O+">O+</SelectItem>
+                      <SelectItem value="O-">O-</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
