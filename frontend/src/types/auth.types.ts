@@ -57,3 +57,29 @@ export interface RegisterUserDto {
     city: string;
     pinCode: string;
 }
+
+export interface RegisterDonorDto {
+    weight: number;
+    takingMedication: boolean;
+    recentTattoo: boolean;
+    recentSurgery: boolean;
+    hepatitis: boolean;
+    hiv: boolean;
+    diabetes: boolean;
+    highBloodPressure: boolean;
+    chronicDisease: boolean;
+    consentInformation: boolean;
+    consentContact: boolean;
+    consentPrivacy: boolean;
+}
+
+export interface DonorAssessmentResult {
+  eligible: boolean;
+  reasons: string[];
+}
+
+export interface RegisterDonorResponse {
+  success: boolean;
+  message: string;
+  data: DonorAssessmentResult;
+}

@@ -8,6 +8,8 @@ export const API_ROUTES = {
     USERS: {
         REGISTER_USER: `${API_BASE_URL}/users/register-user`,
         ME: `${API_BASE_URL}/users/me`,
+    },
+    DONORS: {
         REGISTER_DONORS: `${API_BASE_URL}/donors/register`,
         SEARCH_DONORS: `${API_BASE_URL}/donors/search`,
     },

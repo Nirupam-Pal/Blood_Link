@@ -28,7 +28,7 @@ export function Navbar() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 transition-all duration-300">
       <motion.div
-        className="h-1 bg-gradient-to-r from-red-600 to-rose-400 origin-left"
+        className="h-1 bg-linear-to-r from-red-600 to-rose-400 origin-left"
         style={{ scaleX }}
       />
 
@@ -41,7 +41,7 @@ export function Navbar() {
       >
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-red-600 to-rose-500 flex items-center justify-center shadow-lg shadow-red-600/30 group-hover:scale-105 transition-transform">
+            <div className="h-10 w-10 rounded-xl bg-linear-to-tr from-red-600 to-rose-500 flex items-center justify-center shadow-lg shadow-red-600/30 group-hover:scale-105 transition-transform">
               <HeartHandshake className="h-5 w-5 text-white" />
             </div>
             <span className="text-xl font-bold tracking-tight text-foreground">
@@ -49,18 +49,22 @@ export function Navbar() {
             </span>
           </Link>
 
-          <div className="hidden md:flex items-center gap-8 text-md font-medium text-muted-foreground">
+          {/* <div className="hidden md:flex items-center gap-8 text-md font-medium text-muted-foreground">
             <Link href="/#how-it-works" className="hover:text-foreground transition-colors">How It Works</Link>
             <Link href="/#features" className="hover:text-foreground transition-colors">Features</Link>
             <Link href="/#why-choose" className="hover:text-foreground transition-colors">Why BloodLink</Link>
             <Link href="/#faq" className="hover:text-foreground transition-colors">FAQ</Link>
-          </div>
+          </div> */}
 
           <div className="hidden md:flex items-center gap-3">
             <ThemeToggle />
 
             {status === 'authenticated' && user ? (
+              
               <div className="flex items-center gap-3">
+                <div className='flex items-center px-3 py-1.5 rounded-lg bg-red-900 text-sm font-medium'>
+                  Become a Donor
+                </div>
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted text-foreground text-sm font-medium">
                   <UserIcon className="h-4 w-4 text-red-600" />
                   <span>{user.fullName || user.email}</span>
@@ -84,7 +88,7 @@ export function Navbar() {
                 </Link>
 
                 <Link href="/register">
-                  <Button className="h-10 px-5 rounded-lg bg-gradient-to-r from-red-950 via-rose-800 to-rose-700 hover:from-rose-800 hover:to-red-900 text-white font-medium text-md gap-2 transition-all duration-300 hover:scale-[1.03] shadow-md border-none">
+                  <Button className="h-10 px-5 rounded-lg bg-linear-to-r from-red-950 via-rose-800 to-rose-700 hover:from-rose-800 hover:to-red-900 text-white font-medium text-md gap-2 transition-all duration-300 hover:scale-[1.03] shadow-md border-none">
                     <UserPlus className="h-4 w-4" />
                     Register
                   </Button>

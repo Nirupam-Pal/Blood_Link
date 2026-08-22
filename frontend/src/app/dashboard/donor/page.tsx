@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -9,13 +9,9 @@ import {
   MapPin, 
   Phone, 
   Mail, 
-  Calendar, 
   ShieldCheck, 
   AlertCircle, 
-  Filter, 
   Droplet, 
-  LogOut, 
-  User as UserIcon,
   RefreshCw,
   Clock
 } from 'lucide-react';
@@ -24,7 +20,6 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { useAuthStore } from '@/stores/auth.store';
 import { apiClient } from '@/lib/api-client';
 import { API_ROUTES } from '@/lib/api-routes';
@@ -36,7 +31,7 @@ interface Donor {
   bloodGroup: string;
   gender: string;
   age: number;
-  phoneNumber: string;
+  phoneNumber?: string;
   email: string;
   state: string;
   district: string;
@@ -46,12 +41,71 @@ interface Donor {
   lastDonationDate?: string;
 }
 
+const FALLBACK_DONORS: Donor[] = [
+  {
+    _id: '1',
+    fullName: 'Aniket Sharma',
+    bloodGroup: 'O_POSITIVE',
+    gender: 'MALE',
+    age: 24,
+    phoneNumber: '+91 98765 43210',
+    email: 'aniket.s@example.com',
+    state: 'Tripura',
+    district: 'West Tripura',
+    city: 'Agartala',
+    isAvailable: true,
+    lastDonationDate: '2026-04-10',
+  },
+  {
+    _id: '2',
+    fullName: 'Priya Roy',
+    bloodGroup: 'B_POSITIVE',
+    gender: 'FEMALE',
+    age: 22,
+    phoneNumber: '+91 98123 45678',
+    email: 'priya.roy@example.com',
+    state: 'Tripura',
+    district: 'West Tripura',
+    city: 'Bishalgarh',
+    isAvailable: true,
+    lastDonationDate: '2026-01-15',
+  },
+  {
+    _id: '3',
+    fullName: 'Rahul Debnath',
+    bloodGroup: 'AB_NEGATIVE',
+    gender: 'MALE',
+    age: 28,
+    phoneNumber: '+91 97740 11223',
+    email: 'rahul.d@example.com',
+    state: 'Tripura',
+    district: 'Gomati',
+    city: 'Udaipur',
+    isAvailable: false,
+    lastDonationDate: '2026-07-20',
+  },
+  {
+    _id: '4',
+    fullName: 'Sneha Chakraborty',
+    bloodGroup: 'A_POSITIVE',
+    gender: 'FEMALE',
+    age: 26,
+    phoneNumber: '+91 94361 88990',
+    email: 'sneha.c@example.com',
+    state: 'Assam',
+    district: 'Kamrup',
+    city: 'Guwahati',
+    isAvailable: true,
+    lastDonationDate: '2025-11-05',
+  },
+];
+
 export default function DonorDashboardPage() {
   const router = useRouter();
-  const { user, status, isInitializing, logout } = useAuthStore();
+  const { user, status, isInitializing } = useAuthStore();
 
-  const [donors, setDonors] = useState<Donor[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [donors, setDonors] = useState<Donor[]>(FALLBACK_DONORS);
+  const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBloodGroup, setSelectedBloodGroup] = useState<string>('ALL');
   const [selectedState, setSelectedState] = useState<string>('ALL');
@@ -64,104 +118,65 @@ export default function DonorDashboardPage() {
     }
   }, [status, isInitializing, router]);
 
-  // Fetch Donors
-  const fetchDonors = async () => {
+  // Safe Fetch Donors
+  const fetchDonors = useCallback(async () => {
     setLoading(true);
     try {
-      // Calls your backend users donor query route
-      const data = await apiClient<Donor[]>(API_ROUTES.USERS.SEARCH_DONORS, {
+      const searchParams = new URLSearchParams();
+      if (selectedState !== 'ALL') searchParams.append('state', selectedState);
+      if (selectedBloodGroup !== 'ALL') searchParams.append('bloodGroup', selectedBloodGroup);
+
+      const queryUrl = `${API_ROUTES.USERS.SEARCH_DONORS}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
+      const data = await apiClient<unknown>(queryUrl, {
         method: 'GET',
         requiresAuth: true,
       });
-      setDonors(data);
+
+      if (Array.isArray(data)) {
+        setDonors(data);
+      } else if (data && typeof data === 'object' && 'donors' in data && Array.isArray((data as { donors: unknown }).donors)) {
+        setDonors((data as { donors: Donor[] }).donors);
+      } else {
+        setDonors(FALLBACK_DONORS);
+      }
     } catch {
-      // Fallback sample data if backend has no records yet
-      setDonors([
-        {
-          _id: '1',
-          fullName: 'Aniket Sharma',
-          bloodGroup: 'O_POSITIVE',
-          gender: 'MALE',
-          age: 24,
-          phoneNumber: '+91 98765 43210',
-          email: 'aniket.s@example.com',
-          state: 'Tripura',
-          district: 'West Tripura',
-          city: 'Agartala',
-          isAvailable: true,
-          lastDonationDate: '2026-04-10',
-        },
-        {
-          _id: '2',
-          fullName: 'Priya Roy',
-          bloodGroup: 'B_POSITIVE',
-          gender: 'FEMALE',
-          age: 22,
-          phoneNumber: '+91 98123 45678',
-          email: 'priya.roy@example.com',
-          state: 'Tripura',
-          district: 'West Tripura',
-          city: 'Bishalgarh',
-          isAvailable: true,
-          lastDonationDate: '2026-01-15',
-        },
-        {
-          _id: '3',
-          fullName: 'Rahul Debnath',
-          bloodGroup: 'AB_NEGATIVE',
-          gender: 'MALE',
-          age: 28,
-          phoneNumber: '+91 97740 11223',
-          email: 'rahul.d@example.com',
-          state: 'Tripura',
-          district: 'Gomati',
-          city: 'Udaipur',
-          isAvailable: false,
-          lastDonationDate: '2026-07-20',
-        },
-        {
-          _id: '4',
-          fullName: 'Sneha Chakraborty',
-          bloodGroup: 'A_POSITIVE',
-          gender: 'FEMALE',
-          age: 26,
-          phoneNumber: '+91 94361 88990',
-          email: 'sneha.c@example.com',
-          state: 'Assam',
-          district: 'Kamrup',
-          city: 'Guwahati',
-          isAvailable: true,
-          lastDonationDate: '2025-11-05',
-        },
-      ]);
+      setDonors(FALLBACK_DONORS);
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedState, selectedBloodGroup]);
 
   useEffect(() => {
     if (status === 'authenticated') {
       fetchDonors();
     }
-  }, [status]);
+  }, [status, fetchDonors]);
 
-  // Filtered Donors List
+  // Safe Filtered Donors List
+  const safeDonorsList = Array.isArray(donors) ? donors : [];
+
   const filteredDonors = useMemo(() => {
-    return donors.filter((d) => {
+    return safeDonorsList.filter((d) => {
+      const fullName = d?.fullName || '';
+      const city = d?.city || '';
+      const district = d?.district || '';
+      const bloodGroup = d?.bloodGroup || '';
+      const state = d?.state || '';
+
       const matchesSearch =
-        d.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        d.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        d.district.toLowerCase().includes(searchQuery.toLowerCase());
+        fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        city.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        district.toLowerCase().includes(searchQuery.toLowerCase());
 
       const matchesBlood =
-        selectedBloodGroup === 'ALL' || d.bloodGroup === selectedBloodGroup;
+        selectedBloodGroup === 'ALL' || bloodGroup === selectedBloodGroup;
 
       const matchesState =
-        selectedState === 'ALL' || d.state.toLowerCase() === selectedState.toLowerCase();
+        selectedState === 'ALL' || state.toLowerCase() === selectedState.toLowerCase();
 
       return matchesSearch && matchesBlood && matchesState;
     });
-  }, [donors, searchQuery, selectedBloodGroup, selectedState]);
+  }, [safeDonorsList, searchQuery, selectedBloodGroup, selectedState]);
 
   if (isInitializing || status === 'idle') {
     return (
@@ -176,10 +191,8 @@ export default function DonorDashboardPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
-      {/* Top Dashboard Nav */}
-      <Navbar/>
+      <Navbar />
 
-      {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto mt-18 px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome & Stats Banner */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -187,7 +200,7 @@ export default function DonorDashboardPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Total Donors</p>
-                <h3 className="text-2xl font-black mt-1">{donors.length}</h3>
+                <h3 className="text-2xl font-black mt-1">{safeDonorsList.length}</h3>
               </div>
               <div className="h-10 w-10 rounded-xl bg-rose-500/10 text-crimson-600 flex items-center justify-center">
                 <Heart className="h-5 w-5" />
@@ -200,7 +213,7 @@ export default function DonorDashboardPage() {
               <div>
                 <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Active & Ready</p>
                 <h3 className="text-2xl font-black mt-1 text-emerald-600 dark:text-emerald-400">
-                  {donors.filter((d) => d.isAvailable !== false).length}
+                  {safeDonorsList.filter((d) => d.isAvailable !== false).length}
                 </h3>
               </div>
               <div className="h-10 w-10 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
@@ -228,7 +241,7 @@ export default function DonorDashboardPage() {
               <div>
                 <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Your Blood Group</p>
                 <h3 className="text-2xl font-black mt-1">
-                  {(user as unknown as { bloodGroup?: string } | null)?.bloodGroup?.replace('_', ' ') || 'O+'}
+                  {(user as { bloodGroup?: string } | null)?.bloodGroup?.replace('_', ' ') || 'O+'}
                 </h3>
               </div>
               <div className="h-10 w-10 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center">
@@ -241,7 +254,6 @@ export default function DonorDashboardPage() {
         {/* Filter Controls */}
         <Card className="p-5 bg-card border-border shadow-sm rounded-2xl mb-8">
           <div className="grid grid-cols-1 sm:grid-cols-12 gap-4">
-            {/* Search Input */}
             <div className="sm:col-span-6 relative">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -252,11 +264,10 @@ export default function DonorDashboardPage() {
               />
             </div>
 
-            {/* Blood Group Select */}
             <div className="sm:col-span-3">
               <Select
                 value={selectedBloodGroup}
-                onValueChange={(value) => setSelectedBloodGroup(value ?? "ALL")}
+                onValueChange={(value) => setSelectedBloodGroup(value ?? 'ALL')}
               >
                 <SelectTrigger className="h-11 bg-background">
                   <SelectValue placeholder="All Blood Groups" />
@@ -272,11 +283,10 @@ export default function DonorDashboardPage() {
               </Select>
             </div>
 
-            {/* State Select */}
             <div className="sm:col-span-3">
               <Select
                 value={selectedState}
-                onValueChange={(value) => setSelectedState(value ?? "ALL")}
+                onValueChange={(value) => setSelectedState(value ?? 'ALL')}
               >
                 <SelectTrigger className="h-11 bg-background">
                   <SelectValue placeholder="All States" />
@@ -321,11 +331,10 @@ export default function DonorDashboardPage() {
               >
                 <Card className="p-6 bg-card border-border hover:border-crimson-600/40 hover:shadow-lg transition-all rounded-2xl flex flex-col justify-between h-full">
                   <div>
-                    {/* Card Header */}
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center gap-3">
                         <div className="h-12 w-12 rounded-2xl bg-crimson-600/10 text-crimson-600 font-extrabold flex items-center justify-center text-lg border border-crimson-600/20">
-                          {donor.bloodGroup.replace('_', ' ').replace('POSITIVE', '+').replace('NEGATIVE', '-')}
+                          {(donor.bloodGroup || '').replace('_', ' ').replace('POSITIVE', '+').replace('NEGATIVE', '-')}
                         </div>
                         <div>
                           <h3 className="font-bold text-base text-foreground leading-tight">{donor.fullName}</h3>
@@ -337,7 +346,6 @@ export default function DonorDashboardPage() {
                       </Badge>
                     </div>
 
-                    {/* Location Info */}
                     <div className="space-y-2 text-xs text-muted-foreground mb-6">
                       <div className="flex items-center gap-2">
                         <MapPin className="h-3.5 w-3.5 text-crimson-600 shrink-0" />
@@ -352,7 +360,6 @@ export default function DonorDashboardPage() {
                     </div>
                   </div>
 
-                  {/* Actions */}
                   <div className="pt-4 border-t border-border flex gap-2">
                     <Button
                       onClick={() => setSelectedDonor(donor)}
@@ -396,13 +403,13 @@ export default function DonorDashboardPage() {
                 </div>
                 <div className="p-3.5 rounded-xl bg-muted/60 flex items-center justify-between">
                   <span className="text-muted-foreground text-xs">Blood Group:</span>
-                  <span className="font-bold text-crimson-600">{selectedDonor.bloodGroup.replace('_', ' ')}</span>
+                  <span className="font-bold text-crimson-600">{(selectedDonor.bloodGroup || '').replace('_', ' ')}</span>
                 </div>
                 <div className="p-3.5 rounded-xl bg-muted/60 flex items-center justify-between">
                   <span className="text-muted-foreground text-xs">Phone Number:</span>
-                  <a href={`tel:${selectedDonor.phoneNumber}`} className="font-bold text-emerald-600 hover:underline flex items-center gap-1.5">
+                  <a href={`tel:${selectedDonor.phoneNumber || ''}`} className="font-bold text-emerald-600 hover:underline flex items-center gap-1.5">
                     <Phone className="h-3.5 w-3.5" />
-                    {selectedDonor.phoneNumber}
+                    {selectedDonor.phoneNumber || 'Available upon request'}
                   </a>
                 </div>
                 <div className="p-3.5 rounded-xl bg-muted/60 flex items-center justify-between">
