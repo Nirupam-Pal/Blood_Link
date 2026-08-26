@@ -28,6 +28,7 @@ export default function RegisterDonorPage() {
   const { user, status, isInitializing, isSubmitting, registerAsDonor, error: storeError, clearError } = useAuthStore();
 
   const [weight, setWeight] = useState<number | ''>('');
+  const [age, setAge] = useState<number | ''>('');
   const [localError, setLocalError] = useState<string | null>(null);
 
   const [medicalAnswers, setMedicalAnswers] = useState({
@@ -264,13 +265,28 @@ export default function RegisterDonorPage() {
                       type="number"
                       placeholder="e.g. 25"
                       required
-                      min={18}
-                      max={65}
+                      min={45}
                       value={weight}
                       onChange={(e) => setWeight(e.target.value === '' ? '' : Number(e.target.value))}
                       className="h-11 bg-background max-w-xs"
                     />
                     <p className="text-[11px] text-muted-foreground mt-1">Minimum safe donation weight requirement is usually 18 kg.</p>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                      Age <span className="text-crimson-600">*</span>
+                    </label>
+                    <Input
+                      type="number"
+                      placeholder="e.g. 25"
+                      required
+                      min={18}
+                      max={65}
+                      value={age}
+                      onChange={(e) => setAge(e.target.value === '' ? '' : Number(e.target.value))}
+                      className="h-11 bg-background max-w-xs"
+                    />
+                    <p className="text-[11px] text-muted-foreground mt-1">Minimum safe donation age requirement is usually 18.</p>
                   </div>
                 </div>
 

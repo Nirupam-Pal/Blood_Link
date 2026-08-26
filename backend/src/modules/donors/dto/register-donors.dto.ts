@@ -1,12 +1,19 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsBoolean, IsNotEmpty, IsNumber, Min } from "class-validator";
+import { IsBoolean, IsNotEmpty, IsNumber, Max, Min } from "class-validator";
 
 export class RegisterDonorDto {
     @ApiProperty({ example: 70, description: 'Weight in kilograms (Must be >= 45kg)' })
     @IsNumber()
     @IsNotEmpty()
-    @Min(1)
+    @Min(45)
     readonly weight!: number;
+
+    @ApiProperty({ example: 25, description: 'Must be > 18' })
+    @IsNumber()
+    @IsNotEmpty()
+    @Min(18)
+    @Max(65)
+    readonly age!: number;
 
     @ApiProperty({ example: false })
     @IsBoolean()

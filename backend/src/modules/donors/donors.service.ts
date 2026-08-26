@@ -15,7 +15,7 @@ export class DonorsService {
   constructor(
     private readonly donorsRepository: DonorRepository,
     private readonly usersRepository: UsersRepository,
-    private readonly eligibilityService: EligibilityService,
+    private readonly eligibilityService: EligibilityService
   ) {}
 
   async processRegistration(
@@ -32,6 +32,10 @@ export class DonorsService {
     await this.usersRepository.update(userId, { donor: true });
 
     return { eligible: true, reasons: [] };
+  }
+
+  async getDonors(): Promise<User[]> {
+    return this.donorsRepository.findAllActiveDonors();
   }
 
   async searchDonor(searchDonorDto: SearchDonorDto): Promise<User[]> {

@@ -62,6 +62,23 @@ export class DonorsController {
     };
   }
 
+  @Get('active')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Get all active and eligible donors'
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Return list of all active verified donors'
+  })
+  @ApiResponse({
+    status: HttpStatus.INTERNAL_SERVER_ERROR,
+    description: 'Internal server error while retreiving donors.'
+  })
+  async getAllAvailableDonors() {
+    return this.donorService.getDonors();
+  }
+
   @Get('search')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({

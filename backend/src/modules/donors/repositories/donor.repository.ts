@@ -14,6 +14,13 @@ export class DonorRepository extends BaseRepository<User> {
     super(userModel);
   }
 
+  async findAllActiveDonors(): Promise<User[]> {
+    return this.userModel
+      .find({ isActive: true, donor: true })
+      .select('fullName email bloodGroup gender city subDivision district state')
+      .exec();
+  }
+
   async searchByFilters(filters: SearchDonorDto): Promise<User[]> {
     const escapeRegex = (text: string) =>
       text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
@@ -46,7 +53,7 @@ export class DonorRepository extends BaseRepository<User> {
 
     return this.userModel
       .find(query)
-      .select('fullName bloodGroup phoneNumber city subDivision district state')
+      .select('fullName bloodGroup city subDivision district state')
       .exec();
   }
 }

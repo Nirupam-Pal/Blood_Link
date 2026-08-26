@@ -11,10 +11,15 @@ export class EligibilityService {
   evaluateEligibility(registerDonorDto: RegisterDonorDto): IEligibilityResult {
     const reasons: string[] = [];
 
-    if (registerDonorDto.weight < 18 || registerDonorDto.weight > 65) {
+    if (registerDonorDto.weight < 45) {
       reasons.push(
         'Weight parameter falls below minimum required threshold of 45kg.',
       );
+    }
+    if(registerDonorDto.age < 18 || registerDonorDto.age > 65){
+      reasons.push(
+        'Age parameter falls below or above the required threshold'
+      )
     }
     if (registerDonorDto.takingMedication) {
       reasons.push('Active medication profile conflicts with safety criteria.');
