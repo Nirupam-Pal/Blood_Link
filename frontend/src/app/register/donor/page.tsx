@@ -4,13 +4,13 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  HeartHandshake, 
-  ArrowLeft, 
-  ShieldCheck, 
-  AlertCircle, 
-  Loader2, 
-  CheckCircle2, 
+import {
+  HeartHandshake,
+  ArrowLeft,
+  ShieldCheck,
+  AlertCircle,
+  Loader2,
+  CheckCircle2,
   XCircle,
   Activity,
   FileText,
@@ -162,11 +162,10 @@ export default function RegisterDonorPage() {
               animate={{ opacity: 1, scale: 1 }}
               className="mb-8"
             >
-              <Card className={`p-6 sm:p-8 border shadow-2xl rounded-2xl ${
-                assessmentResult.eligible 
-                  ? 'bg-emerald-500/5 border-emerald-500/20' 
+              <Card className={`p-6 sm:p-8 border shadow-2xl rounded-2xl ${assessmentResult.eligible
+                  ? 'bg-emerald-500/5 border-emerald-500/20'
                   : 'bg-rose-500/5 border-rose-500/20'
-              }`}>
+                }`}>
                 <div className="flex items-start gap-4">
                   {assessmentResult.eligible ? (
                     <div className="h-12 w-12 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center shrink-0">
@@ -250,43 +249,45 @@ export default function RegisterDonorPage() {
 
             <Card className="p-6 sm:p-8 bg-card border-border shadow-xl rounded-2xl">
               <form onSubmit={handleSubmit} className="space-y-8">
-                
+
                 {/* Section 1: Physical Assessment */}
                 <div>
                   <h2 className="text-xs font-bold uppercase tracking-wider text-crimson-600 flex items-center gap-2 mb-4">
                     <Activity className="h-4 w-4" />
                     1. Physical Metrics
                   </h2>
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
-                      Body Weight (kg) <span className="text-crimson-600">*</span>
-                    </label>
-                    <Input
-                      type="number"
-                      placeholder="e.g. 25"
-                      required
-                      min={45}
-                      value={weight}
-                      onChange={(e) => setWeight(e.target.value === '' ? '' : Number(e.target.value))}
-                      className="h-11 bg-background max-w-xs"
-                    />
-                    <p className="text-[11px] text-muted-foreground mt-1">Minimum safe donation weight requirement is usually 18 kg.</p>
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
-                      Age <span className="text-crimson-600">*</span>
-                    </label>
-                    <Input
-                      type="number"
-                      placeholder="e.g. 25"
-                      required
-                      min={18}
-                      max={65}
-                      value={age}
-                      onChange={(e) => setAge(e.target.value === '' ? '' : Number(e.target.value))}
-                      className="h-11 bg-background max-w-xs"
-                    />
-                    <p className="text-[11px] text-muted-foreground mt-1">Minimum safe donation age requirement is usually 18.</p>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="min-w-0">
+                      <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                        Body Weight (kg) <span className="text-crimson-600">*</span>
+                      </label>
+                      <Input
+                        type="number"
+                        placeholder="e.g. 25"
+                        required
+                        min={45}
+                        value={weight}
+                        onChange={(e) => setWeight(e.target.value === '' ? '' : Number(e.target.value))}
+                        className="h-11 w-full bg-background"
+                      />
+                      <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed">Minimum safe donation weight requirement is usually 18 kg.</p>
+                    </div>
+                    <div className="min-w-0">
+                      <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                        Age <span className="text-crimson-600">*</span>
+                      </label>
+                      <Input
+                        type="number"
+                        placeholder="e.g. 25"
+                        required
+                        min={18}
+                        max={65}
+                        value={age}
+                        onChange={(e) => setAge(e.target.value === '' ? '' : Number(e.target.value))}
+                        className="h-11 w-full bg-background"
+                      />
+                      <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed">Minimum safe donation age requirement is usually 18.</p>
+                    </div>
                   </div>
                 </div>
 
@@ -318,22 +319,20 @@ export default function RegisterDonorPage() {
                             <button
                               type="button"
                               onClick={() => handleMedicalToggle(typedKey, false)}
-                              className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all ${
-                                !isYes 
-                                  ? 'bg-emerald-600 text-white shadow-xs' 
+                              className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all ${!isYes
+                                  ? 'bg-emerald-600 text-white shadow-xs'
                                   : 'bg-background text-muted-foreground hover:text-foreground'
-                              }`}
+                                }`}
                             >
                               No
                             </button>
                             <button
                               type="button"
                               onClick={() => handleMedicalToggle(typedKey, true)}
-                              className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all ${
-                                isYes 
-                                  ? 'bg-rose-600 text-white shadow-xs' 
+                              className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all ${isYes
+                                  ? 'bg-rose-600 text-white shadow-xs'
                                   : 'bg-background text-muted-foreground hover:text-foreground'
-                              }`}
+                                }`}
                             >
                               Yes
                             </button>
