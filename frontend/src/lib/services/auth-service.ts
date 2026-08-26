@@ -1,4 +1,4 @@
-import { AuthResponse, LoginDto, RegisterDonorDto, RegisterDonorResponse, RegisterUserDto, User } from "@/types/auth.types";
+import { ActiveDonor, AuthResponse, LoginDto, RegisterDonorDto, RegisterDonorResponse, RegisterUserDto, User } from "@/types/auth.types";
 import { apiClient } from "../api-client";
 import { API_ROUTES } from "../api-routes";
 
@@ -31,6 +31,13 @@ export const authService = {
             method: 'POST',
             body: JSON.stringify(data),
             requiresAuth: true
+        })
+    },
+
+    async getActiveDonors(): Promise<ActiveDonor[]> {
+        return apiClient<ActiveDonor[]>(API_ROUTES.DONORS.ACTIVE_DONORS, {
+            method: 'GET',
+            requiresAuth: true,
         })
     }
 }

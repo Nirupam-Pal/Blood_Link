@@ -58,6 +58,17 @@ export interface RegisterUserDto {
     pinCode: string;
 }
 
+export interface ActiveDonor {
+    _id: string;
+    email: string;
+    fullName: String;
+    gender: Gender;
+    bloodGroup: BloodGroup;
+    state: string;
+    subDivision: string;
+    city: string;
+}
+
 export interface RegisterDonorDto {
     weight: number;
     takingMedication: boolean;
