@@ -17,7 +17,9 @@ export class DonorRepository extends BaseRepository<User> {
   async findAllActiveDonors(): Promise<User[]> {
     return this.userModel
       .find({ isActive: true, donor: true })
-      .select('fullName email bloodGroup gender city subDivision district state')
+      .select(
+        'fullName email bloodGroup gender city subDivision district state',
+      )
       .exec();
   }
 
@@ -27,12 +29,19 @@ export class DonorRepository extends BaseRepository<User> {
 
     const query: FilterQuery<User> = {
       isActive: true,
-      isDonor: true,
+      donor: true,
       state: new RegExp(`^${escapeRegex(filters.state.trim())}$`, 'i'),
     };
 
-    if(filters.bloodGroup) {
-      query.bloodGroup = filters.bloodGroup;
+    if (filters.bloodGroup) {
+      const raw = filters.bloodGroup;
+      const enumFormat = raw
+        .replace('+', '_POSITIVE')
+        .replace('-', '_NEGATIVE');
+      const symbolFormat = raw
+        .replace('_POSITIVE', '+')
+        .replace('_NEGATIVE', '-');
+      query.bloodGroup = { $in: [raw, enumFormat, symbolFormat] };
     }
 
     if (filters.district?.trim()) {
@@ -53,7 +62,7 @@ export class DonorRepository extends BaseRepository<User> {
 
     return this.userModel
       .find(query)
-      .select('fullName bloodGroup city subDivision district state')
+      .select('fullName email bloodGroup city subDivision district state')
       .exec();
   }
 }

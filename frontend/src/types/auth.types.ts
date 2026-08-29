@@ -1,5 +1,3 @@
-import { StringToBoolean } from "class-variance-authority/types";
-
 export type Role = "USER" | "BLOOD_BANK" | "ADMIN";
 
 export type BloodGroup =
@@ -58,40 +56,3 @@ export interface RegisterUserDto {
     pinCode: string;
 }
 
-export interface ActiveDonor {
-    _id: string;
-    email: string;
-    fullName: String;
-    gender: Gender;
-    bloodGroup: BloodGroup;
-    state: string;
-    district: string;
-    subDivision: string;
-    city: string;
-}
-
-export interface RegisterDonorDto {
-    weight: number;
-    takingMedication: boolean;
-    recentTattoo: boolean;
-    recentSurgery: boolean;
-    hepatitis: boolean;
-    hiv: boolean;
-    diabetes: boolean;
-    highBloodPressure: boolean;
-    chronicDisease: boolean;
-    consentInformation: boolean;
-    consentContact: boolean;
-    consentPrivacy: boolean;
-}
-
-export interface DonorAssessmentResult {
-  eligible: boolean;
-  reasons: string[];
-}
-
-export interface RegisterDonorResponse {
-  success: boolean;
-  message: string;
-  data: DonorAssessmentResult;
-}

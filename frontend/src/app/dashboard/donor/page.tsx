@@ -3,17 +3,18 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Heart, 
-  Search, 
-  MapPin, 
-  Phone, 
-  Mail, 
-  ShieldCheck, 
-  AlertCircle, 
-  Droplet, 
+import {
+  Heart,
+  Search,
+  MapPin,
+  Phone,
+  Mail,
+  ShieldCheck,
+  AlertCircle,
+  Droplet,
   RefreshCw,
-  UserCheck
+  UserCheck,
+  RotateCcw
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,23 +22,33 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuthStore } from '@/stores/auth.store';
-import { ActiveDonor } from '@/types/auth.types';
+import { useDonorStore } from '@/stores/donor.store';
+import { ActiveDonor, BloodGroup, SearchDonorDto } from '@/types/donor.types';
 import { Navbar } from '@/components/layout/navbar';
 
 export default function DonorDashboardPage() {
   const router = useRouter();
-  
+
+  // Auth Store Selectors
   const user = useAuthStore((state) => state.user);
   const status = useAuthStore((state) => state.status);
   const isInitializing = useAuthStore((state) => state.isInitializing);
-  const activeDonors = useAuthStore((state) => state.activeDonors);
-  const isLoadingDonors = useAuthStore((state) => state.isLoadingDonors);
-  const fetchActiveDonors = useAuthStore((state) => state.fetchActiveDonors);
 
+  // Donor Store Selectors
+  const activeDonors = useDonorStore((state) => state.donors);
+  const isLoadingDonors = useDonorStore((state) => state.isLoading);
+  const fetchActiveDonors = useDonorStore((state) => state.fetchActiveDonors);
+  const searchDonors = useDonorStore((state) => state.searchDonors);
+
+  // Filter form states
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedBloodGroup, setSelectedBloodGroup] = useState<string>('ALL');
-  const [selectedState, setSelectedState] = useState<string>('ALL');
+  const [selectedState, setSelectedState] = useState<string>('Tripura');
+  const [selectedBloodGroup, setSelectedBloodGroup] = useState<string>('A+');
+  const [districtInput, setDistrictInput] = useState('');
+  const [subDivisionInput, setSubDivisionInput] = useState('');
+  const [cityInput, setCityInput] = useState('');
   const [selectedDonor, setSelectedDonor] = useState<ActiveDonor | null>(null);
+  const [filterError, setFilterError] = useState<string | null>(null);
 
   // Auth Guard
   useEffect(() => {
@@ -46,21 +57,12 @@ export default function DonorDashboardPage() {
     }
   }, [status, isInitializing, router]);
 
-  // Fetch active donors once auth is resolved
+  // Initial load: Fetch all active donors
   useEffect(() => {
     if (!isInitializing && status === 'authenticated') {
       fetchActiveDonors();
     }
   }, [status, isInitializing, fetchActiveDonors]);
-
-  // Extract unique states for filter dropdown
-  const availableStates = useMemo(() => {
-    const statesSet = new Set<string>();
-    (activeDonors || []).forEach((d) => {
-      if (d.state) statesSet.add(d.state);
-    });
-    return Array.from(statesSet);
-  }, [activeDonors]);
 
   // Normalize Blood Groups
   const normalizeBG = (bg?: string) => {
@@ -74,32 +76,82 @@ export default function DonorDashboardPage() {
       .toUpperCase();
   };
 
-  // Safe filtered donors list
+  // Convert display blood groups back to Enum format for the backend DTO
+  const toBackendBloodGroup = (bg: string): BloodGroup => {
+    const map: Record<string, BloodGroup> = {
+      'A+': 'A_POSITIVE' as BloodGroup,
+      'A-': 'A_NEGATIVE' as BloodGroup,
+      'B+': 'B_POSITIVE' as BloodGroup,
+      'B-': 'B_NEGATIVE' as BloodGroup,
+      'O+': 'O_POSITIVE' as BloodGroup,
+      'O-': 'O_NEGATIVE' as BloodGroup,
+      'AB+': 'AB_POSITIVE' as BloodGroup,
+      'AB-': 'AB_NEGATIVE' as BloodGroup,
+    };
+    return map[bg] || ('A_POSITIVE' as BloodGroup);
+  };
+
+  // Handle Backend Filter Search
+  const handleFilterSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFilterError(null);
+
+    if (!selectedState || selectedState === 'ALL') {
+      setFilterError('State is required to search donors.');
+      return;
+    }
+
+    if (!selectedBloodGroup || selectedBloodGroup === 'ALL') {
+      setFilterError('Blood Group is required to search donors.');
+      return;
+    }
+
+    // Send both variants or send the raw selected value (e.g. "A+")
+    const payload: SearchDonorDto = {
+      state: selectedState.trim(),
+      bloodGroup: selectedBloodGroup as BloodGroup, // Sends "A+" directly
+      ...(districtInput.trim() ? { district: districtInput.trim() } : {}),
+      ...(subDivisionInput.trim() ? { subDivision: subDivisionInput.trim() } : {}),
+      ...(cityInput.trim() ? { city: cityInput.trim() } : {}),
+    };
+
+    await searchDonors(payload);
+  };
+
+  // Reset filters
+  const handleResetFilters = async () => {
+    setSelectedState('Tripura');
+    setSelectedBloodGroup('ALL');
+    setDistrictInput('');
+    setSubDivisionInput('');
+    setCityInput('');
+    setSearchQuery('');
+    setFilterError(null);
+    await fetchActiveDonors();
+  };
+
+  // Client-side search for donor name and location keyword filtering
   const filteredDonors = useMemo(() => {
     const list = Array.isArray(activeDonors) ? activeDonors : [];
+    if (!searchQuery.trim()) return list;
+
+    const query = searchQuery.toLowerCase().trim();
     return list.filter((d) => {
       const fullName = d?.fullName || '';
       const city = d?.city || '';
       const district = d?.district || '';
       const subDivision = d?.subDivision || '';
       const state = d?.state || '';
-      const bg = normalizeBG(d?.bloodGroup);
 
-      const matchesSearch =
-        fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        city.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        subDivision.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        district.toLowerCase().includes(searchQuery.toLowerCase());
-
-      const matchesBlood =
-        selectedBloodGroup === 'ALL' || bg === normalizeBG(selectedBloodGroup);
-
-      const matchesState =
-        selectedState === 'ALL' || state.toLowerCase() === selectedState.toLowerCase();
-
-      return matchesSearch && matchesBlood && matchesState;
+      return (
+        fullName.toLowerCase().includes(query) ||
+        city.toLowerCase().includes(query) ||
+        subDivision.toLowerCase().includes(query) ||
+        district.toLowerCase().includes(query) ||
+        state.toLowerCase().includes(query)
+      );
     });
-  }, [activeDonors, searchQuery, selectedBloodGroup, selectedState]);
+  }, [activeDonors, searchQuery]);
 
   if (isInitializing || status === 'idle') {
     return (
@@ -145,7 +197,7 @@ export default function DonorDashboardPage() {
           <Card className="p-5 bg-card border-border shadow-xs">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Active Donors</p>
+                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Total Donors</p>
                 <h3 className="text-2xl font-black mt-1">{activeDonors.length}</h3>
               </div>
               <div className="h-10 w-10 rounded-xl bg-rose-500/10 text-crimson-600 flex items-center justify-center">
@@ -197,61 +249,144 @@ export default function DonorDashboardPage() {
           </Card>
         </div>
 
-        {/* Search & Filters */}
+        {/* Backend Search & Filter Form Matching SearchDonorDto */}
         <Card className="p-5 bg-card border-border shadow-sm rounded-2xl mb-8">
-          <div className="grid grid-cols-1 sm:grid-cols-12 gap-4">
-            <div className="sm:col-span-6 relative">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search by name, city, sub-division, or district..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 h-11 bg-background"
-              />
+          <form onSubmit={handleFilterSearch} className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+              {/* 1. State (Required) */}
+              <div>
+                <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">
+                  State <span className="text-red-500">*</span>
+                </label>
+                <Select
+                  value={selectedState}
+                  onValueChange={(val) => setSelectedState(val ?? 'Tripura')}
+                >
+                  <SelectTrigger className="h-11 bg-background w-full">
+                    <SelectValue placeholder="Select State" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Tripura">Tripura</SelectItem>
+                    <SelectItem value="Assam">Assam</SelectItem>
+                    <SelectItem value="West Bengal">West Bengal</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* 2. Blood Group (Required) */}
+              <div>
+                <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">
+                  Blood Group <span className="text-red-500">*</span>
+                </label>
+                <Select
+                  value={selectedBloodGroup}
+                  onValueChange={(val) => setSelectedBloodGroup(val ?? 'A+')}
+                >
+                  <SelectTrigger className="h-11 bg-background w-full">
+                    <SelectValue placeholder="Select Blood Group" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map((bg) => (
+                      <SelectItem key={bg} value={bg}>
+                        {bg}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* 3. District (Optional) */}
+              <div>
+                <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">
+                  District
+                </label>
+                <Input
+                  placeholder="e.g. Sepahijala"
+                  value={districtInput}
+                  onChange={(e) => setDistrictInput(e.target.value)}
+                  className="h-11 bg-background w-full"
+                />
+              </div>
+
+              {/* 4. Sub-Division (Optional) */}
+              <div>
+                <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">
+                  Sub-Division
+                </label>
+                <Input
+                  placeholder="e.g. Sonamura"
+                  value={subDivisionInput}
+                  onChange={(e) => setSubDivisionInput(e.target.value)}
+                  className="h-11 bg-background w-full"
+                />
+              </div>
+
+              {/* 5. City (Optional) */}
+              <div>
+                <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">
+                  City
+                </label>
+                <Input
+                  placeholder="e.g. Melaghar"
+                  value={cityInput}
+                  onChange={(e) => setCityInput(e.target.value)}
+                  className="h-11 bg-background w-full"
+                />
+              </div>
             </div>
 
-            <div className="sm:col-span-3">
-              <Select value={selectedBloodGroup} onValueChange={(val) => setSelectedBloodGroup(val ?? 'ALL')}>
-                <SelectTrigger className="h-11 bg-background">
-                  <SelectValue placeholder="All Blood Groups" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ALL">All Blood Groups</SelectItem>
-                  {['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map((bg) => (
-                    <SelectItem key={bg} value={bg}>
-                      {bg}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {filterError && (
+              <p className="text-xs text-rose-500 font-medium flex items-center gap-1.5">
+                <AlertCircle className="h-3.5 w-3.5" />
+                {filterError}
+              </p>
+            )}
 
-            <div className="sm:col-span-3">
-              <Select value={selectedState} onValueChange={(val) => setSelectedState(val ?? 'ALL')}>
-                <SelectTrigger className="h-11 bg-background">
-                  <SelectValue placeholder="All States" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ALL">All States</SelectItem>
-                  {availableStates.map((st) => (
-                    <SelectItem key={st} value={st}>
-                      {st}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            {/* Bottom Bar: Keyword quick-filter + Action buttons */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-3 border-t border-border">
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                <Input
+                  placeholder="Quick filter loaded donors by name or location..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9 h-9 bg-background text-xs w-full"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 shrink-0">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleResetFilters}
+                  className="h-9 gap-1.5 text-xs cursor-pointer"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
+                  Reset Filters
+                </Button>
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={isLoadingDonors}
+                  className="h-9 bg-red-600 hover:bg-red-700 text-white text-xs gap-1.5 shadow-sm shadow-red-600/20 cursor-pointer"
+                >
+                  <Search className="h-3.5 w-3.5" />
+                  Search Donors
+                </Button>
+              </div>
             </div>
-          </div>
+          </form>
         </Card>
 
         {/* Donors List Header */}
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-bold">Active Donors ({filteredDonors.length})</h2>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => fetchActiveDonors()} 
-            disabled={isLoadingDonors} 
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => fetchActiveDonors()}
+            disabled={isLoadingDonors}
             className="gap-2 text-xs text-muted-foreground cursor-pointer"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${isLoadingDonors ? 'animate-spin' : ''}`} />
@@ -259,12 +394,13 @@ export default function DonorDashboardPage() {
           </Button>
         </div>
 
+        {/* Results Grid */}
         {filteredDonors.length === 0 ? (
           <Card className="p-12 text-center bg-card border-border">
             <AlertCircle className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-            <h3 className="text-lg font-semibold">No Active Donors Found</h3>
+            <h3 className="text-lg font-semibold">No Donors Found</h3>
             <p className="text-sm text-muted-foreground mt-1">
-              {isLoadingDonors ? 'Loading live donors...' : 'Try changing your search keywords or resetting the blood group filter.'}
+              {isLoadingDonors ? 'Searching for matching donors...' : 'Try adjusting your state, blood group, or district query.'}
             </p>
           </Card>
         ) : (
@@ -306,7 +442,7 @@ export default function DonorDashboardPage() {
                   <div className="pt-4 border-t border-border flex gap-2">
                     <Button
                       onClick={() => setSelectedDonor(donor)}
-                      className="w-full h-9 bg-linear-to-r from-red-700 to-crimson-600 hover:from-red-800 hover:to-rose-700 text-white text-xs font-semibold gap-1.5 shadow-md shadow-crimson-600/20 cursor-pointer border-none"
+                      className="w-full h-9 bg-linear-to-r from-red-700 to-red-950 hover:from-red-800 hover:to-rose-700 text-white text-xs font-semibold gap-1.5 shadow-md shadow-crimson-600/20 cursor-pointer border-none"
                     >
                       <Phone className="h-3.5 w-3.5" />
                       Contact Donor

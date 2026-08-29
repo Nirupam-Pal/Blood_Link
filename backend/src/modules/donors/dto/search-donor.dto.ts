@@ -27,6 +27,7 @@ export class SearchDonorDto {
         example: 'West Tripura',
         description: 'District name (optional)'
     })
+    @IsOptional()
     @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
     @IsString()
     @Length(2, 50, { message: 'District must be between 2 to 50 characters.' })

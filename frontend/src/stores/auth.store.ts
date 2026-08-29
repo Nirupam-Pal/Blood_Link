@@ -1,13 +1,9 @@
 import { authService } from "@/lib/services/auth-service";
 import {
   LoginDto,
-  RegisterDonorDto,
-  RegisterDonorResponse,
   RegisterUserDto,
-  ActiveDonor,
   User,
 } from "@/types/auth.types";
-import { error } from "console";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 
@@ -18,15 +14,11 @@ interface AuthState {
   status: AuthStatus;
   isInitializing: boolean;
   isSubmitting: boolean;
-  activeDonors: ActiveDonor[];
-  isLoadingDonors: boolean;
   error: string | null;
 
   // Actions
   initialize: () => Promise<void>;
   registerUser: (data: RegisterUserDto) => Promise<User>;
-  registerAsDonor: (data: RegisterDonorDto) => Promise<RegisterDonorResponse>;
-  fetchActiveDonors: () => Promise<ActiveDonor[]>;
   login: (credentials: LoginDto) => Promise<User>;
   logout: () => void;
   setUser: (user: User | null) => void;
@@ -35,13 +27,11 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>()(
   devtools(
-    (set, get) => ({
+    (set) => ({
       user: null,
       status: "idle",
       isInitializing: true,
       isSubmitting: false,
-      activeDonors: [],
-      isLoadingDonors: false,
       error: null,
 
       initialize: async () => {
@@ -59,7 +49,9 @@ export const useAuthStore = create<AuthState>()(
           try {
             const parsedUser: User = JSON.parse(cachedUser);
             set({ user: parsedUser, status: "authenticated" });
-          } catch {}
+          } catch {
+            // Ignore parse errors on corrupt cache
+          }
         }
 
         try {
@@ -99,49 +91,8 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      registerAsDonor: async (data: RegisterDonorDto) => {
-        set({ error: null, isSubmitting: true });
-        try {
-          const result = await authService.registerAsDonor(data);
-
-          if (result.success) {
-            const currentUser = get().user;
-            if (currentUser) {
-              const updatedUser: User = { ...currentUser, donor: true };
-              localStorage.setItem("user", JSON.stringify(updatedUser));
-              set({ user: updatedUser });
-            }
-          }
-          return result;
-        } catch (err: unknown) {
-          const message =
-            err instanceof Error ? err.message : "Donor assessment failed";
-          set({ error: message });
-          throw err;
-        } finally {
-          set({ isSubmitting: false });
-        }
-      },
-
-      fetchActiveDonors: async () => {
-        set({ isLoadingDonors: true, error: null });
-        try {
-          const donors = await authService.getActiveDonors();
-          const donorList = Array.isArray(donors) ? donors : [];
-          set({ activeDonors: donorList, isLoadingDonors: false });
-          return donorList;
-        } catch (err: unknown) {
-          const message =
-            err instanceof Error
-              ? err.message
-              : "Failed to fetch active donors";
-          set({ error: message, isLoadingDonors: false });
-          return [];
-        }
-      },
-
       login: async (credentials: LoginDto) => {
-        set({ error: null });
+        set({ error: null, isSubmitting: true });
         try {
           const response = await authService.login(credentials);
 
@@ -156,6 +107,8 @@ export const useAuthStore = create<AuthState>()(
           const message = err instanceof Error ? err.message : "Login failed";
           set({ error: message, status: "unauthenticated" });
           throw err;
+        } finally {
+          set({ isSubmitting: false });
         }
       },
 
