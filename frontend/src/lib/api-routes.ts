@@ -10,7 +10,7 @@ export const API_ROUTES = {
         ME: `${API_BASE_URL}/users/me`,
     },
     DONORS: {
-        ACTIVE_DONORS: `{API_BASE_URL}/donors/active`,
+        ACTIVE: `${API_BASE_URL}/donors/active`,
         REGISTER_DONORS: `${API_BASE_URL}/donors/register`,
         SEARCH_DONORS: `${API_BASE_URL}/donors/search`,
     },

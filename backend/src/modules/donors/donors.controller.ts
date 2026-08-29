@@ -20,6 +20,7 @@ import { CurrentUser } from '../../common/decorators/current-account.decorator';
 import type { AuthenticatedUser } from '../../common/types';
 import { RegisterDonorDto } from './dto/register-donors.dto';
 import { SearchDonorDto } from './dto/search-donor.dto';
+import { Public } from '../../common/decorators/public.decorator';
 
 @ApiTags('Donor System Lifecycle')
 @Controller('donors')
@@ -62,6 +63,7 @@ export class DonorsController {
     };
   }
 
+  @Public()
   @Get('active')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({

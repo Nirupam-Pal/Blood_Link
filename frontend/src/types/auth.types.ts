@@ -65,6 +65,7 @@ export interface ActiveDonor {
     gender: Gender;
     bloodGroup: BloodGroup;
     state: string;
+    district: string;
     subDivision: string;
     city: string;
 }

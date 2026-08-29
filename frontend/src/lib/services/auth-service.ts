@@ -35,7 +35,7 @@ export const authService = {
     },
 
     async getActiveDonors(): Promise<ActiveDonor[]> {
-        return apiClient<ActiveDonor[]>(API_ROUTES.DONORS.ACTIVE_DONORS, {
+        return apiClient<ActiveDonor[]>(API_ROUTES.DONORS.ACTIVE, {
             method: 'GET',
             requiresAuth: true,
         })
