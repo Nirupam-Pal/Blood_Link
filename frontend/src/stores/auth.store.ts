@@ -4,6 +4,8 @@ import {
   RegisterUserDto,
   User,
 } from "@/types/auth.types";
+import { RegisterBloodBankDto } from "@/types/blood-bank.types";
+import { error } from "console";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 
@@ -88,6 +90,21 @@ export const useAuthStore = create<AuthState>()(
           throw err;
         } finally {
           set({ isSubmitting: false });
+        }
+      },
+
+      registerBloodBank: async (data: RegisterBloodBankDto) => {
+        set({ error: null, isSubmitting: true });
+        try {
+          const newBloodBank = await authService.registerBloodBank(data);
+          set({ error: null });
+          return newBloodBank;
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : "Registration failed";
+          set({ error: message });
+          throw err;
+        } finally {
+          set({ isSubmitting: false })
         }
       },
 
