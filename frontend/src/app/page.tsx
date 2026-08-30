@@ -22,6 +22,7 @@ import { Card } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { AnimatedCounter } from '@/components/ui/animated-counter';
 import { Navbar } from '@/components/layout/navbar';
+import { useAuthStore } from '@/stores/auth.store';
 
 const fadeInUp: Variants = {
   hidden: { opacity: 0, y: 20 },
@@ -34,6 +35,10 @@ const staggerContainer: Variants = {
 };
 
 export default function LandingPage() {
+
+  const user = useAuthStore((state) => state.user)
+  const isDonor = Boolean(user?.donor);
+
   return (
     <div className="min-h-screen bg-background text-foreground font-sans antialiased selection:bg-crimson-500 selection:text-white transition-colors duration-300">
       <Navbar />
@@ -71,14 +76,22 @@ export default function LandingPage() {
 
               {/* CTAs */}
               <motion.div variants={fadeInUp} className="mt-8 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                <Button size="lg" className="h-13 px-8 rounded-xl bg-linear-to-r from-red-950 via-rose-800 to-rose-700 text-white font-semibold shadow-xl shadow-crimson-600/20 hover:scale-[1.02] transition-transform text-base">
-                  <Heart className="mr-2 h-5 w-5 fill-white" />
-                  Become a Donor
-                </Button>
-                <Button size="lg" variant="outline" className="h-13 px-8 rounded-xl border-border bg-card/60 hover:bg-muted text-foreground font-semibold backdrop-blur-xs text-base">
-                  <Search className="mr-2 h-5 w-5 text-crimson-500" />
-                  Find Blood Nearby
-                </Button>
+                {!isDonor && user?.role === 'USER' && (
+                  <Link href='/register/donor'>
+                    <Button size="lg" className="h-13 px-8 rounded-xl bg-linear-to-r from-red-950 via-rose-800 to-rose-700 text-white font-semibold shadow-xl shadow-crimson-600/20 hover:scale-[1.02] transition-transform text-base">
+                      <Heart className="mr-2 h-5 w-5 fill-white" />
+                      Become a Donor
+                    </Button>
+                  </Link>
+                )}
+
+                <Link href="/dashboard/donor">
+                  <Button size="lg" variant="outline" className="h-13 px-8 rounded-xl border-border bg-card/60 hover:bg-muted text-foreground font-semibold backdrop-blur-xs text-base">
+                    <Search className="mr-2 h-5 w-5 text-crimson-500" />
+                    Find a Donor
+                  </Button>
+                </Link>
+
               </motion.div>
 
               {/* Stats */}
@@ -318,23 +331,31 @@ export default function LandingPage() {
 
           <div className="mt-8 flex flex-col sm:flex-row justify-center gap-4">
             {/* Fixed Register as Donor Button */}
-            <Button
-              size="lg"
-              className="h-13 px-8 rounded-xl bg-linear-to-r from-red-700 via-crimson-600 to-rose-600 hover:from-red-800 hover:to-rose-700 text-white font-semibold shadow-xl shadow-crimson-600/25 active:scale-[0.98] transition-all text-base border-none"
-            >
-              <Heart className="mr-2 h-5 w-5 fill-white text-white" />
-              Register as Donor
-            </Button>
+            {!isDonor && user?.role === 'USER' && (
+              <Link href='/register/donor'>
+                <Button
+                  size="lg"
+                  className="h-13 px-8 rounded-xl bg-linear-to-r from-red-700 via-crimson-600 to-rose-600 hover:from-red-800 hover:to-rose-700 text-white font-semibold shadow-xl shadow-crimson-600/25 active:scale-[0.98] transition-all text-base border-none"
+                >
+                  <Heart className="mr-2 h-5 w-5 fill-white text-white" />
+                  Register as Donor
+                </Button>
+              </Link>
+
+            )}
+
 
             {/* Fixed Search Blood Availability Button */}
-            <Button
-              size="lg"
-              variant="outline"
-              className="h-13 px-8 rounded-xl border-border bg-card hover:bg-muted text-foreground font-semibold backdrop-blur-xs text-base transition-all"
-            >
-              <Search className="mr-2 h-5 w-5 text-crimson-600 dark:text-crimson-400" />
-              Search Blood Availability
-            </Button>
+            <Link href='/dashboard/donor'>
+              <Button
+                size="lg"
+                variant="outline"
+                className="h-13 px-8 rounded-xl border-border bg-card hover:bg-muted text-foreground font-semibold backdrop-blur-xs text-base transition-all"
+              >
+                <Search className="mr-2 h-5 w-5 text-crimson-600 dark:text-crimson-400" />
+                Search for Donor
+              </Button>
+            </Link>
           </div>
         </div>
       </section>

@@ -14,7 +14,8 @@ import {
   Droplet,
   RefreshCw,
   UserCheck,
-  RotateCcw
+  RotateCcw,
+  X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -49,6 +50,7 @@ export default function DonorDashboardPage() {
   const [cityInput, setCityInput] = useState('');
   const [selectedDonor, setSelectedDonor] = useState<ActiveDonor | null>(null);
   const [filterError, setFilterError] = useState<string | null>(null);
+  const [isVerificationBannerVisible, setIsVerificationBannerVisible] = useState(true);
 
   // Auth Guard
   useEffect(() => {
@@ -170,27 +172,44 @@ export default function DonorDashboardPage() {
 
       <main className="flex-1 max-w-7xl w-full mx-auto mt-18 px-4 sm:px-6 lg:px-8 py-8">
         {/* Donor Banner CTA */}
-        {!user?.donor && (
-          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-            <Card className="p-5 bg-linear-to-r from-red-600/10 via-rose-600/10 to-transparent border-red-600/20 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-xl bg-red-600 text-white flex items-center justify-center font-bold shadow-md shadow-red-600/30">
-                  <Heart className="h-5 w-5 fill-white" />
+        <AnimatePresence>
+          {isVerificationBannerVisible && !user?.donor && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10, height: 0, marginBottom: 0 }}
+              transition={{ duration: 0.2 }}
+              className="mb-8 overflow-hidden"
+            >
+              <Card className="relative p-5 pr-16 bg-linear-to-r from-red-600/10 via-rose-600/10 to-transparent border-red-600/20 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <button
+                  type="button"
+                  aria-label="Dismiss notification"
+                  onClick={() => setIsVerificationBannerVisible(false)}
+                  className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full bg-red-600/10 text-red-500 transition hover:bg-red-600/20 hover:text-red-600"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-red-600 text-white flex items-center justify-center font-bold shadow-md shadow-red-600/30">
+                    <Heart className="h-5 w-5 fill-white" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-sm">Become a Verified Blood Donor</h4>
+                    <p className="text-xs text-muted-foreground">Complete medical clearance to appear in emergency searches across your district.</p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="font-bold text-sm">Become a Verified Blood Donor</h4>
-                  <p className="text-xs text-muted-foreground">Complete medical clearance to appear in emergency searches across your district.</p>
-                </div>
-              </div>
-              <Button 
-                onClick={() => router.push('/register/donor')}
-                className="bg-red-600 hover:bg-red-700 text-white text-xs shrink-0 cursor-pointer"
-              >
-                Get Verified
-              </Button>
-            </Card>
-          </motion.div>
-        )}
+                <Button 
+                  onClick={() => router.push('/register/donor')}
+                  className="bg-red-600 hover:bg-red-700 text-white text-xs shrink-0 cursor-pointer"
+                >
+                  Get Verified
+                </Button>
+              </Card>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
