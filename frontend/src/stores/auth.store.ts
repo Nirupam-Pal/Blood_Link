@@ -4,8 +4,7 @@ import {
   RegisterUserDto,
   User,
 } from "@/types/auth.types";
-import { RegisterBloodBankDto } from "@/types/blood-bank.types";
-import { error } from "console";
+import { BloodBank, RegisterBloodBankDto } from "@/types/blood-bank.types";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 
@@ -21,6 +20,7 @@ interface AuthState {
   // Actions
   initialize: () => Promise<void>;
   registerUser: (data: RegisterUserDto) => Promise<User>;
+  registerBloodBank: (data: RegisterBloodBankDto) => Promise<BloodBank>;
   login: (credentials: LoginDto) => Promise<User>;
   logout: () => void;
   setUser: (user: User | null) => void;

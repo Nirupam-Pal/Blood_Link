@@ -10,18 +10,19 @@ import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { API_ROUTES } from '@/lib/api-routes';
 import { useAuthStore } from '@/stores/auth.store';
-import { BloodGroup } from '@/types/auth.types';
 
 export default function RegisterUserPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [localError, setLocalError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
 
   const registerUser = useAuthStore((state) => state.registerUser);
   const isSubmitting = useAuthStore((state) => state.isSubmitting);
   const storeError = useAuthStore((state) => state.error);
   const clearError = useAuthStore((state) => state.clearError);
-  
+
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
