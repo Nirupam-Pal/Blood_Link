@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { UsersRepository } from '../users/repositories/users.repository';
 import { JwtService } from '@nestjs/jwt';
 import { LoginDto } from './dto/login.dto';
@@ -97,6 +97,11 @@ export class AuthService {
 
   async sendOtp(sendOtpDto: SendOtpDto): Promise<{ message: string }> {
     const email = sendOtpDto.email.toLowerCase();
+
+    const existingBloodBank = await this.bloodBankRepository.findOne({ email });
+    if (existingBloodBank) {
+      throw new ConflictException('A Blood Bnak with this email is already registered.')
+    }
 
     const otp = crypto.randomInt(100000, 999999).toString();
 

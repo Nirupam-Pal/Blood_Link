@@ -31,6 +31,14 @@ export class BloodBanksService {
             )
         }
 
+        const otpAge = Date.now() - new Date(verifiedOtp.createdAt).getTime();
+        if (otpAge > 15 * 60 * 1000) {
+            await this.otpModel.deleteOne({ _id: verifiedOtp._id });
+            throw new BadRequestException(
+                'Verification session exired. Please request and verify a new OTP.',
+            );
+        }
+
         const existingEmail = await this.bloodBanksRepository.findOne({ email });
         if(existingEmail) {
             throw new ConflictException('A blood bank with this email is already registered.');
@@ -41,6 +49,13 @@ export class BloodBanksService {
         })
         if(existingLicense) {
             throw new ConflictException('A blood bank with this license number is already registered')
+        }
+
+        const existingPhone = await this.bloodBanksRepository.findOne({
+            phoneNumber: registerBloodBankDto.phoneNumber.trim(),
+        });
+        if (existingPhone) {
+            throw new ConflictException('A Blood Bank with this phone number is already registered');
         }
 
         const salt = await bcrypt.genSalt(12);
@@ -58,10 +73,6 @@ export class BloodBanksService {
             subDivision: registerBloodBankDto.subDivision,
             city: registerBloodBankDto.city,
             pinCode: registerBloodBankDto.pinCode,
-            // location: {
-            //     type: 'Point',
-            //     coordinates: registerBloodBankDto.location.coordinates
-            // },
             emailVerified: true,
             isActive: true
         });

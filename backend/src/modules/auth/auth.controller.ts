@@ -5,6 +5,7 @@ import { SendOtpDto } from './dto/send-otp.dto';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { Public } from '../../common/decorators/public.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -15,6 +16,7 @@ export class AuthController {
         return this.authService.login(loginDto)
     }
 
+    @Public()
     @Post('send-otp')
     @HttpCode(HttpStatus.OK)
     @ApiOperation({ summary: 'Dispatch a 6-digit verification OTP to an email address.' })
@@ -22,7 +24,8 @@ export class AuthController {
     async sendOtp(@Body() sendOtpDto: SendOtpDto) {
         return this.authService.sendOtp(sendOtpDto);
     }
-
+    
+    @Public()
     @Post('verify-otp')
     @HttpCode(HttpStatus.OK)
     @ApiOperation({ summary: 'Verify the 6-digit OTP code sent via email.' })
