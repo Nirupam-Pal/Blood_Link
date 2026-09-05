@@ -2,7 +2,11 @@ import { authService } from "@/lib/services/auth-service";
 import {
   LoginDto,
   RegisterUserDto,
+  SendOtpDto,
+  SendOtpResponse,
   User,
+  VerifyOtpDto,
+  VerifyOtpResponse,
 } from "@/types/auth.types";
 import { BloodBank, RegisterBloodBankDto } from "@/types/blood-bank.types";
 import { create } from "zustand";
@@ -16,11 +20,15 @@ interface AuthState {
   isInitializing: boolean;
   isSubmitting: boolean;
   error: string | null;
+  pendingVerificationEmail: string | null;
+  pendingBloodBankData: RegisterBloodBankDto | null;
 
-  // Actions
   initialize: () => Promise<void>;
   registerUser: (data: RegisterUserDto) => Promise<User>;
   registerBloodBank: (data: RegisterBloodBankDto) => Promise<BloodBank>;
+  sendOtp: (data: SendOtpDto) => Promise<SendOtpResponse>;
+  verifyOtp: (data: VerifyOtpDto) => Promise<VerifyOtpResponse>;
+  setPendingBloodBankData: (data: RegisterBloodBankDto | null) => void;
   login: (credentials: LoginDto) => Promise<User>;
   logout: () => void;
   setUser: (user: User | null) => void;
@@ -35,6 +43,8 @@ export const useAuthStore = create<AuthState>()(
       isInitializing: true,
       isSubmitting: false,
       error: null,
+      pendingVerificationEmail: null,
+      pendingBloodBankData: null,
 
       initialize: async () => {
         if (typeof window === "undefined") return;
@@ -93,19 +103,59 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      registerBloodBank: async (data: RegisterBloodBankDto) => {
+      sendOtp: async (data: SendOtpDto): Promise<SendOtpResponse> => {
         set({ error: null, isSubmitting: true });
         try {
-          const newBloodBank = await authService.registerBloodBank(data);
+          const response = await authService.sendOtp(data);
           set({ error: null });
-          return newBloodBank;
+          return response;
         } catch (err: unknown) {
-          const message = err instanceof Error ? err.message : "Registration failed";
+          const message =
+            err instanceof Error ? err.message : "Failed to send OTP";
           set({ error: message });
           throw err;
         } finally {
-          set({ isSubmitting: false })
+          set({ isSubmitting: false });
         }
+      },
+
+      verifyOtp: async (data: VerifyOtpDto): Promise<VerifyOtpResponse> => {
+        set({ error: null, isSubmitting: true });
+        try {
+          const response = await authService.verifyOtp(data);
+          set({ error: null });
+          return response;
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : "Invalid OTP";
+          set({ error: message });
+          throw err;
+        } finally {
+          set({ isSubmitting: false });
+        }
+      },
+
+      registerBloodBank: async (
+        data: RegisterBloodBankDto,
+      ): Promise<BloodBank> => {
+        set({ error: null, isSubmitting: true });
+        try {
+          const newBloodBank = await authService.registerBloodBank(data);
+          set({ pendingBloodBankData: null, error: null });
+          return newBloodBank;
+        } catch (err: unknown) {
+          const message =
+            err instanceof Error ? err.message : "Registration failed";
+          set({ error: message });
+          throw err;
+        } finally {
+          set({ isSubmitting: false });
+        }
+      },
+
+      
+
+      setPendingBloodBankData: (data: RegisterBloodBankDto | null) => {
+        set({ pendingBloodBankData: data });
       },
 
       login: async (credentials: LoginDto) => {

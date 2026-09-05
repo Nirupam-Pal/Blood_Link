@@ -72,6 +72,9 @@ export default function RegisterBloodBankPage() {
     return null;
   };
 
+  const sendOtp = useAuthStore((state) => state.sendOtp);
+  const setPendingBloodBankData = useAuthStore((state) => state.setPendingBloodBankData);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLocalError(null);
@@ -84,11 +87,9 @@ export default function RegisterBloodBankPage() {
     }
 
     try {
-      await registerBloodBank(formData);
-      setSuccess(true);
-      setTimeout(() => {
-        router.push('/login');
-      }, 2000);
+      setPendingBloodBankData(formData);
+      await sendOtp({ email: formData.email });
+      router.push(`/verify-otp?email=${encodeURIComponent(formData.email)}`);
     } catch {
       // Handled by store
     }

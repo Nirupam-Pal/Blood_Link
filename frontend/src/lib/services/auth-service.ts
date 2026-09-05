@@ -1,4 +1,4 @@
-import { AuthResponse, LoginDto, RegisterUserDto, User } from "@/types/auth.types";
+import { AuthResponse, LoginDto, RegisterUserDto, SendOtpDto, SendOtpResponse, User, VerifyOtpDto, VerifyOtpResponse } from "@/types/auth.types";
 import { apiClient } from "../api-client";
 import { API_ROUTES } from "../api-routes";
 import { BloodBank, RegisterBloodBankDto } from "@/types/blood-bank.types";
@@ -25,6 +25,22 @@ export const authService = {
             method: 'POST',
             body: JSON.stringify(data),
             requiresAuth: false,
+        })
+    },
+
+    async sendOtp(data: SendOtpDto): Promise<SendOtpResponse> {
+        return apiClient<SendOtpResponse>(API_ROUTES.AUTH.SEND_OTP, {
+            method: 'POST',
+            body: JSON.stringify(data),
+            requiresAuth: false,
+        })
+    },
+
+    async verifyOtp(data: VerifyOtpDto): Promise<VerifyOtpResponse> {
+        return apiClient<VerifyOtpResponse>(API_ROUTES.AUTH.VERIFY_OTP, {
+            method: 'POST',
+            body: JSON.stringify(data),
+            requiresAuth: false
         })
     },
 

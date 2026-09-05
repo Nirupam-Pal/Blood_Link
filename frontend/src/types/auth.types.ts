@@ -64,3 +64,12 @@ export interface VerifyOtpDto {
     email: string;
     otp: string;
 }
+
+export interface SendOtpResponse {
+  message: string;
+}
+
+export interface VerifyOtpResponse {
+  verified: boolean;
+  message: string;
+}
