@@ -180,7 +180,7 @@ export default function BloodBankDashboardPage() {
             <Button
               onClick={handleSaveInventory}
               disabled={saving}
-              className="bg-linear-to-r from-red-700 to-crimson-600 hover:from-red-800 hover:to-rose-700 text-white gap-2 text-sm shadow-md"
+              className="bg-linear-to-r from-red-700 to-red-950 hover:bg-red-800 p-5 text-white gap-2 text-sm shadow-md"
             >
               {saving ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
               Save All Changes

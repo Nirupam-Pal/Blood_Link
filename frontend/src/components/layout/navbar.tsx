@@ -67,10 +67,10 @@ export function Navbar() {
                   </Link>
                 )}
 
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted text-foreground text-sm font-medium">
+                <Button className="flex items-center gap-2 px-3 py-5 rounded-lg bg-muted hover:bg-gray-900 pointer cursor-pointer text-foreground text-sm font-medium">
                   <UserIcon className="h-4 w-4 text-red-600" />
                   <span>{user.fullName || user.email}</span>
-                </div>
+                </Button>
 
                 <Button
                   onClick={logout}
