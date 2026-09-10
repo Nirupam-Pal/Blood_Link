@@ -50,3 +50,8 @@ export interface RegisterBloodBankDto {
   city: string;
   pinCode: string;
 }
+
+export interface UpdateInventoryItemDto {
+  bloodGroup: BloodGroup;
+  units: number;
+}

@@ -23,7 +23,6 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuthStore } from '@/stores/auth.store';
-import { Navbar } from '@/components/layout/navbar';
 import { RegisterBloodBankDto } from '@/types/blood-bank.types';
 
 export default function RegisterBloodBankPage() {
