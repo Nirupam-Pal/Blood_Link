@@ -8,7 +8,6 @@ import {
   VerifyOtpDto,
   VerifyOtpResponse,
 } from "@/types/auth.types";
-import { BloodBank, RegisterBloodBankDto } from "@/types/blood-bank.types";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 
@@ -21,14 +20,12 @@ interface AuthState {
   isSubmitting: boolean;
   error: string | null;
   pendingVerificationEmail: string | null;
-  pendingBloodBankData: RegisterBloodBankDto | null;
 
   initialize: () => Promise<void>;
   registerUser: (data: RegisterUserDto) => Promise<User>;
-  registerBloodBank: (data: RegisterBloodBankDto) => Promise<BloodBank>;
   sendOtp: (data: SendOtpDto) => Promise<SendOtpResponse>;
   verifyOtp: (data: VerifyOtpDto) => Promise<VerifyOtpResponse>;
-  setPendingBloodBankData: (data: RegisterBloodBankDto | null) => void;
+  setPendingVerificationEmail: (email: string | null) => void;
   login: (credentials: LoginDto) => Promise<User>;
   logout: () => void;
   setUser: (user: User | null) => void;
@@ -44,7 +41,6 @@ export const useAuthStore = create<AuthState>()(
       isSubmitting: false,
       error: null,
       pendingVerificationEmail: null,
-      pendingBloodBankData: null,
 
       initialize: async () => {
         if (typeof window === "undefined") return;
@@ -61,9 +57,7 @@ export const useAuthStore = create<AuthState>()(
           try {
             const parsedUser: User = JSON.parse(cachedUser);
             set({ user: parsedUser, status: "authenticated" });
-          } catch {
-            // Ignore parse errors on corrupt cache
-          }
+          } catch {}
         }
 
         try {
@@ -123,7 +117,7 @@ export const useAuthStore = create<AuthState>()(
         set({ error: null, isSubmitting: true });
         try {
           const response = await authService.verifyOtp(data);
-          set({ error: null });
+          set({ error: null, pendingVerificationEmail: null });
           return response;
         } catch (err: unknown) {
           const message = err instanceof Error ? err.message : "Invalid OTP";
@@ -134,28 +128,8 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      registerBloodBank: async (
-        data: RegisterBloodBankDto,
-      ): Promise<BloodBank> => {
-        set({ error: null, isSubmitting: true });
-        try {
-          const newBloodBank = await authService.registerBloodBank(data);
-          set({ pendingBloodBankData: null, error: null });
-          return newBloodBank;
-        } catch (err: unknown) {
-          const message =
-            err instanceof Error ? err.message : "Registration failed";
-          set({ error: message });
-          throw err;
-        } finally {
-          set({ isSubmitting: false });
-        }
-      },
-
-      
-
-      setPendingBloodBankData: (data: RegisterBloodBankDto | null) => {
-        set({ pendingBloodBankData: data });
+      setPendingVerificationEmail: (email: string | null) => {
+        set({ pendingVerificationEmail: email });
       },
 
       login: async (credentials: LoginDto) => {
@@ -187,7 +161,12 @@ export const useAuthStore = create<AuthState>()(
           document.cookie =
             "accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
         }
-        set({ user: null, status: "unauthenticated", error: null });
+        set({
+          user: null,
+          status: "unauthenticated",
+          error: null,
+          pendingVerificationEmail: null,
+        });
       },
 
       setUser: (user: User | null) => {
@@ -196,6 +175,6 @@ export const useAuthStore = create<AuthState>()(
 
       clearError: () => set({ error: null }),
     }),
-    { name: "AuthStore" },
-  ),
+    { name: "AuthStore" }
+  )
 );

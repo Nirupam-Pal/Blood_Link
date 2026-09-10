@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
-  Building2,
   Droplet,
   Plus,
   Minus,
@@ -12,16 +11,11 @@ import {
   ShieldCheck,
   AlertTriangle,
   RefreshCw,
-  LogOut,
-  MapPin,
-  Phone,
-  Mail,
   Layers,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { useAuthStore } from '@/stores/auth.store';
 import { apiClient } from '@/lib/api-client';
 import { API_ROUTES } from '@/lib/api-routes';

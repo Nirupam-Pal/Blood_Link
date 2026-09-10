@@ -20,14 +20,6 @@ export const authService = {
         })
     },
 
-    async registerBloodBank(data: RegisterBloodBankDto): Promise<BloodBank> {
-        return apiClient<BloodBank>(API_ROUTES.BLOOD_BANKS.REGISTER_BLOOD_BANK, {
-            method: 'POST',
-            body: JSON.stringify(data),
-            requiresAuth: false,
-        })
-    },
-
     async sendOtp(data: SendOtpDto): Promise<SendOtpResponse> {
         return apiClient<SendOtpResponse>(API_ROUTES.AUTH.SEND_OTP, {
             method: 'POST',

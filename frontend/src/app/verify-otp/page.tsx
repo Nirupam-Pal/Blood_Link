@@ -15,6 +15,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useAuthStore } from '@/stores/auth.store';
+import { useBloodBankStore } from '@/stores/blood-bank.store';
 import { Navbar } from '@/components/layout/navbar';
 
 export default function VerifyOtpPage() {
@@ -22,13 +23,22 @@ export default function VerifyOtpPage() {
   const searchParams = useSearchParams();
   const queryEmail = searchParams.get('email');
 
-  const pendingData = useAuthStore((state) => state.pendingBloodBankData);
+  // Auth Store Hooks
   const verifyOtp = useAuthStore((state) => state.verifyOtp);
-  const registerBloodBank = useAuthStore((state) => state.registerBloodBank);
   const sendOtp = useAuthStore((state) => state.sendOtp);
-  const isSubmitting = useAuthStore((state) => state.isSubmitting);
-  const storeError = useAuthStore((state) => state.error);
-  const clearError = useAuthStore((state) => state.clearError);
+  const isAuthSubmitting = useAuthStore((state) => state.isSubmitting);
+  const authError = useAuthStore((state) => state.error);
+  const clearAuthError = useAuthStore((state) => state.clearError);
+
+  // Blood Bank Store Hooks
+  const pendingData = useBloodBankStore((state) => state.pendingRegistrationData);
+  const registerBloodBank = useBloodBankStore((state) => state.registerBloodBank);
+  const isBloodBankSubmitting = useBloodBankStore((state) => state.isSubmitting);
+  const bloodBankError = useBloodBankStore((state) => state.error);
+  const clearBloodBankError = useBloodBankStore((state) => state.clearError);
+
+  const isSubmitting = isAuthSubmitting || isBloodBankSubmitting;
+  const storeError = authError || bloodBankError;
 
   const email = queryEmail || pendingData?.email || '';
 
@@ -51,7 +61,8 @@ export default function VerifyOtpPage() {
   const handleChange = (index: number, val: string) => {
     if (localError || storeError) {
       setLocalError(null);
-      clearError();
+      clearAuthError();
+      clearBloodBankError();
     }
 
     const digit = val.replace(/\D/g, '').slice(-1);
@@ -88,7 +99,8 @@ export default function VerifyOtpPage() {
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
     setLocalError(null);
-    clearError();
+    clearAuthError();
+    clearBloodBankError();
 
     const otp = otpValues.join('');
     if (otp.length !== 6) {
@@ -107,11 +119,12 @@ export default function VerifyOtpPage() {
       const otpRes = await verifyOtp({ email, otp });
 
       if (otpRes.verified) {
-        // Step B: If registration data is present, create the Blood Bank record
+        // Step B: If registration data is present in useBloodBankStore, create the Blood Bank record
         if (pendingData) {
           setActionStage('CREATING');
           await registerBloodBank(pendingData);
         }
+
         setIsSuccess(true);
         setTimeout(() => {
           router.push('/login');
@@ -125,7 +138,8 @@ export default function VerifyOtpPage() {
   const handleResend = async () => {
     if (resendCooldown > 0 || !email) return;
     setLocalError(null);
-    clearError();
+    clearAuthError();
+    clearBloodBankError();
 
     try {
       await sendOtp({ email });

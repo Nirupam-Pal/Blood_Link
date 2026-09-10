@@ -7,7 +7,7 @@ import { RegisterBloodBankDto } from './dto/register-blood-bank.dto';
 import { BloodBank } from './blood-banks.schema';
 import * as bcrypt from 'bcrypt';
 import { UpdateBloodBankDto } from './dto/update-blood-bank.dto';
-import { UpdateInventoryItemDto } from './dto/update-inventory-item.dto';
+import {  BatchUpdateInventoryDto } from './dto/update-inventory-item.dto';
 import { SearchBloodBankDto } from './dto/search-bloodBank.dto';
 
 @Injectable()
@@ -107,26 +107,27 @@ export class BloodBanksService {
 
     async updateInventory(
         id: string,
-        updateInventoryDto: UpdateInventoryItemDto,
+        updateInventoryDto: BatchUpdateInventoryDto,
     ): Promise<BloodBank> {
-        await this.bloodBanksRepository.findById(id);
+        const updatePayload: Record<string, { units: number; lastUpdated: Date }> = {};
 
-        const updatePath = `inventory.${updateInventoryDto.bloodGroup}`
-
-        const updatedBank = await this.bloodBanksRepository.update(id, {
-            $set: {
-                [updatePath]: {
-                    units: updateInventoryDto.units,
-                    lastUpdated: new Date()
-                }
-            }
+        const now = new Date();
+        updateInventoryDto.items.forEach((item) => {
+            updatePayload[`inventory.${item.bloodGroup}`] = {
+                units: item.units,
+                lastUpdated: now,
+            };
         });
 
-        if(!updatedBank) {
-            throw new NotFoundException('Failed to update inventory.');
+        const updatedbank = await this.bloodBanksRepository.update(id, {
+            $set: updatePayload,
+        });
+
+        if(!updatedbank) {
+            throw new NotFoundException('Failed to update inventory or blood bank not found.')
         }
 
-        return updatedBank;
+        return updatedbank;
     }
 
     async searchBloodBanks(searchBloodBanksDto: SearchBloodBankDto): Promise<BloodBank[]> {

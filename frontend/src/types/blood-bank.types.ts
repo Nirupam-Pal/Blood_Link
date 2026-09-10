@@ -51,7 +51,23 @@ export interface RegisterBloodBankDto {
   pinCode: string;
 }
 
-export interface UpdateInventoryItemDto {
+export interface InventoryUpdateItem {
   bloodGroup: BloodGroup;
   units: number;
+}
+
+export interface BatchUpdateInventoryDto {
+  items: InventoryUpdateItem[];
+}
+
+export interface InventoryItem {
+  units: number;
+  lastUpdated: string;
+}
+
+export type InventoryMap = Record<BloodGroup, InventoryItem>;
+
+export interface UpdateInventoryResponse {
+  message: string;
+  data: BloodBank;
 }

@@ -23,14 +23,26 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuthStore } from '@/stores/auth.store';
+import { useBloodBankStore } from '@/stores/blood-bank.store';
 import { RegisterBloodBankDto } from '@/types/blood-bank.types';
 
 export default function RegisterBloodBankPage() {
   const router = useRouter();
-  const registerBloodBank = useAuthStore((state) => state.registerBloodBank);
-  const isSubmitting = useAuthStore((state) => state.isSubmitting);
-  const storeError = useAuthStore((state) => state.error);
-  const clearError = useAuthStore((state) => state.clearError);
+
+  // Auth Store Hooks
+  const sendOtp = useAuthStore((state) => state.sendOtp);
+  const isAuthSubmitting = useAuthStore((state) => state.isSubmitting);
+  const authError = useAuthStore((state) => state.error);
+  const clearAuthError = useAuthStore((state) => state.clearError);
+
+  // Blood Bank Store Hooks
+  const setPendingBloodBankData = useBloodBankStore((state) => state.setPendingRegistrationData);
+  const isBloodBankSubmitting = useBloodBankStore((state) => state.isSubmitting);
+  const bloodBankError = useBloodBankStore((state) => state.error);
+  const clearBloodBankError = useBloodBankStore((state) => state.clearError);
+
+  const isSubmitting = isAuthSubmitting || isBloodBankSubmitting;
+  const storeError = authError || bloodBankError;
 
   const [showPassword, setShowPassword] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
@@ -53,7 +65,8 @@ export default function RegisterBloodBankPage() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (localError || storeError) {
       setLocalError(null);
-      clearError();
+      clearAuthError();
+      clearBloodBankError();
     }
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
@@ -71,13 +84,11 @@ export default function RegisterBloodBankPage() {
     return null;
   };
 
-  const sendOtp = useAuthStore((state) => state.sendOtp);
-  const setPendingBloodBankData = useAuthStore((state) => state.setPendingBloodBankData);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLocalError(null);
-    clearError();
+    clearAuthError();
+    clearBloodBankError();
 
     const clientValidationError = validate();
     if (clientValidationError) {
@@ -90,20 +101,21 @@ export default function RegisterBloodBankPage() {
       await sendOtp({ email: formData.email });
       router.push(`/verify-otp?email=${encodeURIComponent(formData.email)}`);
     } catch {
-      // Handled by store
+      // Handled by stores
     }
   };
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
-
       <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {/* Back Link */}
-        <Link href="/register" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors">
+        <Link
+          href="/register"
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
+        >
           <ArrowLeft className="h-4 w-4" />
           Back to portal selection
         </Link>
-
 
         <div className="flex items-center gap-3 mb-8">
           <div className="h-10 w-10 rounded-xl bg-red-600 flex items-center justify-center text-white font-bold shadow-lg shadow-red-600/30">
@@ -262,7 +274,9 @@ export default function RegisterBloodBankPage() {
                     <label className="text-xs font-medium">State</label>
                     <Select
                       value={formData.state}
-                      onValueChange={(val) => setFormData((prev) => ({ ...prev, state: val || 'Tripura' }))}
+                      onValueChange={(val) =>
+                        setFormData((prev) => ({ ...prev, state: val || 'Tripura' }))
+                      }
                     >
                       <SelectTrigger className="h-11 bg-background w-full">
                         <SelectValue placeholder="State" />
@@ -344,7 +358,7 @@ export default function RegisterBloodBankPage() {
                   {isSubmitting ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Registering Facility...
+                      Sending OTP...
                     </>
                   ) : (
                     'Register Blood Bank'
