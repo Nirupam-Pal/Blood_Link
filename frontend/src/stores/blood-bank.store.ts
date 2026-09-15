@@ -3,6 +3,7 @@ import {
   BatchUpdateInventoryDto,
   BloodBank,
   RegisterBloodBankDto,
+  SearchBloodBankDto,
   UpdateInventoryResponse,
 } from "@/types/blood-bank.types";
 import { create } from "zustand";
@@ -14,6 +15,8 @@ interface BloodBankState {
   pendingRegistrationData: RegisterBloodBankDto | null;
   isSubmitting: boolean;
   isUpdatingInventory: boolean;
+  bloodBanks: BloodBank[];
+  isSearching: boolean;
   error: string | null;
 
   // Actions
@@ -23,6 +26,8 @@ interface BloodBankState {
     data: BatchUpdateInventoryDto
   ) => Promise<UpdateInventoryResponse>;
   setCurrentBloodBank: (bank: BloodBank | null) => void;
+  fetchAllBloodBanks: () => Promise<BloodBank[]>;
+  searchBloodBanks: (filters: SearchBloodBankDto) => Promise<BloodBank[]>;
   clearError: () => void;
 }
 
@@ -33,6 +38,8 @@ export const useBloodBankStore = create<BloodBankState>()(
       pendingRegistrationData: null,
       isSubmitting: false,
       isUpdatingInventory: false,
+      bloodBanks: [],
+      isSearching: false,
       error: null,
 
       setPendingRegistrationData: (data: RegisterBloodBankDto | null) => {
@@ -85,6 +92,36 @@ export const useBloodBankStore = create<BloodBankState>()(
 
       setCurrentBloodBank: (bank: BloodBank | null) =>
         set({ currentBloodBank: bank }),
+
+      fetchAllBloodBanks: async () => {
+        set({ isSearching: true, error: null });
+        try {
+          const banks = await bloodBankService.getAllBloodBanks();
+          const bankList = Array.isArray(banks) ? banks : [];
+          set({ bloodBanks: bankList, isSearching: false });
+          return bankList;
+        } catch (err: unknown) {
+          const message =
+            err instanceof Error ? err.message : "Failed to load blood banks";
+          set({ error: message, isSearching: false });
+          return [];
+        }
+      },
+
+      searchBloodBanks: async (filters: SearchBloodBankDto) => {
+        set({ isSearching: true, error: null });
+        try {
+          const response = await bloodBankService.searchBloodBanks(filters);
+          const bankList = Array.isArray(response.data) ? response.data : [];
+          set({ bloodBanks: bankList, isSearching: false });
+          return bankList;
+        } catch (err: unknown) {
+          const message =
+            err instanceof Error ? err.message : "Failed to search blood banks";
+          set({ error: message, isSearching: false });
+          return [];
+        }
+      },
 
       clearError: () => set({ error: null }),
     }),

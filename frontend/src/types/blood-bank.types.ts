@@ -73,3 +73,16 @@ export interface UpdateInventoryResponse {
   message: string;
   data: BloodBank;
 }
+
+export interface SearchBloodBankDto {
+  state: string;
+  city?: string;
+  subDivision?: string;
+  district?: string;
+}
+
+export interface SearchBloodBankResponse {
+  message: string;
+  count: number;
+  data: BloodBank[];
+}

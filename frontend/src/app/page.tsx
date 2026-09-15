@@ -14,7 +14,8 @@ import {
   Smartphone,
   UserCheck,
   Droplet,
-  HeartHandshake
+  HeartHandshake,
+  Building2
 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -89,6 +90,13 @@ export default function LandingPage() {
                   <Button size="lg" variant="outline" className="h-13 px-8 rounded-xl border-border bg-card/60 hover:bg-muted text-foreground font-semibold backdrop-blur-xs text-base">
                     <Search className="mr-2 h-5 w-5 text-crimson-500" />
                     Find a Donor
+                  </Button>
+                </Link>
+
+                <Link href="/dashboard/blood-banks">
+                  <Button size="lg" variant="outline" className="h-13 px-8 rounded-xl border-border bg-card/60 hover:bg-muted text-foreground font-semibold backdrop-blur-xs text-base">
+                    <Building2 className="mr-2 h-5 w-5 text-crimson-500" />
+                    Find Blood Banks
                   </Button>
                 </Link>
 
@@ -354,6 +362,17 @@ export default function LandingPage() {
               >
                 <Search className="mr-2 h-5 w-5 text-crimson-600 dark:text-crimson-400" />
                 Search for Donor
+              </Button>
+            </Link>
+
+            <Link href='/dashboard/blood-banks'>
+              <Button
+                size="lg"
+                variant="outline"
+                className="h-13 px-8 rounded-xl border-border bg-card hover:bg-muted text-foreground font-semibold backdrop-blur-xs text-base transition-all"
+              >
+                <Building2 className="mr-2 h-5 w-5 text-crimson-600 dark:text-crimson-400" />
+                Find Blood Banks
               </Button>
             </Link>
           </div>

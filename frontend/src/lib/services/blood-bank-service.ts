@@ -1,4 +1,4 @@
-import { BatchUpdateInventoryDto, BloodBank, RegisterBloodBankDto, UpdateInventoryResponse } from "@/types/blood-bank.types";
+import { BatchUpdateInventoryDto, BloodBank, RegisterBloodBankDto, SearchBloodBankDto, SearchBloodBankResponse, UpdateInventoryResponse } from "@/types/blood-bank.types";
 import { apiClient } from "../api-client";
 import { API_ROUTES } from "../api-routes";
 
@@ -22,6 +22,21 @@ export const bloodBankService = {
   async getProfile(): Promise<BloodBank> {
     return apiClient<BloodBank>(API_ROUTES.BLOOD_BANKS.PROFILE, {
       method: 'GET',
+      requiresAuth: true,
+    });
+  },
+
+  async getAllBloodBanks(): Promise<BloodBank[]> {
+    return apiClient<BloodBank[]>(API_ROUTES.BLOOD_BANKS.LIST, {
+      method: 'GET',
+      requiresAuth: true,
+    });
+  },
+
+  async searchBloodBanks(data: SearchBloodBankDto): Promise<SearchBloodBankResponse> {
+    return apiClient<SearchBloodBankResponse>(API_ROUTES.BLOOD_BANKS.SEARCH, {
+      method: 'POST',
+      body: JSON.stringify(data),
       requiresAuth: true,
     });
   },
