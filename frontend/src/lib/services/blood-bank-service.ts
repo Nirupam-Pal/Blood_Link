@@ -19,5 +19,10 @@ export const bloodBankService = {
     });
   },
 
-  
+  async getProfile(): Promise<BloodBank> {
+    return apiClient<BloodBank>(API_ROUTES.BLOOD_BANKS.PROFILE, {
+      method: 'GET',
+      requiresAuth: true,
+    });
+  },
 };

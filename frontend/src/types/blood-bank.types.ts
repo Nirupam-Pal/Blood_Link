@@ -1,14 +1,16 @@
 export type Role = "USER" | "BLOOD_BANK" | "ADMIN";
 
+// Must match backend/src/common/enums/blood-group.enum.ts exactly —
+// the Mongoose schema keys the inventory sub-document by these values.
 export type BloodGroup =
-  | "A_POSITIVE"
-  | "A_NEGATIVE"
-  | "B_POSITIVE"
-  | "B_NEGATIVE"
-  | "O_POSITIVE"
-  | "O_NEGATIVE"
-  | "AB_POSITIVE"
-  | "AB_NEGATIVE";
+  | "A+"
+  | "A-"
+  | "B+"
+  | "B-"
+  | "O+"
+  | "O-"
+  | "AB+"
+  | "AB-";
 
 export type Gender = "MALE" | "FEMALE" | "OTHER";
 

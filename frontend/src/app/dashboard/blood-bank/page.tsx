@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
@@ -28,15 +28,26 @@ interface InventoryStock {
 }
 
 const DEFAULT_INVENTORY: InventoryStock[] = [
-  { bloodGroup: 'A_POSITIVE' as BloodGroup, units: 0 },
-  { bloodGroup: 'A_NEGATIVE' as BloodGroup, units: 0 },
-  { bloodGroup: 'B_POSITIVE' as BloodGroup, units: 0 },
-  { bloodGroup: 'B_NEGATIVE' as BloodGroup, units: 0 },
-  { bloodGroup: 'O_POSITIVE' as BloodGroup, units: 0 },
-  { bloodGroup: 'O_NEGATIVE' as BloodGroup, units: 0 },
-  { bloodGroup: 'AB_POSITIVE' as BloodGroup, units: 0 },
-  { bloodGroup: 'AB_NEGATIVE' as BloodGroup, units: 0 },
+  { bloodGroup: 'A+' as BloodGroup, units: 0 },
+  { bloodGroup: 'A-' as BloodGroup, units: 0 },
+  { bloodGroup: 'B+' as BloodGroup, units: 0 },
+  { bloodGroup: 'B-' as BloodGroup, units: 0 },
+  { bloodGroup: 'O+' as BloodGroup, units: 0 },
+  { bloodGroup: 'O-' as BloodGroup, units: 0 },
+  { bloodGroup: 'AB+' as BloodGroup, units: 0 },
+  { bloodGroup: 'AB-' as BloodGroup, units: 0 },
 ];
+
+const mapToInventoryStock = (
+  inventory: Record<string, number | { units: number }>
+): InventoryStock[] =>
+  DEFAULT_INVENTORY.map((defaultItem) => {
+    const existing = inventory[defaultItem.bloodGroup];
+    return {
+      bloodGroup: defaultItem.bloodGroup,
+      units: typeof existing === 'number' ? existing : existing?.units ?? 0,
+    };
+  });
 
 export default function BloodBankDashboardPage() {
   const router = useRouter();
@@ -54,6 +65,7 @@ export default function BloodBankDashboardPage() {
   const [inventory, setInventory] = useState<InventoryStock[]>(DEFAULT_INVENTORY);
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
+  const hasHydratedRef = useRef(false);
 
   // Auth Guard
   useEffect(() => {
@@ -69,18 +81,16 @@ export default function BloodBankDashboardPage() {
     }
   }, [user, currentBloodBank, setCurrentBloodBank]);
 
-  // Safely map Record<BloodGroup, InventoryItem> to local array representation
+  // Hydrate local editable state from server data ONCE. After that, saves
+  // update local state directly (see handleSaveInventory) — re-running this
+  // on every currentBloodBank/user change would clobber in-progress edits
+  // whenever those objects update for unrelated reasons (token refresh, etc).
   useEffect(() => {
+    if (hasHydratedRef.current) return;
     const activeBank = currentBloodBank || (user as any);
     if (activeBank?.inventory) {
-      const mergedInventory = DEFAULT_INVENTORY.map((defaultItem) => {
-        const existing = activeBank.inventory[defaultItem.bloodGroup];
-        return {
-          bloodGroup: defaultItem.bloodGroup,
-          units: typeof existing === 'number' ? existing : existing?.units ?? 0,
-        };
-      });
-      setInventory(mergedInventory);
+      setInventory(mapToInventoryStock(activeBank.inventory));
+      hasHydratedRef.current = true;
     }
   }, [currentBloodBank, user]);
 
@@ -112,10 +122,11 @@ export default function BloodBankDashboardPage() {
     }));
 
     // Send payload matching BatchUpdateInventoryDto: { items: [...] }
+    // (updateInventoryBatch already writes the returned bank into the store)
     const response = await updateInventoryBatch({ items });
 
-    if (response?.data) {
-      setCurrentBloodBank(response.data);
+    if (response?.data?.inventory) {
+      setInventory(mapToInventoryStock(response.data.inventory));
     }
 
     setSavedSuccess(true);
@@ -245,10 +256,7 @@ export default function BloodBankDashboardPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {inventory.map((item) => {
             const isLow = item.units < 5;
-            const displayGroup = item.bloodGroup
-              .replace('_', ' ')
-              .replace('POSITIVE', '+')
-              .replace('NEGATIVE', '-');
+            const displayGroup = item.bloodGroup;
 
             return (
               <motion.div key={item.bloodGroup} layout>

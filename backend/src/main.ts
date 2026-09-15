@@ -1,8 +1,13 @@
 import { NestFactory } from '@nestjs/core';
+import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // Without this, every @IsEnum/@IsInt/@Min decorator on our DTOs is inert
+  // and invalid payloads (e.g. mismatched enum values) pass through silently.
+  app.useGlobalPipes(new ValidationPipe({ transform: true }));
 
   // Enable CORS
   app.enableCors({

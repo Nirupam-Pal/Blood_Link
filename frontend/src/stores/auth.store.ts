@@ -1,7 +1,9 @@
 import { authService } from "@/lib/services/auth-service";
+import { bloodBankService } from "@/lib/services/blood-bank-service";
 import {
   LoginDto,
   RegisterUserDto,
+  Role,
   SendOtpDto,
   SendOtpResponse,
   User,
@@ -10,6 +12,19 @@ import {
 } from "@/types/auth.types";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
+
+// Reads the `role` claim out of the access token so we know whether to
+// refresh via /users/me or /blood-banks/profile without waiting on a
+// (possibly stale or absent) cached user object.
+function getRoleFromToken(token: string): Role | null {
+  try {
+    const payload = token.split(".")[1];
+    const decoded = JSON.parse(atob(payload.replace(/-/g, "+").replace(/_/g, "/")));
+    return decoded?.role ?? null;
+  } catch {
+    return null;
+  }
+}
 
 export type AuthStatus = "idle" | "authenticated" | "unauthenticated";
 
@@ -61,7 +76,18 @@ export const useAuthStore = create<AuthState>()(
         }
 
         try {
-          const freshUser = await authService.getCurrentUser();
+          const role =
+            getRoleFromToken(token) ??
+            (cachedUser ? (JSON.parse(cachedUser) as User).role : null);
+
+          const freshUser: User =
+            role === "BLOOD_BANK"
+              ? ({
+                  ...(await bloodBankService.getProfile()),
+                  role: "BLOOD_BANK",
+                } as unknown as User)
+              : await authService.getCurrentUser();
+
           localStorage.setItem("user", JSON.stringify(freshUser));
           set({
             user: freshUser,

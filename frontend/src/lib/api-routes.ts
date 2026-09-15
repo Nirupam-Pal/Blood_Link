@@ -20,6 +20,7 @@ export const API_ROUTES = {
         REGISTER_BLOOD_BANK: `${API_BASE_URL}/blood-banks/register`,
         LIST: `${API_BASE_URL}/blood-banks`,
         SEARCH: `${API_BASE_URL}/blood-banks/search`,
-        UPDATE_INVENTORY: `${API_BASE_URL}/blood-banks/inventory`
+        UPDATE_INVENTORY: `${API_BASE_URL}/blood-banks/inventory`,
+        PROFILE: `${API_BASE_URL}/blood-banks/profile`,
     }
 } as const;
