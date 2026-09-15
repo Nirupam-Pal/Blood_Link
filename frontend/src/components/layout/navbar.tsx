@@ -7,6 +7,15 @@ import { HeartHandshake, Menu, X, LogIn, UserPlus, LogOut, User as UserIcon, Hea
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { useAuthStore } from '@/stores/auth.store';
+import type { User } from '@/types/auth.types';
+
+// Blood Bank accounts carry their name under `bloodBankName`, not `fullName`.
+function getDisplayName(user: User): string {
+  if (user.role === 'BLOOD_BANK') {
+    return (user as unknown as { bloodBankName?: string }).bloodBankName || user.email;
+  }
+  return user.fullName || user.email;
+}
 
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -27,6 +36,7 @@ export function Navbar() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 transition-all duration-300">
@@ -70,7 +80,7 @@ export function Navbar() {
                 <Link href="/profile">
                   <Button className="flex items-center gap-2 px-3 py-5 rounded-lg bg-muted hover:bg-gray-900 pointer cursor-pointer text-foreground text-sm font-medium">
                     <UserIcon className="h-4 w-4 text-red-600" />
-                    <span>{user.fullName || user.email}</span>
+                    <span>{getDisplayName(user)}</span>
                   </Button>
                 </Link>
 
@@ -134,12 +144,12 @@ export function Navbar() {
                   <Link href="/profile" onClick={() => setMobileMenuOpen(false)}>
                     <Button variant="outline" className="w-full text-foreground justify-center gap-2 mb-2">
                       <UserIcon className="h-4 w-4 text-red-600" />
-                      {user.fullName || user.email}
+                      {getDisplayName(user)}
                     </Button>
                   </Link>
                   <Button onClick={logout} variant="outline" className="w-full text-foreground justify-center gap-2">
                     <LogOut className="h-4 w-4" />
-                    Sign Out ({user.fullName || user.email})
+                    Sign Out ({getDisplayName(user)})
                   </Button>
                 </>
               ) : (

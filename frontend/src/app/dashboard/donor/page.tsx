@@ -173,7 +173,7 @@ export default function DonorDashboardPage() {
       <main className="flex-1 max-w-7xl w-full mx-auto mt-18 px-4 sm:px-6 lg:px-8 py-8">
         {/* Donor Banner CTA */}
         <AnimatePresence>
-          {isVerificationBannerVisible && !user?.donor && (
+          {isVerificationBannerVisible && !user?.donor && user?.role === 'USER' && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}

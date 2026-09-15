@@ -27,6 +27,20 @@ function getRoleFromToken(token: string): Role | null {
   }
 }
 
+// /auth/login only returns a trimmed user projection (id/fullName/email/
+// role/donor) for token-signing purposes — it omits gender, bloodGroup,
+// address fields, etc. Fetch the full profile so callers always get every
+// field, not just what happened to be embedded in the JWT payload.
+async function fetchFullProfileForRole(role: Role): Promise<User> {
+  if (role === "BLOOD_BANK") {
+    return {
+      ...(await bloodBankService.getProfile()),
+      role: "BLOOD_BANK",
+    } as unknown as User;
+  }
+  return authService.getCurrentUser();
+}
+
 export type AuthStatus = "idle" | "authenticated" | "unauthenticated";
 
 interface AuthState {
@@ -84,13 +98,7 @@ export const useAuthStore = create<AuthState>()(
             getRoleFromToken(token) ??
             (cachedUser ? (JSON.parse(cachedUser) as User).role : null);
 
-          const freshUser: User =
-            role === "BLOOD_BANK"
-              ? ({
-                  ...(await bloodBankService.getProfile()),
-                  role: "BLOOD_BANK",
-                } as unknown as User)
-              : await authService.getCurrentUser();
+          const freshUser: User = await fetchFullProfileForRole(role ?? "USER");
 
           localStorage.setItem("user", JSON.stringify(freshUser));
           set({
@@ -169,11 +177,20 @@ export const useAuthStore = create<AuthState>()(
 
           localStorage.setItem("accessToken", response.accessToken);
           localStorage.setItem("refreshToken", response.refreshToken);
-          localStorage.setItem("user", JSON.stringify(response.user));
           document.cookie = `accessToken=${response.accessToken}; path=/; max-age=86400; SameSite=Lax`;
 
-          set({ user: response.user, status: "authenticated", error: null });
-          return response.user;
+          // Enrich the trimmed login payload with the full profile so every
+          // field is populated immediately, not just after a page reload.
+          let fullUser = response.user;
+          try {
+            fullUser = await fetchFullProfileForRole(response.user.role);
+          } catch {
+            // Fall back to the minimal login payload if the follow-up fetch fails.
+          }
+
+          localStorage.setItem("user", JSON.stringify(fullUser));
+          set({ user: fullUser, status: "authenticated", error: null });
+          return fullUser;
         } catch (err: unknown) {
           const message = err instanceof Error ? err.message : "Login failed";
           set({ error: message, status: "unauthenticated" });

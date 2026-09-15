@@ -58,6 +58,14 @@ export default function RegisterDonorPage() {
     }
   }, [status, isInitializing, router]);
 
+  // Only USER accounts can register as a donor — Blood Bank accounts have
+  // no donor eligibility flow and should never reach this form.
+  useEffect(() => {
+    if (!isInitializing && status === 'authenticated' && user && user.role !== 'USER') {
+      router.push('/');
+    }
+  }, [status, isInitializing, user, router]);
+
   const handleMedicalToggle = (key: keyof typeof medicalAnswers, value: boolean) => {
     setMedicalAnswers((prev) => ({ ...prev, [key]: value }));
   };
@@ -103,7 +111,7 @@ export default function RegisterDonorPage() {
     }
   };
 
-  if (isInitializing || status === 'idle') {
+  if (isInitializing || status === 'idle' || (user && user.role !== 'USER')) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
