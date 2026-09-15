@@ -9,6 +9,7 @@ import {
   Patch,
   Post,
   Query,
+  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -104,15 +105,23 @@ export class BloodBanksController {
   }
 
   @Patch('inventory')
+  @Roles(Role.BLOOD_BANK)
   @ApiOperation({
     summary: 'Batch update inventory units for multiple blood groups',
   })
   async updateInventory(
-    @CurrentBloodBank('id') id: string,
+    @CurrentBloodBank() bank: any,
     @Body() batchUpdateDto: BatchUpdateInventoryDto,
   ) {
+    // Fallback ID handling if 'id' or '_id' is stored on the user payload
+    const bankId = bank?.id || bank?._id || bank?.sub;
+    
+    if (!bankId) {
+      throw new UnauthorizedException('Invalid blood bank identification token.');
+    }
+
     const data = await this.bloodBanksService.updateInventory(
-      id,
+      bankId,
       batchUpdateDto,
     );
 
