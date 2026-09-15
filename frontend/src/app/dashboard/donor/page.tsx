@@ -26,6 +26,7 @@ import { useAuthStore } from '@/stores/auth.store';
 import { useDonorStore } from '@/stores/donor.store';
 import { ActiveDonor, BloodGroup, SearchDonorDto } from '@/types/donor.types';
 import { Navbar } from '@/components/layout/navbar';
+import { AmbientOrbs } from '@/components/ui/ambient-orbs';
 
 export default function DonorDashboardPage() {
   const router = useRouter();
@@ -157,7 +158,7 @@ export default function DonorDashboardPage() {
 
   if (isInitializing || status === 'idle') {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-cosmic flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <Droplet className="h-10 w-10 text-crimson-600 animate-bounce" />
           <p className="text-sm text-muted-foreground">Authenticating session...</p>
@@ -167,10 +168,11 @@ export default function DonorDashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col">
+    <div className="relative min-h-screen bg-cosmic text-foreground flex flex-col overflow-hidden">
+      <AmbientOrbs />
       <Navbar />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto mt-18 px-4 sm:px-6 lg:px-8 py-8">
+      <main className="relative z-10 flex-1 max-w-7xl w-full mx-auto mt-18 px-4 sm:px-6 lg:px-8 py-8">
         {/* Donor Banner CTA */}
         <AnimatePresence>
           {isVerificationBannerVisible && !user?.donor && user?.role === 'USER' && (
@@ -388,7 +390,7 @@ export default function DonorDashboardPage() {
                   type="submit"
                   size="sm"
                   disabled={isLoadingDonors}
-                  className="h-9 bg-red-600 hover:bg-red-700 text-white text-xs gap-1.5 shadow-sm shadow-red-600/20 cursor-pointer"
+                  className="h-9 bg-red-600 hover:bg-red-700 text-white text-xs gap-1.5 cursor-pointer"
                 >
                   <Search className="h-3.5 w-3.5" />
                   Search Donors
@@ -461,7 +463,7 @@ export default function DonorDashboardPage() {
                   <div className="pt-4 border-t border-border flex gap-2">
                     <Button
                       onClick={() => setSelectedDonor(donor)}
-                      className="w-full h-9 bg-linear-to-r from-red-700 to-red-950 hover:from-red-800 hover:to-rose-700 text-white text-xs font-semibold gap-1.5 shadow-md shadow-crimson-600/20 cursor-pointer border-none"
+                      className="w-full h-9 bg-linear-to-r from-red-700 to-red-950 hover:from-red-800 hover:to-rose-700 text-white text-xs font-semibold gap-1.5 cursor-pointer border-none"
                     >
                       <Phone className="h-3.5 w-3.5" />
                       Contact Donor

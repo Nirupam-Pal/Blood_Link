@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Droplet,
   Plus,
@@ -13,14 +13,14 @@ import {
   RefreshCw,
   Layers,
   AlertCircle,
+  X,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { useAuthStore } from '@/stores/auth.store';
 import { useBloodBankStore } from '@/stores/blood-bank.store';
 import { Navbar } from '@/components/layout/navbar';
+import { AmbientOrbs } from '@/components/ui/ambient-orbs';
 import { BloodGroup } from '@/types/blood-bank.types';
+import { cn } from '@/lib/utils';
 
 interface InventoryStock {
   bloodGroup: BloodGroup;
@@ -142,174 +142,353 @@ export default function BloodBankDashboardPage() {
 
   if (isInitializing || status === 'idle') {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <Droplet className="h-10 w-10 text-red-600 animate-bounce" />
-          <p className="text-sm text-muted-foreground">Loading blood bank dashboard...</p>
+      <div className="min-h-screen bg-cosmic flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative h-16 w-16">
+            <div className="absolute inset-0 rounded-full bg-red-600/30 blur-xl animate-pulse" />
+            <div className="relative h-16 w-16 rounded-full border border-red-500/30 bg-card backdrop-blur-xl flex items-center justify-center">
+              <Droplet className="h-7 w-7 text-red-500 animate-bounce" />
+            </div>
+          </div>
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">
+            Initializing Dashboard
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col">
+    <div className="relative min-h-screen bg-cosmic text-foreground overflow-hidden">
+      <AmbientOrbs />
+
       <Navbar />
 
-      <main className="flex-1 max-w-7xl w-full mt-18 mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {(localError || storeError) && (
-          <div className="p-4 mb-6 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <AlertCircle className="h-4 w-4 shrink-0" />
-              <span>{localError || storeError}</span>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setLocalError(null);
-                clearError();
-              }}
-              className="text-xs h-7 px-2"
-            >
-              Dismiss
-            </Button>
-          </div>
+      {/* HUD scan-line that sweeps across the top while a save is in flight */}
+      <AnimatePresence>
+        {isUpdatingInventory && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed top-0 left-0 right-0 z-50 h-[2px] overflow-hidden"
+          >
+            <motion.div
+              className="h-full w-1/3 bg-gradient-to-r from-transparent via-red-500 to-transparent shadow-[0_0_12px_2px_rgba(255,30,64,0.8)]"
+              animate={{ x: ['-100%', '300%'] }}
+              transition={{ duration: 1.1, repeat: Infinity, ease: 'linear' }}
+            />
+          </motion.div>
         )}
+      </AnimatePresence>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-          <Card className="p-5 bg-card border-border shadow-xs">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
-                  Total Units Available
-                </p>
-                <h3 className="text-2xl font-black mt-1">{totalUnits} Bags</h3>
-              </div>
-              <div className="h-10 w-10 rounded-xl bg-rose-500/10 text-red-600 flex items-center justify-center">
-                <Layers className="h-5 w-5" />
-              </div>
-            </div>
-          </Card>
+      <main className="relative z-10 flex-1 max-w-7xl w-full mt-18 mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        {/* Eyebrow / System status */}
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400 mb-4"
+        >
+          <span className="relative flex h-1.5 w-1.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
+          </span>
+          Live Inventory Feed — Online
+        </motion.div>
 
-          <Card className="p-5 bg-card border-border shadow-xs">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
-                  Critical Shortages (&lt;5 units)
-                </p>
-                <h3 className={`text-2xl font-black mt-1 ${criticalShortages > 0 ? 'text-amber-500' : 'text-emerald-600'}`}>
-                  {criticalShortages} Groups
-                </h3>
+        <AnimatePresence>
+          {(localError || storeError) && (
+            <motion.div
+              initial={{ opacity: 0, y: -10, height: 0 }}
+              animate={{ opacity: 1, y: 0, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="p-4 mb-6 rounded-2xl border border-red-500/30 bg-red-500/10 backdrop-blur-xl text-red-600 dark:text-red-300 text-sm flex items-center justify-between dark:shadow-[0_0_25px_rgba(255,30,64,0.15)] overflow-hidden"
+            >
+              <div className="flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                <span>{localError || storeError}</span>
               </div>
-              <div className="h-10 w-10 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
-                <AlertTriangle className="h-5 w-5" />
-              </div>
-            </div>
-          </Card>
+              <button
+                onClick={() => {
+                  setLocalError(null);
+                  clearError();
+                }}
+                className="shrink-0 h-7 w-7 rounded-lg flex items-center justify-center text-red-500/70 hover:text-red-600 dark:text-red-300/70 dark:hover:text-red-200 hover:bg-red-500/10 transition-colors cursor-pointer"
+                aria-label="Dismiss error"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-          <Card className="p-5 bg-card border-border shadow-xs">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
-                  Verification Status
-                </p>
-                <h3 className="text-2xl font-black mt-1 text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
-                  {isVerified ? 'Verified' : 'Pending Approval'}
-                </h3>
-              </div>
-              <div className="h-10 w-10 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
-                <ShieldCheck className="h-5 w-5" />
-              </div>
-            </div>
-          </Card>
-        </div>
+        {/* Stat metrics */}
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={{ visible: { transition: { staggerChildren: 0.08 } } }}
+          className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10"
+        >
+          <StatCard
+            icon={Layers}
+            label="Total Units Available"
+            value={`${totalUnits} Bags`}
+            hue="red"
+          />
+          <StatCard
+            icon={AlertTriangle}
+            label="Critical Shortages (<5 units)"
+            value={`${criticalShortages} Groups`}
+            hue={criticalShortages > 0 ? 'amber' : 'emerald'}
+          />
+          <StatCard
+            icon={ShieldCheck}
+            label="Verification Status"
+            value={isVerified ? 'Verified' : 'Pending Approval'}
+            hue="emerald"
+          />
+        </motion.div>
 
+        {/* Section header + Save CTA */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h2 className="text-xl font-bold tracking-tight">Live Blood Inventory Management</h2>
-            <p className="text-sm text-muted-foreground">
+            <h2 className="text-xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text text-transparent">
+              Live Blood Inventory Management
+            </h2>
+            <p className="text-sm text-muted-foreground mt-0.5">
               Update real-time stock units so patients and emergency donors can discover available reserves.
             </p>
           </div>
 
           <div className="flex items-center gap-3">
-            {savedSuccess && (
-              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold animate-pulse">
-                ✓ Inventory Updated
-              </span>
-            )}
-            <Button
+            <AnimatePresence>
+              {savedSuccess && (
+                <motion.span
+                  initial={{ opacity: 0, scale: 0.8, x: 8 }}
+                  animate={{ opacity: 1, scale: 1, x: 0 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 px-3 py-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10"
+                >
+                  <ShieldCheck className="h-3.5 w-3.5" />
+                  Inventory Synced
+                </motion.span>
+              )}
+            </AnimatePresence>
+
+            <motion.button
               onClick={handleSaveInventory}
               disabled={isUpdatingInventory}
-              className="bg-red-600 hover:bg-red-700 p-5 text-white gap-2 text-sm shadow-md cursor-pointer"
-            >
-              {isUpdatingInventory ? (
-                <RefreshCw className="h-4 w-4 animate-spin" />
-              ) : (
-                <Save className="h-4 w-4" />
+              whileHover={!isUpdatingInventory ? { scale: 1.03 } : undefined}
+              whileTap={!isUpdatingInventory ? { scale: 0.96 } : undefined}
+              className={cn(
+                'relative overflow-hidden rounded-xl px-6 py-3 text-sm font-semibold text-white',
+                'bg-gradient-to-r from-red-700 via-red-600 to-rose-600',
+                'disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer transition-colors duration-300'
               )}
-              Save All Changes
-            </Button>
+            >
+              {!isUpdatingInventory && (
+                <motion.span
+                  aria-hidden
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent"
+                  initial={{ x: '-120%' }}
+                  animate={{ x: '120%' }}
+                  transition={{ duration: 2, repeat: Infinity, ease: 'linear', repeatDelay: 0.6 }}
+                />
+              )}
+              <span className="relative flex items-center gap-2">
+                {isUpdatingInventory ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                    Syncing Inventory...
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-4 w-4" />
+                    Save All Changes
+                  </>
+                )}
+              </span>
+            </motion.button>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Inventory grid */}
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={{ visible: { transition: { staggerChildren: 0.06 } } }}
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+          style={{ perspective: 1200 }}
+        >
           {inventory.map((item) => {
             const isLow = item.units < 5;
-            const displayGroup = item.bloodGroup;
 
             return (
-              <motion.div key={item.bloodGroup} layout>
-                <Card className="p-6 bg-card border-border hover:border-red-600/40 hover:shadow-lg transition-all rounded-2xl flex flex-col justify-between">
-                  <div>
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="h-12 w-12 rounded-2xl bg-red-600/10 text-red-600 font-black text-xl flex items-center justify-center border border-red-600/20">
-                        {displayGroup}
+              <motion.div
+                key={item.bloodGroup}
+                layout
+                variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+                whileHover={{ y: -6, rotateX: 4, rotateY: -4, scale: 1.015 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                style={{ transformStyle: 'preserve-3d' }}
+                className={cn(
+                  'group relative rounded-2xl border backdrop-blur-xl p-6 flex flex-col justify-between',
+                  'bg-card shadow-sm dark:shadow-2xl transition-colors duration-300',
+                  isLow
+                    ? 'border-red-500/20 hover:border-red-500/50 dark:hover:shadow-[0_0_30px_rgba(255,30,64,0.25)]'
+                    : 'border-border hover:border-emerald-400/40 dark:hover:shadow-[0_0_30px_rgba(16,185,129,0.18)]'
+                )}
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="relative h-12 w-12 shrink-0">
+                      <div className="absolute inset-0 rounded-2xl bg-red-600/30 blur-md opacity-70 group-hover:opacity-100 transition-opacity" />
+                      <div className="relative h-12 w-12 rounded-2xl bg-red-600/10 border border-red-500/30 text-red-600 dark:text-red-400 font-black text-xl flex items-center justify-center">
+                        {item.bloodGroup}
                       </div>
-                      <Badge
-                        variant={isLow ? 'destructive' : 'default'}
-                        className={
-                          !isLow
-                            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-[10px]'
-                            : 'text-[10px]'
-                        }
-                      >
-                        {isLow ? 'Critical Low' : 'In Stock'}
-                      </Badge>
                     </div>
 
-                    <div className="text-center my-4">
-                      <span className="text-4xl font-black">{item.units}</span>
-                      <span className="text-xs text-muted-foreground block mt-1">Available Units</span>
-                    </div>
+                    <span
+                      className={cn(
+                        'text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border',
+                        isLow
+                          ? 'text-red-600 dark:text-red-400 border-red-500/30 bg-red-500/10 dark:shadow-[0_0_12px_rgba(255,30,64,0.25)]'
+                          : 'text-emerald-600 dark:text-emerald-400 border-emerald-500/30 bg-emerald-500/10 dark:shadow-[0_0_12px_rgba(16,185,129,0.2)]'
+                      )}
+                    >
+                      {isLow ? 'Critical Low' : 'In Stock'}
+                    </span>
                   </div>
 
-                  <div className="flex items-center justify-between gap-2 pt-4 border-t border-border">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleStockChange(item.bloodGroup, -1)}
-                      disabled={item.units === 0}
-                      className="h-9 w-9 p-0 rounded-lg cursor-pointer"
+                  <div className="text-center my-4">
+                    <motion.span
+                      key={item.units}
+                      initial={{ scale: 1.35, opacity: 0.5 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+                      className="text-4xl font-black inline-block bg-gradient-to-b from-foreground to-foreground/50 bg-clip-text text-transparent"
                     >
-                      <Minus className="h-4 w-4" />
-                    </Button>
-
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleStockChange(item.bloodGroup, 1)}
-                      className="h-9 w-9 p-0 rounded-lg text-red-600 cursor-pointer"
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
+                      {item.units}
+                    </motion.span>
+                    <span className="text-[11px] text-muted-foreground uppercase tracking-wider block mt-1">
+                      Available Units
+                    </span>
                   </div>
-                </Card>
+                </div>
+
+                <div className="flex items-center justify-between gap-2 pt-4 border-t border-border">
+                  <motion.button
+                    whileTap={{ scale: 0.85 }}
+                    onClick={() => handleStockChange(item.bloodGroup, -1)}
+                    disabled={item.units === 0}
+                    className="h-9 w-9 rounded-lg border border-border bg-muted/50 hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                  >
+                    <Minus className="h-4 w-4" />
+                  </motion.button>
+
+                  <motion.button
+                    whileTap={{ scale: 0.85 }}
+                    onClick={() => handleStockChange(item.bloodGroup, 1)}
+                    className="h-9 w-9 rounded-lg border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 flex items-center justify-center text-red-600 dark:text-red-400 transition-colors cursor-pointer"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </motion.button>
+                </div>
               </motion.div>
             );
           })}
-        </div>
+        </motion.div>
       </main>
     </div>
+  );
+}
+
+/* ---------------------------------------------------------------------- */
+/* Presentational helpers — purely visual, no state or business logic.    */
+/* ---------------------------------------------------------------------- */
+
+const HUE_STYLES: Record<
+  'red' | 'amber' | 'emerald' | 'cyan',
+  { glow: string; ring: string; bg: string; text: string; hover: string }
+> = {
+  red: {
+    glow: 'bg-red-600/40',
+    ring: 'border-red-500/30',
+    bg: 'bg-red-500/10',
+    text: 'text-red-600 dark:text-red-400',
+    hover: 'hover:border-red-500/40 dark:hover:shadow-[0_0_30px_rgba(255,30,64,0.15)]',
+  },
+  amber: {
+    glow: 'bg-amber-500/40',
+    ring: 'border-amber-500/30',
+    bg: 'bg-amber-500/10',
+    text: 'text-amber-600 dark:text-amber-400',
+    hover: 'hover:border-amber-500/40 dark:hover:shadow-[0_0_30px_rgba(245,158,11,0.15)]',
+  },
+  emerald: {
+    glow: 'bg-emerald-500/40',
+    ring: 'border-emerald-500/30',
+    bg: 'bg-emerald-500/10',
+    text: 'text-emerald-600 dark:text-emerald-400',
+    hover: 'hover:border-emerald-500/40 dark:hover:shadow-[0_0_30px_rgba(16,185,129,0.15)]',
+  },
+  cyan: {
+    glow: 'bg-cyan-500/40',
+    ring: 'border-cyan-500/30',
+    bg: 'bg-cyan-500/10',
+    text: 'text-cyan-600 dark:text-cyan-400',
+    hover: 'hover:border-cyan-500/40 dark:hover:shadow-[0_0_30px_rgba(34,211,238,0.15)]',
+  },
+};
+
+function StatCard({
+  icon: Icon,
+  label,
+  value,
+  hue,
+}: {
+  icon: React.ElementType;
+  label: string;
+  value: React.ReactNode;
+  hue: keyof typeof HUE_STYLES;
+}) {
+  const styles = HUE_STYLES[hue];
+
+  return (
+    <motion.div variants={{ hidden: { opacity: 0, y: 14 }, visible: { opacity: 1, y: 0 } }}>
+      <div
+        className={cn(
+          'relative rounded-2xl border border-border bg-card backdrop-blur-xl shadow-sm dark:shadow-2xl p-5',
+          'transition-all duration-300',
+          styles.hover
+        )}
+      >
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">{label}</p>
+            <h3 className="text-2xl font-black mt-1.5 tracking-tight">{value}</h3>
+          </div>
+
+          <div className="relative h-12 w-12 shrink-0">
+            <motion.div
+              animate={{ scale: [1, 1.2, 1], opacity: [0.4, 0.8, 0.4] }}
+              transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+              className={cn('absolute inset-0 rounded-full blur-md', styles.glow)}
+            />
+            <div
+              className={cn(
+                'relative h-12 w-12 rounded-full border flex items-center justify-center',
+                styles.ring,
+                styles.bg,
+                styles.text
+              )}
+            >
+              <Icon className="h-5 w-5" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </motion.div>
   );
 }

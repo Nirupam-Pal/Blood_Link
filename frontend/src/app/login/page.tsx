@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { AmbientOrbs } from '@/components/ui/ambient-orbs';
 import { useAuthStore } from '@/stores/auth.store';
 
 function LoginFormContent() {
@@ -49,7 +50,7 @@ function LoginFormContent() {
   };
 
   return (
-    <Card className="p-6 sm:p-8 bg-card border-border shadow-2xl rounded-2xl">
+    <Card className="p-6 sm:p-8 bg-card border-border shadow-2xl rounded-2xl hover:shadow-crimson-600/10 transition-shadow duration-500">
       {isJustRegistered && (
         <motion.div
           initial={{ opacity: 0, y: -10 }}
@@ -112,7 +113,7 @@ function LoginFormContent() {
         <Button
           type="submit"
           disabled={loading}
-          className="w-full h-11 bg-linear-to-r from-red-700 via-crimson-600 to-rose-600 hover:from-red-800 hover:to-rose-700 text-white font-semibold shadow-lg shadow-crimson-600/25 transition-all border-none"
+          className="w-full h-11 bg-linear-to-r from-red-700 via-crimson-600 to-rose-600 hover:from-red-800 hover:to-rose-700 text-white font-semibold transition-all border-none"
         >
           {loading ? (
             <Loader2 className="h-5 w-5 animate-spin" />
@@ -137,8 +138,9 @@ function LoginFormContent() {
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col justify-between p-4 sm:p-6 lg:p-8">
-      <header className="flex items-center justify-between max-w-7xl w-full mx-auto">
+    <div className="relative min-h-screen bg-cosmic text-foreground flex flex-col justify-between p-4 sm:p-6 lg:p-8 overflow-hidden">
+      <AmbientOrbs />
+      <header className="relative z-10 flex items-center justify-between max-w-7xl w-full mx-auto">
         <Link href="/" className="flex items-center gap-2.5 group">
           <div className="h-10 w-10 rounded-xl bg-linear-to-tr from-crimson-600 to-rose-500 flex items-center justify-center shadow-lg shadow-crimson-600/30 group-hover:scale-105 transition-transform">
             <HeartHandshake className="h-5 w-5 text-white" />
@@ -150,7 +152,12 @@ export default function LoginPage() {
         <ThemeToggle />
       </header>
 
-      <main className="max-w-md w-full mx-auto my-12">
+      <motion.main
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: 'easeOut' }}
+        className="relative z-10 max-w-md w-full mx-auto my-12"
+      >
         <Link
           href="/"
           className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
@@ -169,7 +176,7 @@ export default function LoginPage() {
         <Suspense fallback={<div className="p-8 text-center text-muted-foreground">Loading form...</div>}>
           <LoginFormContent />
         </Suspense>
-      </main>
+      </motion.main>
 
       <footer className="text-center text-xs text-muted-foreground py-4">
         © 2026 BloodLink Ecosystem. All rights reserved.

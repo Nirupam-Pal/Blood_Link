@@ -17,6 +17,7 @@ import { Card } from '@/components/ui/card';
 import { useAuthStore } from '@/stores/auth.store';
 import { useBloodBankStore } from '@/stores/blood-bank.store';
 import { Navbar } from '@/components/layout/navbar';
+import { AmbientOrbs } from '@/components/ui/ambient-orbs';
 
 export default function VerifyOtpPage() {
   const router = useRouter();
@@ -148,10 +149,16 @@ export default function VerifyOtpPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col">
+    <div className="relative min-h-screen bg-cosmic text-foreground flex flex-col overflow-hidden">
+      <AmbientOrbs />
       <Navbar />
 
-      <main className="flex-1 max-w-md w-full mx-auto mt-24 px-4 py-8">
+      <main className="relative z-10 flex-1 max-w-md w-full mx-auto mt-24 px-4 py-8">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
+        >
         <Card className="p-6 sm:p-8 bg-card border-border shadow-2xl rounded-3xl">
           {isSuccess ? (
             <motion.div
@@ -211,7 +218,7 @@ export default function VerifyOtpPage() {
                       onChange={(e) => handleChange(idx, e.target.value)}
                       onKeyDown={(e) => handleKeyDown(idx, e)}
                       onPaste={handlePaste}
-                      className="w-11 h-13 sm:w-12 sm:h-14 text-center text-xl font-bold bg-background border border-border rounded-xl focus:border-red-600 focus:ring-2 focus:ring-red-600/20 outline-none transition-all"
+                      className="w-11 h-13 sm:w-12 sm:h-14 text-center text-xl font-bold bg-background border border-border rounded-xl focus:border-red-600 focus:ring-2 focus:ring-red-600/20 focus:scale-110 outline-none transition-all duration-200"
                     />
                   ))}
                 </div>
@@ -219,7 +226,7 @@ export default function VerifyOtpPage() {
                 <Button
                   type="submit"
                   disabled={isSubmitting || otpValues.join('').length !== 6}
-                  className="w-full h-11 bg-red-600 hover:bg-red-700 text-white font-semibold text-xs shadow-md shadow-red-600/20 cursor-pointer"
+                  className="w-full h-11 bg-red-600 hover:bg-red-700 text-white font-semibold text-xs cursor-pointer"
                 >
                   {isSubmitting ? (
                     <>
@@ -249,6 +256,7 @@ export default function VerifyOtpPage() {
             </div>
           )}
         </Card>
+        </motion.div>
       </main>
     </div>
   );

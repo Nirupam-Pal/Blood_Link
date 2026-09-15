@@ -22,6 +22,7 @@ import { Card } from '@/components/ui/card';
 import { useAuthStore } from '@/stores/auth.store';
 import { RegisterDonorDto, DonorAssessmentResult } from '@/types/auth.types';
 import { Navbar } from '@/components/layout/navbar';
+import { AmbientOrbs } from '@/components/ui/ambient-orbs';
 
 export default function RegisterDonorPage() {
   const router = useRouter();
@@ -113,7 +114,7 @@ export default function RegisterDonorPage() {
 
   if (isInitializing || status === 'idle' || (user && user.role !== 'USER')) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-cosmic flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <Activity className="h-8 w-8 text-crimson-600 animate-spin" />
           <p className="text-sm text-muted-foreground">Checking authentication status...</p>
@@ -125,9 +126,10 @@ export default function RegisterDonorPage() {
   // Already Registered Donor State
   if (user?.donor && !assessmentCompleted) {
     return (
-      <div className="min-h-screen bg-background text-foreground flex flex-col">
+      <div className="relative min-h-screen bg-cosmic text-foreground flex flex-col overflow-hidden">
+        <AmbientOrbs />
         <Navbar />
-        <main className="flex-1 max-w-2xl w-full mx-auto mt-24 px-4 py-8">
+        <main className="relative z-10 flex-1 max-w-2xl w-full mx-auto mt-24 px-4 py-8">
           <Card className="p-8 bg-card border-border shadow-xl rounded-2xl text-center">
             <div className="h-16 w-16 bg-emerald-500/10 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-500/20">
               <UserCheck className="h-8 w-8" />
@@ -150,10 +152,11 @@ export default function RegisterDonorPage() {
   const activeError = localError || storeError;
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col">
+    <div className="relative min-h-screen bg-cosmic text-foreground flex flex-col overflow-hidden">
+      <AmbientOrbs />
       <Navbar />
 
-      <main className="flex-1 max-w-3xl w-full mx-auto mt-20 px-4 sm:px-6 lg:px-8 py-8">
+      <main className="relative z-10 flex-1 max-w-3xl w-full mx-auto mt-20 px-4 sm:px-6 lg:px-8 py-8">
         <Link
           href="/dashboard/donor"
           className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
@@ -328,7 +331,7 @@ export default function RegisterDonorPage() {
                               type="button"
                               onClick={() => handleMedicalToggle(typedKey, false)}
                               className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all ${!isYes
-                                  ? 'bg-emerald-600 text-white shadow-xs'
+                                  ? 'bg-emerald-600 text-white'
                                   : 'bg-background text-muted-foreground hover:text-foreground'
                                 }`}
                             >
@@ -338,7 +341,7 @@ export default function RegisterDonorPage() {
                               type="button"
                               onClick={() => handleMedicalToggle(typedKey, true)}
                               className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all ${isYes
-                                  ? 'bg-rose-600 text-white shadow-xs'
+                                  ? 'bg-rose-600 text-white'
                                   : 'bg-background text-muted-foreground hover:text-foreground'
                                 }`}
                             >
@@ -384,7 +387,7 @@ export default function RegisterDonorPage() {
                 <Button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full h-12 bg-linear-to-r from-red-700 via-rose-600 to-red-600 hover:from-red-800 hover:to-rose-700 text-white font-semibold text-sm shadow-lg shadow-crimson-600/25 border-none"
+                  className="w-full h-12 bg-linear-to-r from-red-700 via-rose-600 to-red-600 hover:from-red-800 hover:to-rose-700 text-white font-semibold text-sm border-none"
                 >
                   {isSubmitting ? (
                     <span className="flex items-center gap-2">

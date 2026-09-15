@@ -3,11 +3,14 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
 import { HeartHandshake, ArrowLeft, Loader2, EyeOff, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { AmbientOrbs } from '@/components/ui/ambient-orbs';
 import { API_ROUTES } from '@/lib/api-routes';
 import { useAuthStore } from '@/stores/auth.store';
 
@@ -72,15 +75,24 @@ export default function RegisterUserPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-2xl mx-auto">
+    <div className="relative min-h-screen bg-cosmic text-foreground py-12 px-4 sm:px-6 lg:px-8 overflow-hidden">
+      <AmbientOrbs />
+      <div className="relative z-10 max-w-2xl mx-auto">
 
-        {/* Back Link */}
-        <Link href="/register" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors">
-          <ArrowLeft className="h-4 w-4" />
-          Back to portal selection
-        </Link>
+        {/* Back Link + Theme Toggle */}
+        <div className="flex items-center justify-between mb-6">
+          <Link href="/register" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <ArrowLeft className="h-4 w-4" />
+            Back to portal selection
+          </Link>
+          <ThemeToggle />
+        </div>
 
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
+        >
         {/* Header */}
         <div className="flex items-center gap-3 mb-8">
           <div className="h-10 w-10 rounded-xl bg-red-600 flex items-center justify-center text-white font-bold shadow-lg shadow-red-600/30">
@@ -212,12 +224,13 @@ export default function RegisterUserPage() {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full h-12 bg-linear-to-r from-red-700 via-crimson-600 to-rose-600 hover:from-red-800 hover:to-rose-700 text-white font-semibold text-base shadow-lg shadow-red-600/25"
+              className="w-full h-12 bg-linear-to-r from-red-700 via-crimson-600 to-rose-600 hover:from-red-800 hover:to-rose-700 text-white font-semibold text-base"
             >
               {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Complete Registration'}
             </Button>
           </form>
         </Card>
+        </motion.div>
       </div>
     </div>
   );

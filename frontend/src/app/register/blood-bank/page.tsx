@@ -22,6 +22,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { AmbientOrbs } from '@/components/ui/ambient-orbs';
 import { useAuthStore } from '@/stores/auth.store';
 import { useBloodBankStore } from '@/stores/blood-bank.store';
 import { RegisterBloodBankDto } from '@/types/blood-bank.types';
@@ -106,17 +108,26 @@ export default function RegisterBloodBankPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col">
-      <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        {/* Back Link */}
-        <Link
-          href="/register"
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to portal selection
-        </Link>
+    <div className="relative min-h-screen bg-cosmic text-foreground flex flex-col overflow-hidden">
+      <AmbientOrbs />
+      <main className="relative z-10 flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        {/* Back Link + Theme Toggle */}
+        <div className="flex items-center justify-between mb-6">
+          <Link
+            href="/register"
+            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to portal selection
+          </Link>
+          <ThemeToggle />
+        </div>
 
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
+        >
         <div className="flex items-center gap-3 mb-8">
           <div className="h-10 w-10 rounded-xl bg-red-600 flex items-center justify-center text-white font-bold shadow-lg shadow-red-600/30">
             <Building2 className="h-5 w-5" />
@@ -353,7 +364,7 @@ export default function RegisterBloodBankPage() {
                 <Button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full sm:w-auto h-11 px-8 bg-red-600 hover:bg-red-700 text-white font-semibold shadow-md shadow-red-600/20 cursor-pointer"
+                  className="w-full sm:w-auto h-11 px-8 bg-red-600 hover:bg-red-700 text-white font-semibold cursor-pointer"
                 >
                   {isSubmitting ? (
                     <>
@@ -368,6 +379,7 @@ export default function RegisterBloodBankPage() {
             </form>
           )}
         </Card>
+        </motion.div>
       </main>
     </div>
   );

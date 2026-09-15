@@ -6,12 +6,14 @@ import { User, Building2, ArrowRight, HeartHandshake, ShieldCheck } from 'lucide
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { AmbientOrbs } from '@/components/ui/ambient-orbs';
 
 export default function RegisterSelectionPage() {
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col justify-between p-4 sm:p-6 lg:p-8">
+    <div className="relative min-h-screen bg-cosmic text-foreground flex flex-col justify-between p-4 sm:p-6 lg:p-8 overflow-hidden">
+      <AmbientOrbs />
       {/* Header */}
-      <header className="flex items-center justify-between max-w-7xl w-full mx-auto">
+      <header className="relative z-10 flex items-center justify-between max-w-7xl w-full mx-auto">
         <Link href="/" className="flex items-center gap-2.5 group">
           <div className="h-10 w-10 rounded-xl bg-linear-to-tr from-red-600 to-rose-500 flex items-center justify-center shadow-lg shadow-red-600/30 group-hover:scale-105 transition-transform">
             <HeartHandshake className="h-5 w-5 text-white" />
@@ -32,7 +34,7 @@ export default function RegisterSelectionPage() {
       </header>
 
       {/* Main Selection Card Container */}
-      <main className="max-w-4xl w-full mx-auto my-12">
+      <main className="relative z-10 max-w-4xl w-full mx-auto my-12">
         <div className="text-center mb-12">
           <motion.div 
             initial={{ opacity: 0, y: 10 }}

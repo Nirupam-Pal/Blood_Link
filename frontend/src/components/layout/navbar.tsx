@@ -48,13 +48,13 @@ export function Navbar() {
       <nav
         className={`mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 transition-all duration-300 ${
           isScrolled
-            ? 'mt-3 py-3 rounded-2xl bg-background/80 backdrop-blur-md border border-border shadow-2xl shadow-black/20'
+            ? 'mt-3 py-3 rounded-2xl bg-card/80 backdrop-blur-xl border border-border shadow-2xl shadow-black/20 dark:shadow-[0_0_30px_-8px_rgba(255,30,64,0.25)]'
             : 'py-5 bg-transparent'
         }`}
       >
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="h-10 w-10 rounded-xl bg-linear-to-tr from-red-600 to-rose-500 flex items-center justify-center shadow-lg shadow-red-600/30 group-hover:scale-105 transition-transform">
+            <div className="h-10 w-10 rounded-xl bg-linear-to-tr from-red-600 to-rose-500 flex items-center justify-center shadow-lg shadow-red-600/30 dark:shadow-red-600/50 group-hover:scale-105 group-hover:rotate-6 transition-transform">
               <HeartHandshake className="h-5 w-5 text-white" />
             </div>
             <span className="text-xl font-bold tracking-tight text-foreground">
@@ -70,7 +70,7 @@ export function Navbar() {
                 {/* Only visible when not registered as donor and not a blood bank organization */}
                 {!isDonor && user.role === 'USER' && (
                   <Link href="/register/donor">
-                    <Button className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-red-900 hover:bg-red-800 text-white text-xs font-semibold shadow-md shadow-crimson-600/20 border-none">
+                    <Button className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-red-900 hover:bg-red-800 text-white text-xs font-semibold border-none">
                       <Heart className="h-3.5 w-3.5 fill-white" />
                       Become a Donor
                     </Button>
@@ -103,7 +103,7 @@ export function Navbar() {
                 </Link>
 
                 <Link href="/register">
-                  <Button className="h-10 px-5 rounded-lg bg-linear-to-r from-red-950 via-rose-800 to-rose-700 hover:from-rose-800 hover:to-red-900 text-white font-medium text-sm gap-2 transition-all duration-300 hover:scale-[1.03] shadow-md border-none">
+                  <Button className="h-10 px-5 rounded-lg bg-linear-to-r from-red-950 via-rose-800 to-rose-700 hover:from-rose-800 hover:to-red-900 text-white font-medium text-sm gap-2 transition-all duration-300 hover:scale-[1.03] border-none">
                     <UserPlus className="h-4 w-4" />
                     Register
                   </Button>

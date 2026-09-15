@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   User as UserIcon,
   Building2,
@@ -24,6 +25,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Navbar } from '@/components/layout/navbar';
+import { AmbientOrbs } from '@/components/ui/ambient-orbs';
 import { useAuthStore } from '@/stores/auth.store';
 import { useBloodBankStore } from '@/stores/blood-bank.store';
 
@@ -185,7 +187,7 @@ export default function ProfilePage() {
 
   if (isInitializing || status === 'idle' || !user) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-cosmic flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <Droplet className="h-10 w-10 text-red-600 animate-bounce" />
           <p className="text-sm text-muted-foreground">Loading your profile...</p>
@@ -197,10 +199,11 @@ export default function ProfilePage() {
   const displayName = isBloodBank ? bank?.bloodBankName : user.fullName;
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col">
+    <div className="relative min-h-screen bg-cosmic text-foreground flex flex-col overflow-hidden">
+      <AmbientOrbs />
       <Navbar />
 
-      <main className="flex-1 max-w-4xl w-full mx-auto mt-18 px-4 sm:px-6 lg:px-8 py-8">
+      <main className="relative z-10 flex-1 max-w-4xl w-full mx-auto mt-18 px-4 sm:px-6 lg:px-8 py-8">
         {error && (
           <div className="p-4 mb-6 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -214,12 +217,21 @@ export default function ProfilePage() {
         )}
 
         {/* Header Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: 'easeOut' }}
+        >
         <Card className="p-6 bg-card border-border shadow-sm rounded-2xl mb-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <div className="h-16 w-16 rounded-2xl bg-red-600/10 text-red-600 flex items-center justify-center border border-red-600/20 shrink-0">
+              <motion.div
+                whileHover={{ scale: 1.05, rotate: 3 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 15 }}
+                className="h-16 w-16 rounded-2xl bg-red-600/10 text-red-600 flex items-center justify-center border border-red-600/20 shrink-0"
+              >
                 {isBloodBank ? <Building2 className="h-8 w-8" /> : <UserIcon className="h-8 w-8" />}
-              </div>
+              </motion.div>
               <div>
                 <h1 className="text-xl font-bold text-foreground">{displayName}</h1>
                 <p className="text-sm text-muted-foreground flex items-center gap-1.5 mt-0.5">
@@ -261,7 +273,7 @@ export default function ProfilePage() {
             {!isEditing ? (
               <Button
                 onClick={() => setIsEditing(true)}
-                className="bg-red-600 hover:bg-red-700 text-white gap-2 text-sm shadow-md cursor-pointer shrink-0"
+                className="bg-red-600 hover:bg-red-700 text-white gap-2 text-sm cursor-pointer shrink-0"
               >
                 <Pencil className="h-4 w-4" />
                 Edit Profile
@@ -280,7 +292,7 @@ export default function ProfilePage() {
                 <Button
                   onClick={handleSave}
                   disabled={isSaving}
-                  className="bg-red-600 hover:bg-red-700 text-white gap-2 text-sm shadow-md cursor-pointer"
+                  className="bg-red-600 hover:bg-red-700 text-white gap-2 text-sm cursor-pointer"
                 >
                   {isSaving ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                   Save Changes
@@ -289,20 +301,40 @@ export default function ProfilePage() {
             )}
           </div>
 
-          {savedSuccess && (
-            <p className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold mt-4">
-              ✓ Profile updated successfully
-            </p>
-          )}
+          <AnimatePresence>
+            {savedSuccess && (
+              <motion.p
+                initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                animate={{ opacity: 1, height: 'auto', marginTop: 16 }}
+                exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                transition={{ duration: 0.25 }}
+                className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold overflow-hidden"
+              >
+                ✓ Profile updated successfully
+              </motion.p>
+            )}
+          </AnimatePresence>
         </Card>
+        </motion.div>
 
         {/* Details Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.1, ease: 'easeOut' }}
+        >
         <Card className="p-6 bg-card border-border shadow-sm rounded-2xl">
           <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-5">
             {isBloodBank ? 'Facility Information' : 'Personal Information'}
           </h2>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <motion.div
+            key={isEditing ? 'edit' : 'view'}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.25 }}
+            className="grid grid-cols-1 sm:grid-cols-2 gap-5"
+          >
             {isBloodBank ? (
               <>
                 <Field label="Blood Bank Name" icon={Building2}>
@@ -436,8 +468,9 @@ export default function ProfilePage() {
                 <ReadOnlyValue>{isBloodBank ? bank?.pinCode : user.pinCode}</ReadOnlyValue>
               )}
             </Field>
-          </div>
+          </motion.div>
         </Card>
+        </motion.div>
       </main>
     </div>
   );

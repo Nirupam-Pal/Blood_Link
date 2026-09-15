@@ -49,72 +49,82 @@
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  /* A warm, faintly rose-tinted neutral scale (hue ~25, matching the
+     crimson-600 brand color) instead of pure greyscale — every page reads
+     this through bg-background/bg-card/border-border/etc, so this one
+     palette upgrade is felt everywhere without touching individual pages. */
+  --background: oklch(0.99 0.004 40);
+  --foreground: oklch(0.19 0.012 30);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: oklch(0.19 0.012 30);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.19 0.012 30);
+  --primary: oklch(0.55 0.215 25);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.96 0.008 30);
+  --secondary-foreground: oklch(0.24 0.012 30);
+  --muted: oklch(0.965 0.007 30);
+  --muted-foreground: oklch(0.5 0.012 30);
+  --accent: oklch(0.95 0.03 20);
+  --accent-foreground: oklch(0.4 0.16 25);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  --border: oklch(0.91 0.007 30);
+  --input: oklch(0.91 0.007 30);
+  --ring: oklch(0.6 0.18 25);
+  --chart-1: oklch(0.65 0.2 25);
+  --chart-2: oklch(0.6 0.15 45);
+  --chart-3: oklch(0.55 0.1 200);
+  --chart-4: oklch(0.6 0.15 150);
+  --chart-5: oklch(0.65 0.18 80);
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar: oklch(0.98 0.005 30);
+  --sidebar-foreground: oklch(0.19 0.012 30);
+  --sidebar-primary: oklch(0.55 0.215 25);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.95 0.03 20);
+  --sidebar-accent-foreground: oklch(0.4 0.16 25);
+  --sidebar-border: oklch(0.91 0.007 30);
+  --sidebar-ring: oklch(0.6 0.18 25);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(38.777% 0.1098 22.339);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  /* True obsidian void + glass cards + neon crimson/cyan accents — every
+     Card/Input/Badge/Button in the app reads these tokens directly, so this
+     is the single place that turns dark mode into the "cyber-medical"
+     aesthetic everywhere at once. --card/--secondary/--muted are genuinely
+     translucent (glass); --input/--popover stay solid-ish so text inside
+     them stays crisp; --primary/--ring/--destructive are saturated neon. */
+  --background: oklch(0.12 0.012 264);
+  --foreground: oklch(0.96 0.006 264);
+  --card: oklch(1 0 0 / 6%);
+  --card-foreground: oklch(0.97 0.005 264);
+  --popover: oklch(0.15 0.015 264 / 96%);
+  --popover-foreground: oklch(0.97 0.005 264);
+  --primary: oklch(0.62 0.23 20);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(1 0 0 / 8%);
+  --secondary-foreground: oklch(0.96 0.006 264);
+  --muted: oklch(1 0 0 / 5%);
+  --muted-foreground: oklch(0.68 0.014 264);
+  --accent: oklch(0.5 0.1 195 / 20%);
+  --accent-foreground: oklch(0.88 0.07 195);
+  --destructive: oklch(0.66 0.21 25);
+  --border: oklch(1 0 0 / 14%);
+  --input: oklch(0.3 0.025 264);
+  --ring: oklch(0.62 0.23 20);
+  --chart-1: oklch(0.68 0.22 20);
+  --chart-2: oklch(0.65 0.13 195);
+  --chart-3: oklch(0.65 0.15 150);
+  --chart-4: oklch(0.7 0.16 80);
+  --chart-5: oklch(0.6 0.18 300);
+  --sidebar: oklch(0.14 0.014 264);
+  --sidebar-foreground: oklch(0.96 0.006 264);
+  --sidebar-primary: oklch(0.62 0.23 20);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.5 0.1 195 / 20%);
+  --sidebar-accent-foreground: oklch(0.88 0.07 195);
+  --sidebar-border: oklch(1 0 0 / 14%);
+  --sidebar-ring: oklch(0.62 0.23 20);
 }
 
 @layer base {
@@ -127,4 +137,100 @@
   html {
     @apply font-sans;
   }
+
+  /* Smooth, app-wide cross-fade whenever the theme toggles or any element's
+     colors change — elements with their own transition-* utility classes
+     (buttons, cards with hover states, etc.) simply override this. */
+  *,
+  *::before,
+  *::after {
+    transition-property: background-color, border-color, color, fill, stroke,
+      text-decoration-color;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 250ms;
+  }
+}
+
+@layer utilities {
+  .animate-in-up {
+    animation: fade-in-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  /* The ambient "cyber-medical" backdrop — swap onto any page's root
+     wrapper in place of bg-background. Pinned to the viewport so the glow
+     feels like one continuous environment as you scroll, not a repeating
+     per-page gradient. Subtle in light mode, vivid in dark mode. */
+  .bg-cosmic {
+    background-color: var(--background);
+    background-image:
+      radial-gradient(ellipse 60% 50% at 12% -8%, oklch(0.55 0.2 25 / 7%), transparent 60%),
+      radial-gradient(ellipse 55% 45% at 100% 8%, oklch(0.55 0.13 195 / 5%), transparent 60%);
+    background-repeat: no-repeat;
+  }
+
+  .dark .bg-cosmic {
+    background-image:
+      radial-gradient(ellipse 65% 55% at 8% -10%, oklch(0.55 0.22 20 / 35%), transparent 60%),
+      radial-gradient(ellipse 60% 55% at 105% 12%, oklch(0.6 0.15 195 / 22%), transparent 60%),
+      radial-gradient(ellipse 70% 55% at 30% 115%, oklch(0.5 0.2 20 / 18%), transparent 55%),
+      linear-gradient(
+        to right,
+        oklch(1 0 0 / 3%) 1px,
+        transparent 1px
+      ),
+      linear-gradient(
+        to bottom,
+        oklch(1 0 0 / 3%) 1px,
+        transparent 1px
+      );
+    background-size:
+      auto,
+      auto,
+      auto,
+      48px 48px,
+      48px 48px;
+  }
+
+  .glow-crimson {
+    box-shadow: 0 0 24px -4px oklch(0.62 0.23 20 / 55%);
+  }
+
+  .glow-cyan {
+    box-shadow: 0 0 24px -4px oklch(0.6 0.15 195 / 45%);
+  }
+
+  .text-glow {
+    text-shadow: 0 0 18px oklch(0.62 0.23 20 / 45%);
+  }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes glow-pulse {
+  0%, 100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.08);
+  }
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 3s ease-in-out infinite;
 }

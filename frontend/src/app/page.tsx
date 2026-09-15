@@ -23,6 +23,7 @@ import { Card } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { AnimatedCounter } from '@/components/ui/animated-counter';
 import { Navbar } from '@/components/layout/navbar';
+import { AmbientOrbs } from '@/components/ui/ambient-orbs';
 import { useAuthStore } from '@/stores/auth.store';
 
 const fadeInUp: Variants = {
@@ -41,20 +42,18 @@ export default function LandingPage() {
   const isDonor = Boolean(user?.donor);
 
   return (
-    <div className="min-h-screen bg-background text-foreground font-sans antialiased selection:bg-crimson-500 selection:text-white transition-colors duration-300">
+    <div className="relative min-h-screen bg-cosmic text-foreground font-sans antialiased selection:bg-crimson-500 selection:text-white">
       <Navbar />
 
       {/* HERO SECTION */}
       <section className="relative pt-32 pb-20 md:pt-44 md:pb-32 overflow-hidden">
+        <AmbientOrbs />
         {/* Ambient Glows */}
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-200 h-200 bg-crimson-600/10 dark:bg-crimson-600/15 rounded-full blur-[140px] pointer-events-none animate-pulse-slow" />
 
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="grid lg:grid-cols-12 gap-12 items-center">
-
-            {/* Left Content */}
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 relative z-10">
             <motion.div
-              className="lg:col-span-7 text-center lg:text-left"
+              className="text-center"
               initial="hidden"
               animate="visible"
               variants={staggerContainer}
@@ -71,15 +70,15 @@ export default function LandingPage() {
                 </span> In Seconds.
               </motion.h1>
 
-              <motion.p variants={fadeInUp} className="mt-6 text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto lg:mx-0 font-normal leading-relaxed tracking-[0.01em]">
+              <motion.p variants={fadeInUp} className="mt-6 text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto font-normal leading-relaxed tracking-[0.01em]">
                 BloodLink bridges the critical gap between donors, patients, and blood banks using intelligent real-time matching. Reliable, fast, and accessible 24/7.
               </motion.p>
 
               {/* CTAs */}
-              <motion.div variants={fadeInUp} className="mt-8 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+              <motion.div variants={fadeInUp} className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
                 {!isDonor && user?.role === 'USER' && (
                   <Link href='/register/donor'>
-                    <Button size="lg" className="h-13 px-8 rounded-xl bg-linear-to-r from-red-950 via-rose-800 to-rose-700 text-white font-semibold shadow-xl shadow-crimson-600/20 hover:scale-[1.02] transition-transform text-base">
+                    <Button size="lg" className="h-13 px-8 rounded-xl bg-linear-to-r from-red-950 via-rose-800 to-rose-700 text-white font-semibold hover:scale-[1.02] transition-transform text-base">
                       <Heart className="mr-2 h-5 w-5 fill-white" />
                       Become a Donor
                     </Button>
@@ -103,7 +102,7 @@ export default function LandingPage() {
               </motion.div>
 
               {/* Stats */}
-              <motion.div variants={fadeInUp} className="mt-12 pt-8 border-t border-border grid grid-cols-2 sm:grid-cols-4 gap-6 text-center lg:text-left">
+              <motion.div variants={fadeInUp} className="mt-12 pt-8 border-t border-border grid grid-cols-2 sm:grid-cols-4 gap-6 text-center max-w-2xl mx-auto">
                 <div>
                   <div className="text-2xl font-bold text-foreground"><AnimatedCounter value={15000} suffix="+" /></div>
                   <div className="text-xs text-muted-foreground font-medium mt-1">Active Donors</div>
@@ -122,68 +121,6 @@ export default function LandingPage() {
                 </div>
               </motion.div>
             </motion.div>
-
-            {/* Right Interactive Mockup Card */}
-            <motion.div
-              className="lg:col-span-5 relative"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-            >
-              <div className="relative rounded-3xl p-6 bg-card/80 border border-border backdrop-blur-xl shadow-2xl">
-                <div className="flex items-center justify-between pb-4 border-b border-border">
-                  <div className="flex items-center gap-3">
-                    <div className="h-3 w-3 rounded-full bg-rose-500 animate-ping" />
-                    <span className="text-sm font-semibold text-foreground">Live Emergency Match</span>
-                  </div>
-                  <span className="text-xs text-muted-foreground">Agartala, Tripura</span>
-                </div>
-
-                <div className="mt-6 space-y-4">
-                  <div className="p-4 rounded-2xl bg-muted/50 border border-border flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-xl bg-crimson-600/20 text-crimson-600 dark:text-crimson-400 font-bold flex items-center justify-center">
-                        O+
-                      </div>
-                      <div>
-                        <div className="text-sm font-medium text-foreground">Agartala Medical College</div>
-                        <div className="text-xs text-muted-foreground">2 Units Needed Urgently</div>
-                      </div>
-                    </div>
-                    <span className="px-2.5 py-1 text-[10px] font-semibold rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                      In Progress
-                    </span>
-                  </div>
-
-                  <div className="p-4 rounded-2xl bg-muted/50 border border-border flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-xl bg-crimson-600/20 text-crimson-600 dark:text-crimson-400 font-bold flex items-center justify-center">
-                        B-
-                      </div>
-                      <div>
-                        <div className="text-sm font-medium text-foreground">Central Blood Bank</div>
-                        <div className="text-xs text-muted-foreground">Donor Matched • 1.2 km away</div>
-                      </div>
-                    </div>
-                    <span className="px-2.5 py-1 text-[10px] font-semibold rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                      Matched
-                    </span>
-                  </div>
-                </div>
-
-                <motion.div
-                  className="absolute -bottom-6 -left-6 p-4 rounded-2xl bg-card border border-border shadow-xl flex items-center gap-3 animate-float"
-                >
-                  <ShieldCheck className="h-8 w-8 text-emerald-500" />
-                  <div>
-                    <div className="text-xs text-muted-foreground">Security Verified</div>
-                    <div className="text-sm font-bold text-foreground">100% HIPAA Compliant</div>
-                  </div>
-                </motion.div>
-              </div>
-            </motion.div>
-
-          </div>
         </div>
       </section>
 
@@ -343,7 +280,7 @@ export default function LandingPage() {
               <Link href='/register/donor'>
                 <Button
                   size="lg"
-                  className="h-13 px-8 rounded-xl bg-linear-to-r from-red-700 via-crimson-600 to-rose-600 hover:from-red-800 hover:to-rose-700 text-white font-semibold shadow-xl shadow-crimson-600/25 active:scale-[0.98] transition-all text-base border-none"
+                  className="h-13 px-8 rounded-xl bg-linear-to-r from-red-700 via-crimson-600 to-rose-600 hover:from-red-800 hover:to-rose-700 text-white font-semibold active:scale-[0.98] transition-all text-base border-none"
                 >
                   <Heart className="mr-2 h-5 w-5 fill-white text-white" />
                   Register as Donor
