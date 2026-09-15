@@ -4,6 +4,7 @@ import {
   BloodBank,
   RegisterBloodBankDto,
   SearchBloodBankDto,
+  UpdateBloodBankProfileDto,
   UpdateInventoryResponse,
 } from "@/types/blood-bank.types";
 import { create } from "zustand";
@@ -15,6 +16,7 @@ interface BloodBankState {
   pendingRegistrationData: RegisterBloodBankDto | null;
   isSubmitting: boolean;
   isUpdatingInventory: boolean;
+  isUpdatingProfile: boolean;
   bloodBanks: BloodBank[];
   isSearching: boolean;
   error: string | null;
@@ -28,6 +30,7 @@ interface BloodBankState {
   setCurrentBloodBank: (bank: BloodBank | null) => void;
   fetchAllBloodBanks: () => Promise<BloodBank[]>;
   searchBloodBanks: (filters: SearchBloodBankDto) => Promise<BloodBank[]>;
+  updateProfile: (data: UpdateBloodBankProfileDto) => Promise<BloodBank>;
   clearError: () => void;
 }
 
@@ -38,6 +41,7 @@ export const useBloodBankStore = create<BloodBankState>()(
       pendingRegistrationData: null,
       isSubmitting: false,
       isUpdatingInventory: false,
+      isUpdatingProfile: false,
       bloodBanks: [],
       isSearching: false,
       error: null,
@@ -120,6 +124,32 @@ export const useBloodBankStore = create<BloodBankState>()(
             err instanceof Error ? err.message : "Failed to search blood banks";
           set({ error: message, isSearching: false });
           return [];
+        }
+      },
+
+      updateProfile: async (data: UpdateBloodBankProfileDto) => {
+        set({ isUpdatingProfile: true, error: null });
+        try {
+          const response = await bloodBankService.updateProfile(data);
+
+          // Synchronize auth state if active user is this blood bank
+          const authUser = useAuthStore.getState().user;
+          if (authUser && authUser.id === response.data.id) {
+            useAuthStore.getState().setUser({
+              ...authUser,
+              ...response.data,
+            });
+          }
+
+          set({ currentBloodBank: response.data, error: null });
+          return response.data;
+        } catch (err: unknown) {
+          const message =
+            err instanceof Error ? err.message : "Failed to update profile";
+          set({ error: message });
+          throw err;
+        } finally {
+          set({ isUpdatingProfile: false });
         }
       },
 

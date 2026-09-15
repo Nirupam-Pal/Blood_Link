@@ -1,14 +1,15 @@
 export type Role = "USER" | "BLOOD_BANK" | "ADMIN";
 
+// Must match backend/src/common/enums/blood-group.enum.ts exactly.
 export type BloodGroup =
-  | "A_POSITIVE"
-  | "A_NEGATIVE"
-  | "B_POSITIVE"
-  | "B_NEGATIVE"
-  | "O_POSITIVE"
-  | "O_NEGATIVE"
-  | "AB_POSITIVE"
-  | "AB_NEGATIVE";
+  | "A+"
+  | "A-"
+  | "B+"
+  | "B-"
+  | "O+"
+  | "O-"
+  | "AB+"
+  | "AB-";
 
 export type Gender = 'MALE' | 'FEMALE' | 'OTHER'
 
@@ -72,4 +73,15 @@ export interface SendOtpResponse {
 export interface VerifyOtpResponse {
   verified: boolean;
   message: string;
+}
+
+export interface UpdateUserProfileDto {
+  fullName?: string;
+  gender?: Gender;
+  bloodGroup?: BloodGroup;
+  state?: string;
+  district?: string;
+  subDivision?: string;
+  city?: string;
+  pinCode?: string;
 }

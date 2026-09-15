@@ -6,6 +6,7 @@ import {
   Role,
   SendOtpDto,
   SendOtpResponse,
+  UpdateUserProfileDto,
   User,
   VerifyOtpDto,
   VerifyOtpResponse,
@@ -33,6 +34,7 @@ interface AuthState {
   status: AuthStatus;
   isInitializing: boolean;
   isSubmitting: boolean;
+  isUpdatingProfile: boolean;
   error: string | null;
   pendingVerificationEmail: string | null;
 
@@ -44,6 +46,7 @@ interface AuthState {
   login: (credentials: LoginDto) => Promise<User>;
   logout: () => void;
   setUser: (user: User | null) => void;
+  updateProfile: (data: UpdateUserProfileDto) => Promise<User>;
   clearError: () => void;
 }
 
@@ -54,6 +57,7 @@ export const useAuthStore = create<AuthState>()(
       status: "idle",
       isInitializing: true,
       isSubmitting: false,
+      isUpdatingProfile: false,
       error: null,
       pendingVerificationEmail: null,
 
@@ -197,6 +201,23 @@ export const useAuthStore = create<AuthState>()(
 
       setUser: (user: User | null) => {
         set({ user, status: user ? "authenticated" : "unauthenticated" });
+      },
+
+      updateProfile: async (data: UpdateUserProfileDto) => {
+        set({ isUpdatingProfile: true, error: null });
+        try {
+          const updatedUser = await authService.updateProfile(data);
+          localStorage.setItem("user", JSON.stringify(updatedUser));
+          set({ user: updatedUser, error: null });
+          return updatedUser;
+        } catch (err: unknown) {
+          const message =
+            err instanceof Error ? err.message : "Failed to update profile";
+          set({ error: message });
+          throw err;
+        } finally {
+          set({ isUpdatingProfile: false });
+        }
       },
 
       clearError: () => set({ error: null }),

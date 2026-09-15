@@ -86,3 +86,20 @@ export interface SearchBloodBankResponse {
   count: number;
   data: BloodBank[];
 }
+
+export interface UpdateBloodBankProfileDto {
+  bloodBankName?: string;
+  licenseNumber?: string;
+  phoneNumber?: string;
+  address?: string;
+  state?: string;
+  district?: string;
+  subDivision?: string;
+  city?: string;
+  pinCode?: string;
+}
+
+export interface UpdateBloodBankProfileResponse {
+  message: string;
+  data: BloodBank;
+}

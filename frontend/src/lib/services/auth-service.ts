@@ -1,4 +1,4 @@
-import { AuthResponse, LoginDto, RegisterUserDto, SendOtpDto, SendOtpResponse, User, VerifyOtpDto, VerifyOtpResponse } from "@/types/auth.types";
+import { AuthResponse, LoginDto, RegisterUserDto, SendOtpDto, SendOtpResponse, UpdateUserProfileDto, User, VerifyOtpDto, VerifyOtpResponse } from "@/types/auth.types";
 import { apiClient } from "../api-client";
 import { API_ROUTES } from "../api-routes";
 import { BloodBank, RegisterBloodBankDto } from "@/types/blood-bank.types";
@@ -39,6 +39,14 @@ export const authService = {
     async getCurrentUser(): Promise<User> {
         return apiClient<User>(API_ROUTES.USERS.ME, {
             method: 'GET',
+            requiresAuth: true,
+        })
+    },
+
+    async updateProfile(data: UpdateUserProfileDto): Promise<User> {
+        return apiClient<User>(API_ROUTES.USERS.ME, {
+            method: 'PUT',
+            body: JSON.stringify(data),
             requiresAuth: true,
         })
     },

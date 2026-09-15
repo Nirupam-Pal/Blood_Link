@@ -67,10 +67,12 @@ export function Navbar() {
                   </Link>
                 )}
 
-                <Button className="flex items-center gap-2 px-3 py-5 rounded-lg bg-muted hover:bg-gray-900 pointer cursor-pointer text-foreground text-sm font-medium">
-                  <UserIcon className="h-4 w-4 text-red-600" />
-                  <span>{user.fullName || user.email}</span>
-                </Button>
+                <Link href="/profile">
+                  <Button className="flex items-center gap-2 px-3 py-5 rounded-lg bg-muted hover:bg-gray-900 pointer cursor-pointer text-foreground text-sm font-medium">
+                    <UserIcon className="h-4 w-4 text-red-600" />
+                    <span>{user.fullName || user.email}</span>
+                  </Button>
+                </Link>
 
                 <Button
                   onClick={logout}
@@ -129,6 +131,12 @@ export function Navbar() {
                       </Button>
                     </Link>
                   )}
+                  <Link href="/profile" onClick={() => setMobileMenuOpen(false)}>
+                    <Button variant="outline" className="w-full text-foreground justify-center gap-2 mb-2">
+                      <UserIcon className="h-4 w-4 text-red-600" />
+                      {user.fullName || user.email}
+                    </Button>
+                  </Link>
                   <Button onClick={logout} variant="outline" className="w-full text-foreground justify-center gap-2">
                     <LogOut className="h-4 w-4" />
                     Sign Out ({user.fullName || user.email})
