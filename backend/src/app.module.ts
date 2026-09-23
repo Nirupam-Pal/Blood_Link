@@ -7,6 +7,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { DonorsModule } from './modules/donors/donors.module';
 import { BloodBanksModule } from './modules/blood-banks/blood-banks.module';
+import { ConnectionRequestsModule } from './modules/connection-requests/connection-requests.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { BloodBanksModule } from './modules/blood-banks/blood-banks.module';
     UsersModule,
     DonorsModule,
     BloodBanksModule,
+    ConnectionRequestsModule
   ],
   controllers: [AppController],
   providers: [AppService],
