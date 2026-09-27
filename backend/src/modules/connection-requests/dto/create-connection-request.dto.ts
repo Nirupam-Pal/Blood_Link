@@ -2,7 +2,7 @@ import { IsMongoId, IsOptional, IsString, MaxLength } from "class-validator";
 
 export class CreateConnectionRequestDto {
     @IsMongoId()
-    donorId?: string;
+    donorId!: string;
 
     @IsOptional()
     @IsString()

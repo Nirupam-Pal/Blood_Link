@@ -1,4 +1,4 @@
-import { Prop, Schema } from "@nestjs/mongoose";
+import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Types, Document } from "mongoose";
 
 export type NotificationType =
@@ -28,3 +28,5 @@ export class Notification extends Document {
     @Prop({ type: Boolean, default: false, index: true })
     isRead?: boolean
 }
+
+export const NotificationSchema = SchemaFactory.createForClass(Notification);
