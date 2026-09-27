@@ -27,4 +27,27 @@ export class NotificationsService {
         });
         return notification;
     }
+
+    async getNotifications(userId: string) {
+        return this.notificationModel.find({ userId: new Types.ObjectId(userId) }).sort({ createdAt: -1 }).limit(50);
+    }
+
+    async getUnreadCount(userId: string) {
+        return this.notificationModel.countDocuments({ userId: new Types.ObjectId(userId), isRead: false });
+    }
+
+    async markAsRead(notificationId: string, userId: string) {
+        return this.notificationModel.findOneAndUpdate(
+            { _id: new Types.ObjectId(notificationId), userId: new Types.ObjectId(userId) },
+            { isRead: true },
+            { new: true },
+        )
+    }
+
+    async markAllAsRead(userId: string) {
+        return this.notificationModel.updateMany(
+            { userId: new Types.ObjectId(userId), isRead: false },
+            { isRead: true },
+        )
+    }
 }
