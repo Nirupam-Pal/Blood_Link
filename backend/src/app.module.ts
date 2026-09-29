@@ -8,6 +8,8 @@ import { UsersModule } from './modules/users/users.module';
 import { DonorsModule } from './modules/donors/donors.module';
 import { BloodBanksModule } from './modules/blood-banks/blood-banks.module';
 import { ConnectionRequestsModule } from './modules/connection-requests/connection-requests.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
+import { ChatModule } from './modules/chat/chat.module';
 
 @Module({
   imports: [
@@ -22,7 +24,9 @@ import { ConnectionRequestsModule } from './modules/connection-requests/connecti
     UsersModule,
     DonorsModule,
     BloodBanksModule,
-    ConnectionRequestsModule
+    ConnectionRequestsModule,
+    NotificationsModule,
+    ChatModule
   ],
   controllers: [AppController],
   providers: [AppService],
