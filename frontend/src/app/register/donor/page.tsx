@@ -287,7 +287,7 @@ export default function RegisterDonorPage() {
                       </label>
                       <Input
                         type="number"
-                        placeholder="e.g. 25"
+                        placeholder="e.g. 60"
                         required
                         min={45}
                         value={weight}
