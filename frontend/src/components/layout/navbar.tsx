@@ -3,10 +3,12 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, useScroll, useSpring } from 'framer-motion';
-import { HeartHandshake, Menu, X, LogIn, UserPlus, LogOut, User as UserIcon, Heart } from 'lucide-react';
+import { HeartHandshake, Menu, X, LogIn, UserPlus, LogOut, User as UserIcon, Heart, Bell, MessageSquare, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { useAuthStore } from '@/stores/auth.store';
+import { useNotificationStore } from '@/stores/notification.store';
+import { useChatStore } from '@/stores/chat.store';
 import type { User } from '@/types/auth.types';
 
 // Blood Bank accounts carry their name under `bloodBankName`, not `fullName`.
@@ -28,8 +30,35 @@ export function Navbar() {
   const status = useAuthStore((state) => state.status);
   const logout = useAuthStore((state) => state.logout);
 
+  // Notifications badge
+  const unreadCount = useNotificationStore((state) => state.unreadCount);
+  const fetchUnreadCount = useNotificationStore((state) => state.fetchUnreadCount);
+
   // Check if donor is active
   const isDonor = Boolean(user?.donor);
+
+  // Connections, chat and notifications are for individual (USER) accounts
+  const showSocialLinks = status === 'authenticated' && user?.role === 'USER';
+
+  // Poll the unread count while signed in
+  useEffect(() => {
+    if (!showSocialLinks) return;
+    fetchUnreadCount();
+    const interval = setInterval(fetchUnreadCount, 30000);
+    return () => clearInterval(interval);
+  }, [showSocialLinks, fetchUnreadCount]);
+
+  const handleLogout = () => {
+    useChatStore.getState().disconnect();
+    useNotificationStore.getState().reset();
+    logout();
+  };
+
+  const socialLinks = [
+    { href: '/connections', label: 'Connections', icon: Users, badge: 0 },
+    { href: '/messages', label: 'Messages', icon: MessageSquare, badge: 0 },
+    { href: '/notifications', label: 'Notifications', icon: Bell, badge: unreadCount },
+  ];
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -77,6 +106,23 @@ export function Navbar() {
                   </Link>
                 )}
 
+                {showSocialLinks && (
+                  <div className="flex items-center gap-1">
+                    {socialLinks.map(({ href, label, icon: Icon, badge }) => (
+                      <Link key={href} href={href} aria-label={label} title={label}>
+                        <Button variant="ghost" className="relative h-10 w-10 p-0 text-muted-foreground hover:text-foreground cursor-pointer">
+                          <Icon className="h-4.5 w-4.5" />
+                          {badge > 0 && (
+                            <span className="absolute -top-0.5 -right-0.5 min-w-4.5 h-4.5 px-1 rounded-full bg-red-600 text-white text-[10px] font-bold flex items-center justify-center shadow-md shadow-red-600/40">
+                              {badge > 99 ? '99+' : badge}
+                            </span>
+                          )}
+                        </Button>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+
                 <Link href="/profile">
                   <Button className="flex items-center gap-2 px-3 py-5 rounded-lg bg-muted hover:bg-gray-900 pointer cursor-pointer text-foreground text-sm font-medium">
                     <UserIcon className="h-4 w-4 text-red-600" />
@@ -85,7 +131,7 @@ export function Navbar() {
                 </Link>
 
                 <Button
-                  onClick={logout}
+                  onClick={handleLogout}
                   variant="ghost"
                   className="text-muted-foreground hover:text-foreground gap-1.5 text-xs"
                 >
@@ -141,13 +187,27 @@ export function Navbar() {
                       </Button>
                     </Link>
                   )}
+                  {showSocialLinks &&
+                    socialLinks.map(({ href, label, icon: Icon, badge }) => (
+                      <Link key={href} href={href} onClick={() => setMobileMenuOpen(false)}>
+                        <Button variant="outline" className="w-full text-foreground justify-center gap-2 mb-2">
+                          <Icon className="h-4 w-4 text-red-600" />
+                          {label}
+                          {badge > 0 && (
+                            <span className="min-w-5 h-5 px-1.5 rounded-full bg-red-600 text-white text-[10px] font-bold flex items-center justify-center">
+                              {badge > 99 ? '99+' : badge}
+                            </span>
+                          )}
+                        </Button>
+                      </Link>
+                    ))}
                   <Link href="/profile" onClick={() => setMobileMenuOpen(false)}>
                     <Button variant="outline" className="w-full text-foreground justify-center gap-2 mb-2">
                       <UserIcon className="h-4 w-4 text-red-600" />
                       {getDisplayName(user)}
                     </Button>
                   </Link>
-                  <Button onClick={logout} variant="outline" className="w-full text-foreground justify-center gap-2">
+                  <Button onClick={handleLogout} variant="outline" className="w-full text-foreground justify-center gap-2">
                     <LogOut className="h-4 w-4" />
                     Sign Out ({getDisplayName(user)})
                   </Button>

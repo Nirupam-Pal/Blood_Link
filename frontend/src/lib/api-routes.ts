@@ -22,5 +22,27 @@ export const API_ROUTES = {
         SEARCH: `${API_BASE_URL}/blood-banks/search`,
         UPDATE_INVENTORY: `${API_BASE_URL}/blood-banks/inventory`,
         PROFILE: `${API_BASE_URL}/blood-banks/profile`,
-    }
+    },
+    CONNECTION_REQUESTS: {
+        CREATE: `${API_BASE_URL}/connection-requests`,
+        RECEIVED: `${API_BASE_URL}/connection-requests/received`,
+        SENT: `${API_BASE_URL}/connection-requests/sent`,
+        ACCEPT: (id: string) => `${API_BASE_URL}/connection-requests/${id}/accept`,
+        REJECT: (id: string) => `${API_BASE_URL}/connection-requests/${id}/reject`,
+        CANCEL: (id: string) => `${API_BASE_URL}/connection-requests/${id}/cancel`,
+    },
+    CONNECTIONS: {
+        LIST: `${API_BASE_URL}/connections`,
+    },
+    NOTIFICATIONS: {
+        LIST: `${API_BASE_URL}/notifications`,
+        UNREAD_COUNT: `${API_BASE_URL}/notifications/unread-count`,
+        READ_ALL: `${API_BASE_URL}/notifications/read-all`,
+        MARK_READ: (id: string) => `${API_BASE_URL}/notifications/${id}/read`,
+    },
+    CONVERSATIONS: {
+        LIST: `${API_BASE_URL}/conversations`,
+        MESSAGES: (id: string) => `${API_BASE_URL}/conversations/${id}/messages`,
+    },
+    SOCKET_URL: API_BASE_URL,
 } as const;

@@ -15,7 +15,11 @@ import {
   RefreshCw,
   UserCheck,
   RotateCcw,
-  X
+  X,
+  Send,
+  Clock,
+  MessageSquare,
+  CheckCircle2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,6 +28,8 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuthStore } from '@/stores/auth.store';
 import { useDonorStore } from '@/stores/donor.store';
+import { useConnectionStore } from '@/stores/connection.store';
+import { getCurrentUserId, refId } from '@/lib/format';
 import { ActiveDonor, BloodGroup, SearchDonorDto } from '@/types/donor.types';
 import { Navbar } from '@/components/layout/navbar';
 import { AmbientOrbs } from '@/components/ui/ambient-orbs';
@@ -42,6 +48,13 @@ export default function DonorDashboardPage() {
   const fetchActiveDonors = useDonorStore((state) => state.fetchActiveDonors);
   const searchDonors = useDonorStore((state) => state.searchDonors);
 
+  // Connection Store Selectors
+  const sentRequests = useConnectionStore((state) => state.sentRequests);
+  const connections = useConnectionStore((state) => state.connections);
+  const isSendingRequest = useConnectionStore((state) => state.isSubmitting);
+  const fetchSentAndConnections = useConnectionStore((state) => state.fetchSentAndConnections);
+  const sendConnectionRequest = useConnectionStore((state) => state.sendRequest);
+
   // Filter form states
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedState, setSelectedState] = useState<string>('Tripura');
@@ -52,6 +65,9 @@ export default function DonorDashboardPage() {
   const [selectedDonor, setSelectedDonor] = useState<ActiveDonor | null>(null);
   const [filterError, setFilterError] = useState<string | null>(null);
   const [isVerificationBannerVisible, setIsVerificationBannerVisible] = useState(true);
+  const [requestMessage, setRequestMessage] = useState('');
+  const [requestError, setRequestError] = useState<string | null>(null);
+  const [requestSent, setRequestSent] = useState(false);
 
   // Auth Guard
   useEffect(() => {
@@ -66,6 +82,42 @@ export default function DonorDashboardPage() {
       fetchActiveDonors();
     }
   }, [status, isInitializing, fetchActiveDonors]);
+
+  // Load existing requests/connections so the contact modal knows the current state
+  useEffect(() => {
+    if (!isInitializing && status === 'authenticated' && user?.role === 'USER') {
+      fetchSentAndConnections();
+    }
+  }, [status, isInitializing, user?.role, fetchSentAndConnections]);
+
+  // Relationship between the signed-in user and a donor
+  const getConnectionState = (donorId: string): 'self' | 'connected' | 'pending' | 'none' => {
+    if (donorId === getCurrentUserId()) return 'self';
+    if (connections.some((c) => refId(c.donorId) === donorId || refId(c.userId) === donorId)) return 'connected';
+    if (sentRequests.some((r) => r.status === 'PENDING' && refId(r.receiverId) === donorId)) return 'pending';
+    return 'none';
+  };
+
+  const openContactModal = (donor: ActiveDonor) => {
+    setSelectedDonor(donor);
+    setRequestMessage('');
+    setRequestError(null);
+    setRequestSent(false);
+  };
+
+  const handleSendRequest = async () => {
+    if (!selectedDonor) return;
+    setRequestError(null);
+    try {
+      await sendConnectionRequest({
+        donorId: selectedDonor._id,
+        ...(requestMessage.trim() ? { message: requestMessage.trim() } : {}),
+      });
+      setRequestSent(true);
+    } catch (err: unknown) {
+      setRequestError(err instanceof Error ? err.message : 'Failed to send request');
+    }
+  };
 
   // Normalize Blood Groups
   const normalizeBG = (bg?: string) => {
@@ -462,7 +514,7 @@ export default function DonorDashboardPage() {
 
                   <div className="pt-4 border-t border-border flex gap-2">
                     <Button
-                      onClick={() => setSelectedDonor(donor)}
+                      onClick={() => openContactModal(donor)}
                       className="w-full h-9 bg-linear-to-r from-red-700 to-red-950 hover:from-red-800 hover:to-rose-700 text-white text-xs font-semibold gap-1.5 cursor-pointer border-none"
                     >
                       <Phone className="h-3.5 w-3.5" />
@@ -520,7 +572,78 @@ export default function DonorDashboardPage() {
                 </div>
               </div>
 
-              <div className="mt-6 flex justify-end">
+              {/* Connection Request */}
+              {user?.role === 'USER' && getConnectionState(selectedDonor._id) !== 'self' && (
+                <div className="mt-5 pt-4 border-t border-border">
+                  {!requestSent && getConnectionState(selectedDonor._id) === 'connected' && (
+                    <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-between gap-3">
+                      <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                        <CheckCircle2 className="h-4 w-4" />
+                        You are connected with this donor
+                      </span>
+                      <Button
+                        size="sm"
+                        onClick={() => router.push('/connections?tab=connected')}
+                        className="h-8 bg-red-600 hover:bg-red-700 text-white text-xs gap-1.5 cursor-pointer"
+                      >
+                        <MessageSquare className="h-3.5 w-3.5" />
+                        Chat
+                      </Button>
+                    </div>
+                  )}
+
+                  {(requestSent || getConnectionState(selectedDonor._id) === 'pending') && (
+                    <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-between gap-3">
+                      <span className="text-xs font-medium text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
+                        <Clock className="h-4 w-4" />
+                        {requestSent ? 'Request sent! Waiting for the donor to respond.' : 'Connection request pending'}
+                      </span>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => router.push('/connections?tab=sent')}
+                        className="h-8 text-xs cursor-pointer"
+                      >
+                        View
+                      </Button>
+                    </div>
+                  )}
+
+                  {!requestSent && getConnectionState(selectedDonor._id) === 'none' && (
+                    <div className="space-y-2">
+                      <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">
+                        Request to Connect
+                      </label>
+                      <textarea
+                        value={requestMessage}
+                        onChange={(e) => setRequestMessage(e.target.value.slice(0, 500))}
+                        rows={3}
+                        placeholder="Add a short note, e.g. patient details, hospital and urgency (optional)"
+                        className="w-full resize-none rounded-lg border border-input bg-background dark:bg-input/30 px-3 py-2 text-sm outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 transition-all"
+                      />
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[10px] text-muted-foreground">{requestMessage.length}/500</span>
+                        {requestError && (
+                          <span className="text-xs text-rose-500 font-medium flex items-center gap-1.5">
+                            <AlertCircle className="h-3.5 w-3.5" />
+                            {requestError}
+                          </span>
+                        )}
+                      </div>
+                      <Button
+                        onClick={handleSendRequest}
+                        disabled={isSendingRequest}
+                        className="w-full h-10 bg-linear-to-r from-red-700 to-red-950 hover:from-red-800 hover:to-rose-700 text-white text-xs font-semibold gap-1.5 cursor-pointer border-none"
+                      >
+                        {isSendingRequest ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+                        Send Connection Request
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="mt-4 flex justify-end">
                 <Button onClick={() => setSelectedDonor(null)} className="w-full bg-red-600 hover:bg-red-700 text-white cursor-pointer">
                   Close
                 </Button>
