@@ -5,13 +5,8 @@ import { Server, Socket } from "socket.io";
 import { ChatService } from "./chat.service";
 import { JwtPayload } from "../../common/types";
 
-@WebSocketGateway({
-    cors: {
-        // Keep in sync with the HTTP CORS config in main.ts
-        origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
-        credentials: true,
-    }
-})
+// CORS for the socket server is configured from CORS_ORIGINS in main.ts (CorsIoAdapter)
+@WebSocketGateway()
 export class ChatGateway implements OnGatewayConnection {
     @WebSocketServer()
     server!: Server;
