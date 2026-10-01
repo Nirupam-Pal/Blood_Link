@@ -20,13 +20,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { useAuthStore } from '@/stores/auth.store';
-import { RegisterDonorDto, DonorAssessmentResult } from '@/types/auth.types';
+import { useDonorStore } from '@/stores/donor.store';
+import { RegisterDonorDto, DonorAssessmentResult } from '@/types/donor.types';
 import { Navbar } from '@/components/layout/navbar';
 import { AmbientOrbs } from '@/components/ui/ambient-orbs';
 
 export default function RegisterDonorPage() {
   const router = useRouter();
-  const { user, status, isInitializing, isSubmitting, registerAsDonor, error: storeError, clearError } = useAuthStore();
+  const { user, status, isInitializing } = useAuthStore();
+  const { isSubmitting, registerAsDonor, error: storeError, clearError } = useDonorStore();
 
   const [weight, setWeight] = useState<number | ''>('');
   const [age, setAge] = useState<number | ''>('');

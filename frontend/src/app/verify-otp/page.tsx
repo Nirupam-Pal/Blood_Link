@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { Suspense, useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { 
@@ -19,7 +19,22 @@ import { useBloodBankStore } from '@/stores/blood-bank.store';
 import { Navbar } from '@/components/layout/navbar';
 import { AmbientOrbs } from '@/components/ui/ambient-orbs';
 
+// useSearchParams() needs a Suspense boundary so the page can be prerendered at build time
 export default function VerifyOtpPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-cosmic flex items-center justify-center">
+          <Loader2 className="h-8 w-8 text-crimson-600 animate-spin" />
+        </div>
+      }
+    >
+      <VerifyOtpContent />
+    </Suspense>
+  );
+}
+
+function VerifyOtpContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryEmail = searchParams.get('email');
