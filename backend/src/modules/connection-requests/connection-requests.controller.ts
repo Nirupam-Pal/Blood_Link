@@ -1,4 +1,5 @@
 import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { IsObjectIdPipe } from '@nestjs/mongoose';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { ConnectionRequestsService } from './connection-requests.service';
 import { CurrentUser } from '../../common/decorators/current-account.decorator';
@@ -11,33 +12,33 @@ export class ConnectionRequestsController {
 
 
     @Post()
-    async create(@CurrentUser() account: any, @Body() dto: CreateConnectionRequestDto) {
-        return this.connectionRequestService.createRequest(account.sub || account._id, dto.donorId, dto.message);
+    async create(@CurrentUser('id') userId: string, @Body() dto: CreateConnectionRequestDto) {
+        return this.connectionRequestService.createRequest(userId, dto.donorId, dto.message);
     }
 
     @Get('received')
-    async getReceived(@CurrentUser() account: any) {
-        return this.connectionRequestService.getReceivedRequests(account.sub || account._id);
+    async getReceived(@CurrentUser('id') userId: string) {
+        return this.connectionRequestService.getReceivedRequests(userId);
     }
 
     @Get('sent')
-    async getSent(@CurrentUser() account: any){
-        return this.connectionRequestService.getSentRequests(account.sub || account._id);
+    async getSent(@CurrentUser('id') userId: string){
+        return this.connectionRequestService.getSentRequests(userId);
     }
 
     @Patch(':id/accept')
-    async accept(@Param('id') id: string, @CurrentUser() account: any) {
-        return this.connectionRequestService.acceptRequest(id, account.sub || account._id);
+    async accept(@Param('id', IsObjectIdPipe) id: string, @CurrentUser('id') userId: string) {
+        return this.connectionRequestService.acceptRequest(id, userId);
     }
 
     @Patch(':id/reject')
-    async reject(@Param('id') id: string, @CurrentUser() account: any) {
-        return this.connectionRequestService.rejectRequest(id, account.sub || account._id);
+    async reject(@Param('id', IsObjectIdPipe) id: string, @CurrentUser('id') userId: string) {
+        return this.connectionRequestService.rejectRequest(id, userId);
     }
 
     @Patch(':id/cancel')
-    async cancel(@Param('id') id: string, @CurrentUser() account: any) {
-        return this.connectionRequestService.cancelRequest(id, account.sub || account._id);
+    async cancel(@Param('id', IsObjectIdPipe) id: string, @CurrentUser('id') userId: string) {
+        return this.connectionRequestService.cancelRequest(id, userId);
     }
 }
 
@@ -47,7 +48,7 @@ export class ConnectionsController {
     constructor(private readonly connectionRequestsService: ConnectionRequestsService) {}
 
     @Get()
-    async findAll(@CurrentUser() account: any) {
-        return this.connectionRequestsService.getConnections(account.sub || account._id);
+    async findAll(@CurrentUser('id') userId: string) {
+        return this.connectionRequestsService.getConnections(userId);
     }
 }

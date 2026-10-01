@@ -51,6 +51,14 @@ export class BaseRepository<T extends Document> {
     return this.model.findByIdAndUpdate(id, update, options).exec();
   }
 
+  async findOneAndUpdate(
+    filter: FilterQuery<T>,
+    update: UpdateQuery<T>,
+    options: QueryOptions = { new: true },
+  ): Promise<T | null> {
+    return this.model.findOneAndUpdate(filter, update, options).exec();
+  }
+
   async delete(id: string): Promise<T | null> {
     return this.model
       .findByIdAndUpdate(id, { isActive: false }, { new: true })

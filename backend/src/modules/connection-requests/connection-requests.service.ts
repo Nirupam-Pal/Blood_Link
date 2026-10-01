@@ -5,8 +5,12 @@ import { UsersRepository } from '../users/repositories/users.repository';
 import { NotificationsService } from '../notifications/notifications.service';
 import { ChatService } from '../chat/chat.service';
 import { InjectConnection } from '@nestjs/mongoose';
-import { ClientSession, Connection, Types } from 'mongoose';
+import { Connection as MongoConnection, Types } from 'mongoose';
 import { ConnectionRequestStatus } from '../../common/enums/connection-request-status.enum';
+import { Connection } from './schemas/connection.schema';
+
+const USER_PUBLIC_FIELDS = 'fullName email bloodGroup city subDivision district';
+const MAX_REQUESTS_RETURNED = 100;
 
 @Injectable()
 export class ConnectionRequestsService {
@@ -16,7 +20,7 @@ export class ConnectionRequestsService {
         private readonly usersRepository: UsersRepository,
         private readonly notificationService: NotificationsService,
         private readonly chatService: ChatService,
-        @InjectConnection() private readonly mongoConnection: Connection,
+        @InjectConnection() private readonly mongoConnection: MongoConnection,
     ) {}
 
     async createRequest(senderId: string, donorId: string, message?: string) {
@@ -27,40 +31,61 @@ export class ConnectionRequestsService {
         }
 
         const donor = await this.usersRepository.findById(donorId);
-        if (!donor || donor.role != 'DONOR') {
+        if (!donor || !donor.donor || !donor.isActive) {
         throw new BadRequestException(
             'Target account is not a registered donor.',
         );
         }
 
-        const existing = await this.connectionRequestRepository.findOne({
-        senderId: new Types.ObjectId(senderId),
-        receiverId: new Types.ObjectId(donorId),
-        status: {
-            $in: [
-            ConnectionRequestStatus.PENDING,
-            ConnectionRequestStatus.ACCEPTED,
-            ],
-        },
-        });
+        const sender = new Types.ObjectId(senderId);
+        const receiver = new Types.ObjectId(donorId);
 
-        if (existing) {
-        if (existing.status === ConnectionRequestStatus.ACCEPTED) {
-            throw new BadRequestException(
-            'A valid connection already existswith this donor.',
-            );
-        }
+        const existingConnection = await this.connectionRepository.findOne({
+        $or: [
+            { userId: sender, donorId: receiver },
+            { userId: receiver, donorId: sender },
+        ],
+        });
+        if (existingConnection) {
         throw new BadRequestException(
-            'A pending connection request already exists.',
+            'A valid connection already exists with this donor.',
         );
         }
 
-        const request = await this.connectionRequestRepository.create({
-        senderId: new Types.ObjectId(senderId),
-        receiverId: new Types.ObjectId(donorId),
-        message,
+        // Check both directions so two people can't have crossing pending requests
+        const existing = await this.connectionRequestRepository.findOne({
+        $or: [
+            { senderId: sender, receiverId: receiver },
+            { senderId: receiver, receiverId: sender },
+        ],
         status: ConnectionRequestStatus.PENDING,
         });
+
+        if (existing) {
+        throw new BadRequestException(
+            existing.senderId.equals(sender)
+            ? 'A pending connection request already exists.'
+            : 'This donor has already sent you a connection request.',
+        );
+        }
+
+        let request;
+        try {
+        request = await this.connectionRequestRepository.create({
+            senderId: sender,
+            receiverId: receiver,
+            message,
+            status: ConnectionRequestStatus.PENDING,
+        });
+        } catch (error) {
+        // Unique partial index hit by a concurrent duplicate request
+        if ((error as { code?: number })?.code === 11000) {
+            throw new BadRequestException(
+            'A pending connection request already exists.',
+            );
+        }
+        throw error;
+        }
 
         await this.notificationService.createNotification({
         userId: donorId,
@@ -78,9 +103,11 @@ export class ConnectionRequestsService {
         { receiverId: new Types.ObjectId(donorId) },
         undefined,
         {
+            sort: { createdAt: -1 },
+            limit: MAX_REQUESTS_RETURNED,
             populate: {
             path: 'senderId',
-            select: 'name email phone bloodGroup city subDivision district',
+            select: USER_PUBLIC_FIELDS,
             },
         },
         );
@@ -91,64 +118,77 @@ export class ConnectionRequestsService {
             { senderId: new Types.ObjectId(userId) },
             undefined,
             {
+                sort: { createdAt: -1 },
+                limit: MAX_REQUESTS_RETURNED,
                 populate: {
                     path: 'receiverId',
-                    select: 'name email phone bloodGroup city subDivision district',
+                    select: USER_PUBLIC_FIELDS,
                 },
             },
         );
     }
 
     async acceptRequest(requestId: string, donorId: string) {
-        const session: ClientSession = await this.mongoConnection.startSession();
-        session.startTransaction();
+        const session = await this.mongoConnection.startSession();
+        let connection!: Connection;
+        let conversationId!: string;
+        let senderId!: string;
 
         try {
-            const request = await this.connectionRequestRepository.findById(requestId);
-            if(!request) {
-                throw new NotFoundException('Connection request not found.')
-            }
+            // withTransaction retries on write conflicts, so a concurrent accept/cancel
+            // re-reads the request and fails the PENDING check instead of double-accepting.
+            await session.withTransaction(async () => {
+                const request = await this.connectionRequestRepository.findById(requestId, undefined, { session });
+                if(!request) {
+                    throw new NotFoundException('Connection request not found.')
+                }
 
-            if(request.receiverId.toString() !== donorId) {
-                throw new ForbiddenException('You are not authorized to accept this request');
-            }
+                if(request.receiverId.toString() !== donorId) {
+                    throw new ForbiddenException('You are not authorized to accept this request');
+                }
 
-            if(request.status !== ConnectionRequestStatus.PENDING) {
-                throw new BadRequestException(`Request is already ${request.status.toLowerCase()}`);
-            }
+                if(request.status !== ConnectionRequestStatus.PENDING) {
+                    throw new BadRequestException(`Request is already ${request.status.toLowerCase()}`);
+                }
 
-            request.status = ConnectionRequestStatus.ACCEPTED;
-            request.respondedAt = new Date();
-            await request.save({ session });
+                request.status = ConnectionRequestStatus.ACCEPTED;
+                request.respondedAt = new Date();
+                await request.save({ session });
 
-            const connection  = await this.connectionRepository.create(
-                {
-                    userId: request.senderId,
-                    donorId: request.receiverId,
-                    connectionRequestId: request._id,
-                    connectedAt: new Date(),
-                    lastInteractionAt: new Date(),
-                },
-                session ,
-            );
+                connection = await this.connectionRepository.create(
+                    {
+                        userId: request.senderId,
+                        donorId: request.receiverId,
+                        connectionRequestId: request._id,
+                        connectedAt: new Date(),
+                        lastInteractionAt: new Date(),
+                    },
+                    session,
+                );
 
-            await session.commitTransaction();
-            session.endSession();
+                const conversation = await this.chatService.getOrCreateConversation(
+                    request.senderId.toString(),
+                    request.receiverId.toString(),
+                    connection._id!.toString(),
+                    session,
+                );
 
-            await this.notificationService.createNotification({
-                userId: request.senderId.toString(),
-                type: 'CONNECTION_REQUEST_ACCEPTED',
-                title: 'Connection Accepted',
-                message: 'Your blood connection request has been accepted!',
-                referenceId: connection._id.toString(),
+                conversationId = conversation._id!.toString();
+                senderId = request.senderId.toString();
             });
-
-            return connection;
-        } catch (error) {
-            await session.abortTransaction();
-            session.endSession();
-            throw error;
+        } finally {
+            await session.endSession();
         }
+
+        await this.notificationService.createNotification({
+            userId: senderId,
+            type: 'CONNECTION_REQUEST_ACCEPTED',
+            title: 'Connection Accepted',
+            message: 'Your blood connection request has been accepted!',
+            referenceId: connection._id!.toString(),
+        });
+
+        return { connection, conversationId };
     }
 
     async rejectRequest(requestId: string, donorId: string) {
@@ -161,23 +201,24 @@ export class ConnectionRequestsService {
             throw new ForbiddenException('You are not authorized to reject this request.')
         }
 
-        if(request.status !== ConnectionRequestStatus.PENDING) {
-            throw new BadRequestException(`Request is already ${request.status.toLowerCase()}`)
+        // Conditional update so a concurrent accept/cancel can't be overwritten
+        const updated = await this.connectionRequestRepository.findOneAndUpdate(
+            { _id: request._id, status: ConnectionRequestStatus.PENDING },
+            { status: ConnectionRequestStatus.REJECTED, respondedAt: new Date() },
+        );
+        if (!updated) {
+            throw new BadRequestException('Only pending requests can be rejected.');
         }
-
-        request.status = ConnectionRequestStatus.REJECTED;
-        request.respondedAt = new Date();
-        await request.save();
 
         await this.notificationService.createNotification({
             userId: request.senderId.toString(),
             type: 'CONNECTION_REQUEST_REJECTED',
             title: 'Connection Rejected',
             message: 'Your blood connection request was declined.',
-            referenceId: request._id.toString(),
+            referenceId: request._id!.toString(),
         });
 
-        return request;
+        return updated;
     }
 
     async cancelRequest(requestId: string, userId: string) {
@@ -190,27 +231,28 @@ export class ConnectionRequestsService {
             throw new ForbiddenException('You are not authorized to cancel this request.');
         }
 
-        if(request.status !== ConnectionRequestStatus.PENDING) {
+        const updated = await this.connectionRequestRepository.findOneAndUpdate(
+            { _id: request._id, status: ConnectionRequestStatus.PENDING },
+            { status: ConnectionRequestStatus.CANCELLED },
+        );
+        if (!updated) {
             throw new BadRequestException('Only pending requests can be cancelled.');
         }
-
-        request.status = ConnectionRequestStatus.CANCELLED;
-        await request.save();
-        return request;
+        return updated;
     }
 
     async getConnections(accountId: string) {
-        return this.connectionRepository.findOne(
-            { $or: [{ userId: new Types.ObjectId(accountId) }, { donorId: new Types.ObjectId(accountId) }] },
+        const id = new Types.ObjectId(accountId);
+        return this.connectionRepository.findMany(
+            { $or: [{ userId: id }, { donorId: id }] },
             undefined,
-            { 
-                populate: {
-                    path: 'userId donorId',
-                    select: 'name email phone bloodGroup city subDivision district role',
-                },
+            {
+                sort: { lastInteractionAt: -1 },
+                populate: [
+                    { path: 'userId', select: `${USER_PUBLIC_FIELDS} role` },
+                    { path: 'donorId', select: `${USER_PUBLIC_FIELDS} role` },
+                ],
             },
         );
     }
-
-
 }

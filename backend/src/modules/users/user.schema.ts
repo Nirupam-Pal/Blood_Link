@@ -21,10 +21,10 @@ export class User extends Document {
   @Prop({ required: true })
   fullName!: string;
 
-  @Prop({ required: true, enum: Gender })
+  @Prop({ type: String, required: true, enum: Gender })
   gender!: Gender;
 
-  @Prop({ required: true, enum: BloodGroup })
+  @Prop({ type: String, required: true, enum: BloodGroup })
   bloodGroup!: BloodGroup; 
 
   @Prop({ required: true, index: true, trim: true })
@@ -57,13 +57,13 @@ export class User extends Document {
 
 export const UserSchema = SchemaFactory.createForClass(User);
 UserSchema.index({
-  isActive: 1, isDonor: 1, state: 1, bloodGroup: 1, district: 1, subDivision: 1, city: 1,
+  isActive: 1, donor: 1, state: 1, bloodGroup: 1, district: 1, subDivision: 1, city: 1,
 });
 
 UserSchema.index({
-  isActive: 1, isDonor: 1, state: 1, bloodGroup: 1, city: 1,
+  isActive: 1, donor: 1, state: 1, bloodGroup: 1, city: 1,
 });
 
-UserSchema.index({ 
-  isActive: 1, isDonor: 1, state: 1, bloodGroup: 1, subDivision: 1,
+UserSchema.index({
+  isActive: 1, donor: 1, state: 1, bloodGroup: 1, subDivision: 1,
 });

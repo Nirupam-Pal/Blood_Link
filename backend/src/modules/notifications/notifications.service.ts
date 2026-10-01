@@ -1,14 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Notification, NotificationType } from './schemas/notification.schema';
 import { Model, Types } from 'mongoose';
-import { EmailService } from '../../common/services/email.service';
 
 @Injectable()
 export class NotificationsService {
     constructor(
         @InjectModel(Notification.name) private readonly notificationModel: Model<Notification>,
-        private readonly emailService: EmailService,
     ) {}
 
     async createNotification(data: {
@@ -37,17 +35,21 @@ export class NotificationsService {
     }
 
     async markAsRead(notificationId: string, userId: string) {
-        return this.notificationModel.findOneAndUpdate(
+        const notification = await this.notificationModel.findOneAndUpdate(
             { _id: new Types.ObjectId(notificationId), userId: new Types.ObjectId(userId) },
             { isRead: true },
             { new: true },
-        )
+        );
+        if (!notification) {
+            throw new NotFoundException('Notification not found.');
+        }
+        return notification;
     }
 
     async markAllAsRead(userId: string) {
         return this.notificationModel.updateMany(
             { userId: new Types.ObjectId(userId), isRead: false },
             { isRead: true },
-        )
+        );
     }
 }

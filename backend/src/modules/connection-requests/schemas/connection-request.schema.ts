@@ -28,5 +28,10 @@ export class ConnectionRequest extends Document {
 export const ConnectionRequestSchema =
   SchemaFactory.createForClass(ConnectionRequest);
 
-// Compound index to prevent duplicate pending requests between same sender and receiver
 ConnectionRequestSchema.index({ senderId: 1, receiverId: 1, status: 1 });
+
+// Prevents duplicate pending requests between the same sender and receiver (even under concurrent inserts)
+ConnectionRequestSchema.index(
+  { senderId: 1, receiverId: 1 },
+  { unique: true, partialFilterExpression: { status: ConnectionRequestStatus.PENDING } },
+);

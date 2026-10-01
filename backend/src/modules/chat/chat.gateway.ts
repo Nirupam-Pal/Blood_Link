@@ -1,14 +1,18 @@
+import { HttpException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
-import { ConnectedSocket, MessageBody, OnGatewayConnection, OnGatewayDisconnect, SubscribeMessage, WebSocketGateway, WebSocketServer } from "@nestjs/websockets";
+import { ConnectedSocket, MessageBody, OnGatewayConnection, SubscribeMessage, WebSocketGateway, WebSocketServer, WsException } from "@nestjs/websockets";
 import { Server, Socket } from "socket.io";
 import { ChatService } from "./chat.service";
+import { JwtPayload } from "../../common/types";
 
 @WebSocketGateway({
     cors: {
-        origin: '*',
+        // Keep in sync with the HTTP CORS config in main.ts
+        origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
+        credentials: true,
     }
 })
-export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class ChatGateway implements OnGatewayConnection {
     @WebSocketServer()
     server!: Server;
 
@@ -24,32 +28,50 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
                 client.disconnect();
                 return;
             }
-            const payload = this.jwtService.verify(token);
-            client.data.user = payload;
+            const payload = await this.jwtService.verifyAsync<JwtPayload>(token);
+            client.data.userId = String(payload.sub);
         } catch {
             client.disconnect();
         }
     }
 
-    handleDisconnect(client: Socket) {
-        // Cleanup presence if needed
-    }
-
     @SubscribeMessage('conversation:join')
     async handleJoinConversation(@ConnectedSocket() client: Socket, @MessageBody() data: { conversationId: string }) {
-        client.join(data.conversationId);
+        const userId = this.getUserId(client);
+        await this.run(() => this.chatService.getConversationForParticipant(data?.conversationId, userId));
+        await client.join(data.conversationId);
+        return { ok: true };
     }
 
     @SubscribeMessage('message:send')
     async handleMessageSend(
         @ConnectedSocket() client: Socket,
-        @MessageBody() data: { conversationId: string; receiverId: string; content: string },
+        @MessageBody() data: { conversationId: string; content: string },
     ) {
-        const userId = client.data.user?.sub || client.data.user?._id;
-        if(!userId) return;
-
-        const message = await this.chatService.saveMessage(data.conversationId, userId, data.receiverId, data.content);
+        const userId = this.getUserId(client);
+        const message = await this.run(() => this.chatService.saveMessage(data?.conversationId, userId, data?.content));
 
         this.server.to(data.conversationId).emit('message:new', message);
+        return message;
+    }
+
+    private getUserId(client: Socket): string {
+        const userId = client.data.userId as string | undefined;
+        if (!userId) {
+            throw new WsException('Unauthorized');
+        }
+        return userId;
+    }
+
+    /** Converts HTTP exceptions from the service layer into WsExceptions so the client gets the real message. */
+    private async run<T>(fn: () => Promise<T>): Promise<T> {
+        try {
+            return await fn();
+        } catch (error) {
+            if (error instanceof HttpException) {
+                throw new WsException(error.message);
+            }
+            throw error;
+        }
     }
 }

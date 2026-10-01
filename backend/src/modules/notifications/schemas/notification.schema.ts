@@ -1,19 +1,22 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Types, Document } from "mongoose";
 
-export type NotificationType =
-  | 'CONNECTION_REQUEST_RECEIVED'
-  | 'CONNECTION_REQUEST_ACCEPTED'
-  | 'CONNECTION_REQUEST_REJECTED'
-  | 'NEW_MESSAGE'
-  | 'SYSTEM_NOTIFICATION';
+export const NOTIFICATION_TYPES = [
+  'CONNECTION_REQUEST_RECEIVED',
+  'CONNECTION_REQUEST_ACCEPTED',
+  'CONNECTION_REQUEST_REJECTED',
+  'NEW_MESSAGE',
+  'SYSTEM_NOTIFICATION',
+] as const;
+
+export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
 @Schema({ timestamps: true })
 export class Notification extends Document {
     @Prop({ type: Types.ObjectId, ref: 'User', required: true, index: true })
     userId?: Types.ObjectId;
 
-    @Prop({ type: String, required: true })
+    @Prop({ type: String, required: true, enum: NOTIFICATION_TYPES })
     type?: NotificationType;
 
     @Prop({ type: String, required: true })
@@ -30,3 +33,4 @@ export class Notification extends Document {
 }
 
 export const NotificationSchema = SchemaFactory.createForClass(Notification);
+NotificationSchema.index({ userId: 1, createdAt: -1 });
