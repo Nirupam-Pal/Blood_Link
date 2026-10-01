@@ -26,6 +26,7 @@ export interface ActiveDonor {
 
 export interface RegisterDonorDto {
     weight: number;
+    age: number;
     takingMedication: boolean;
     recentTattoo: boolean;
     recentSurgery: boolean;

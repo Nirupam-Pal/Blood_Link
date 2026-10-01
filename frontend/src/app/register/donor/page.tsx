@@ -87,6 +87,16 @@ export default function RegisterDonorPage() {
       return;
     }
 
+    if (age === '' || !Number.isInteger(Number(age))) {
+      setLocalError('Please enter your age in years.');
+      return;
+    }
+
+    if (Number(age) < 18 || Number(age) > 65) {
+      setLocalError('Blood donors must be between 18 and 65 years old.');
+      return;
+    }
+
     if (!consents.consentInformation || !consents.consentContact || !consents.consentPrivacy) {
       setLocalError('Please accept all 3 legal consent declarations before submitting.');
       return;
@@ -94,6 +104,7 @@ export default function RegisterDonorPage() {
 
     const payload: RegisterDonorDto = {
       weight: Number(weight),
+      age: Number(age),
       ...medicalAnswers,
       ...consents,
     };
