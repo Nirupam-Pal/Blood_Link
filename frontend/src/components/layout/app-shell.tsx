@@ -43,6 +43,8 @@ interface NavItem {
   label: string;
   icon: LucideIcon;
   badge?: number;
+  /** Primary directory actions get a tinted icon tile so they stand out. */
+  featured?: boolean;
 }
 
 interface NavSection {
@@ -108,8 +110,8 @@ export function AppShell({ children, bleed = false }: { children: ReactNode; ble
       {
         title: 'Directory',
         items: [
-          { href: '/dashboard/donor', label: 'Find donors', icon: Search },
-          { href: '/dashboard/blood-banks', label: 'Blood banks', icon: Building2 },
+          { href: '/dashboard/donor', label: 'Find donors', icon: Search, featured: true },
+          { href: '/dashboard/blood-banks', label: 'Blood banks', icon: Building2, featured: true },
         ],
       }
     );
@@ -119,18 +121,17 @@ export function AppShell({ children, bleed = false }: { children: ReactNode; ble
         items: [
           { href: '/', label: 'Home', icon: Home },
           { href: '/dashboard/blood-bank', label: 'Inventory', icon: Droplets },
-          { href: '/dashboard/blood-banks', label: 'Blood bank directory', icon: Building2 },
+          { href: '/dashboard/blood-banks', label: 'Blood bank directory', icon: Building2, featured: true },
         ],
-      },
-      { title: 'Account', items: [{ href: '/profile', label: 'Profile', icon: UserIcon }] }
+      }
     );
   } else {
     sections.push(
       {
         items: [
           { href: '/', label: 'Home', icon: Home },
-          { href: '/dashboard/donor', label: 'Find donors', icon: Search },
-          { href: '/dashboard/blood-banks', label: 'Blood banks', icon: Building2 },
+          { href: '/dashboard/donor', label: 'Find donors', icon: Search, featured: true },
+          { href: '/dashboard/blood-banks', label: 'Blood banks', icon: Building2, featured: true },
         ],
       },
       {
@@ -142,20 +143,14 @@ export function AppShell({ children, bleed = false }: { children: ReactNode; ble
               { href: '/notifications', label: 'Notifications', icon: Bell, badge: unreadCount },
             ]
           : [],
-      },
-      { title: 'Account', items: [{ href: '/profile', label: 'Profile', icon: UserIcon }] }
+      }
     );
   }
 
-  // Bottom call-to-action, like the reference's dark pill
-  const cta = !isAuthed
-    ? { href: '/register', label: 'Create free account', icon: UserPlus }
-    : isBloodBank
-      ? { href: '/dashboard/blood-bank', label: 'Update stock', icon: Droplets }
-      : !isDonor
-        ? { href: '/register/donor', label: 'Become a donor', icon: Heart }
-        : { href: '/dashboard/donor', label: 'Find a donor', icon: Search };
-  const CtaIcon = cta.icon;
+  // Bottom call-to-action — only shown when it leads somewhere the nav above
+  // doesn't already cover (the donor sign-up for members who aren't donors yet).
+  const showDonorCta = isAuthed && user?.role === 'USER' && !isDonor;
+  const isProfileActive = pathname === '/profile';
 
   const isActive = (href: string) =>
     href === '/' ? pathname === '/' : pathname === href || pathname?.startsWith(`${href}/`);
@@ -167,14 +162,29 @@ export function AppShell({ children, bleed = false }: { children: ReactNode; ble
       {/* Account block */}
       <div className="px-2 pb-6">
         {isAuthed && user ? (
-          <Link href="/profile" className="flex items-center gap-3 rounded-xl p-1 -m-1 hover:bg-sidebar-accent/70">
+          // Doubles as the Profile link
+          <Link
+            href="/profile"
+            aria-current={isProfileActive ? 'page' : undefined}
+            title="View profile"
+            className={cn(
+              'group flex items-center gap-3 rounded-xl p-1.5 -m-1.5',
+              isProfileActive ? 'bg-sidebar-accent shadow-card' : 'hover:bg-sidebar-accent/70'
+            )}
+          >
             <Avatar name={getDisplayName(user)} />
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold text-foreground">{getDisplayName(user)}</p>
               <p className="truncate text-xs text-muted-foreground">
                 {isBloodBank ? 'Blood bank' : isDonor ? 'Active donor' : 'Member'}
               </p>
             </div>
+            <ChevronRight
+              className={cn(
+                'h-4 w-4 shrink-0 transition-all',
+                isProfileActive ? 'text-brand' : 'text-muted-foreground opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5'
+              )}
+            />
           </Link>
         ) : (
           <Logo />
@@ -197,8 +207,13 @@ export function AppShell({ children, bleed = false }: { children: ReactNode; ble
                         href={item.href}
                         aria-current={active ? 'page' : undefined}
                         className={cn(
-                          'relative flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm',
-                          active ? 'text-foreground font-medium' : 'text-sidebar-foreground hover:text-foreground'
+                          'relative flex items-center gap-2.5 rounded-lg px-2.5 text-sm',
+                          item.featured ? 'py-1.5 font-medium' : 'py-2',
+                          active
+                            ? 'text-foreground font-medium'
+                            : item.featured
+                              ? 'text-foreground hover:bg-sidebar-accent/60'
+                              : 'text-sidebar-foreground hover:text-foreground'
                         )}
                       >
                         {active && (
@@ -208,7 +223,18 @@ export function AppShell({ children, bleed = false }: { children: ReactNode; ble
                             transition={{ type: 'spring', stiffness: 500, damping: 40 }}
                           />
                         )}
-                        <Icon className={cn('relative h-4 w-4 shrink-0', active ? 'text-brand' : 'text-muted-foreground')} />
+                        {item.featured ? (
+                          <span
+                            className={cn(
+                              'relative -ml-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md transition-colors',
+                              active ? 'btn-brand' : 'bg-brand-soft text-brand'
+                            )}
+                          >
+                            <Icon className="h-3.5 w-3.5" />
+                          </span>
+                        ) : (
+                          <Icon className={cn('relative h-4 w-4 shrink-0', active ? 'text-brand' : 'text-muted-foreground')} />
+                        )}
                         <span className="relative flex-1 truncate">{item.label}</span>
                         {item.badge ? <CountBadge count={item.badge} pulse className="relative" /> : null}
                       </Link>
@@ -232,16 +258,18 @@ export function AppShell({ children, bleed = false }: { children: ReactNode; ble
             Sign out
           </button>
         )}
-        <Link
-          href={cta.href}
-          className="btn-ink mt-3 flex h-10 items-center justify-between gap-2 rounded-full pl-4 pr-3 text-sm font-medium"
-        >
-          <span className="flex items-center gap-2">
-            <CtaIcon className="h-4 w-4" />
-            {cta.label}
-          </span>
-          <ChevronRight className="h-4 w-4 opacity-70" />
-        </Link>
+        {showDonorCta && (
+          <Link
+            href="/register/donor"
+            className="btn-ink mt-3 flex h-10 items-center justify-between gap-2 rounded-full pl-4 pr-3 text-sm font-medium"
+          >
+            <span className="flex items-center gap-2">
+              <Heart className="h-4 w-4" />
+              Become a donor
+            </span>
+            <ChevronRight className="h-4 w-4 opacity-70" />
+          </Link>
+        )}
       </div>
     </div>
   );
