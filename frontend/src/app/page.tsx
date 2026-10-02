@@ -24,10 +24,11 @@ import {
   UserCheck,
 } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { SiteNavbar } from '@/components/layout/site-navbar';
-import { Logo, StatCard } from '@/components/ui/state-views';
+import { BrandMark, Logo, StatCard } from '@/components/ui/state-views';
 import { useAuthStore } from '@/stores/auth.store';
 import { cn } from '@/lib/utils';
 
@@ -215,6 +216,27 @@ function BentoCard({ title, desc, children, className }: { title: string; desc: 
         <h3 className="text-base font-semibold text-foreground">{title}</h3>
         <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{desc}</p>
       </div>
+    </motion.div>
+  );
+}
+
+/** Full-bleed brand banner that links into the app. */
+function Banner({ src, alt, href, className }: { src: string; alt: string; href: string; className?: string }) {
+  return (
+    <motion.div variants={fadeInUp} className={className}>
+      <Link
+        href={href}
+        className="group block overflow-hidden rounded-3xl shadow-card transition-all duration-500 ease-out hover:-translate-y-1 hover:shadow-float focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+      >
+        <Image
+          src={src}
+          alt={alt}
+          width={1800}
+          height={600}
+          unoptimized
+          className="h-auto w-full transition-transform duration-700 ease-out group-hover:scale-[1.015]"
+        />
+      </Link>
     </motion.div>
   );
 }
@@ -638,6 +660,45 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ───────────── MISSION (brand banners) ───────────── */}
+      <section id="mission" className="scroll-mt-24 px-5 py-24 sm:px-8">
+        <div className="mx-auto max-w-6xl">
+          <SectionTitle
+            title={<>Be the <span className="text-gradient-brand">Link</span>.</>}
+            desc="The right donor is often just a few kilometres away. BloodLink makes sure they can be found."
+          />
+
+          <motion.div {...inView} variants={staggerContainer} className="space-y-5">
+            <Banner
+              src="/brand/hoarding-crimson.svg"
+              alt="Someone near you needs blood today. Find verified donors nearby and connect in minutes."
+              href="/dashboard/donor"
+            />
+
+            <div className="grid gap-5 lg:grid-cols-[1.55fr_1fr]">
+              <Banner
+                src="/brand/hoarding-light.svg"
+                alt="Every drop finds its way. Verified blood donors near you, connected in minutes."
+                href="/register/donor"
+              />
+
+              {/* The meaning behind the symbol */}
+              <motion.div
+                variants={fadeInUp}
+                className="flex flex-col justify-center gap-4 rounded-3xl bg-surface p-7 shadow-card"
+              >
+                <BrandMark className="h-12 w-12" />
+                <h3 className="text-xl font-semibold tracking-tight text-balance">Blood, found where it&apos;s needed.</h3>
+                <p className="text-sm leading-relaxed text-muted-foreground">
+                  A blood drop and a location pin are the same shape, facing opposite ways — the donor and the person in
+                  need. BloodLink is where the two meet.
+                </p>
+              </motion.div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
       {/* ───────────── FAQ ───────────── */}
       <section id="faq" className="scroll-mt-24 px-5 py-24 sm:px-8">
         <div className="mx-auto max-w-3xl">
@@ -723,6 +784,7 @@ export default function LandingPage() {
                 l: [
                   { h: '#problem', n: 'The problem' },
                   { h: '#how-it-works', n: 'How it works' },
+                  { h: '#mission', n: 'Mission' },
                   { h: '#faq', n: 'FAQ' },
                 ],
               },

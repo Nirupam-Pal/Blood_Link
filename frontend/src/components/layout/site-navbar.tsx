@@ -14,6 +14,7 @@ const LINKS = [
   { href: '#problem', label: 'Problem' },
   { href: '#features', label: 'Features' },
   { href: '#how-it-works', label: 'How it works' },
+  { href: '#mission', label: 'Mission' },
   { href: '#faq', label: 'FAQ' },
 ];
 
@@ -38,7 +39,7 @@ export function SiteNavbar() {
     <header className="fixed inset-x-0 top-0 z-50 px-4">
       <motion.nav
         animate={{
-          maxWidth: scrolled ? 760 : 1200,
+          maxWidth: scrolled ? 840 : 1200,
           y: scrolled ? 12 : 0,
           paddingLeft: scrolled ? 16 : 8,
           paddingRight: scrolled ? 8 : 8,
@@ -57,7 +58,7 @@ export function SiteNavbar() {
               key={l.href}
               href={l.href}
               onMouseEnter={() => setHovered(l.href)}
-              className="relative px-3.5 py-1.5 text-sm text-muted-foreground hover:text-foreground"
+              className="relative whitespace-nowrap px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground lg:px-3.5"
             >
               {hovered === l.href && (
                 <motion.span layoutId="nav-hover" className="absolute inset-0 rounded-full bg-muted" transition={{ type: 'spring', stiffness: 500, damping: 40 }} />

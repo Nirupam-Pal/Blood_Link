@@ -159,36 +159,9 @@ export function AppShell({ children, bleed = false }: { children: ReactNode; ble
   // active-pill animations independent.
   const renderRail = (variant: 'desktop' | 'mobile') => (
     <div className="flex h-full flex-col px-3 py-5">
-      {/* Account block */}
-      <div className="px-2 pb-6">
-        {isAuthed && user ? (
-          // Doubles as the Profile link
-          <Link
-            href="/profile"
-            aria-current={isProfileActive ? 'page' : undefined}
-            title="View profile"
-            className={cn(
-              'group flex items-center gap-3 rounded-xl p-1.5 -m-1.5',
-              isProfileActive ? 'bg-sidebar-accent shadow-card' : 'hover:bg-sidebar-accent/70'
-            )}
-          >
-            <Avatar name={getDisplayName(user)} />
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold text-foreground">{getDisplayName(user)}</p>
-              <p className="truncate text-xs text-muted-foreground">
-                {isBloodBank ? 'Blood bank' : isDonor ? 'Active donor' : 'Member'}
-              </p>
-            </div>
-            <ChevronRight
-              className={cn(
-                'h-4 w-4 shrink-0 transition-all',
-                isProfileActive ? 'text-brand' : 'text-muted-foreground opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5'
-              )}
-            />
-          </Link>
-        ) : (
-          <Logo />
-        )}
+      {/* Brand — always visible, on every page */}
+      <div className="px-2 pb-7">
+        <Logo />
       </div>
 
       <nav className="flex-1 space-y-6 overflow-y-auto scrollbar-thin" aria-label="Main">
@@ -247,6 +220,32 @@ export function AppShell({ children, bleed = false }: { children: ReactNode; ble
       </nav>
 
       <div className="space-y-1 pt-4">
+        {isAuthed && user && (
+          // Account card; doubles as the Profile link
+          <Link
+            href="/profile"
+            aria-current={isProfileActive ? 'page' : undefined}
+            title="View profile"
+            className={cn(
+              'group mb-2 flex items-center gap-3 rounded-xl p-2',
+              isProfileActive ? 'bg-sidebar-accent shadow-card' : 'hover:bg-sidebar-accent/70'
+            )}
+          >
+            <Avatar name={getDisplayName(user)} />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold text-foreground">{getDisplayName(user)}</p>
+              <p className="truncate text-xs text-muted-foreground">
+                {isBloodBank ? 'Blood bank' : isDonor ? 'Active donor' : 'Member'}
+              </p>
+            </div>
+            <ChevronRight
+              className={cn(
+                'h-4 w-4 shrink-0 transition-all',
+                isProfileActive ? 'text-brand' : 'text-muted-foreground opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5'
+              )}
+            />
+          </Link>
+        )}
         <ThemeToggle showLabel className="px-2.5" />
         {isAuthed && (
           <button
