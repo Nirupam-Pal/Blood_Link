@@ -289,7 +289,7 @@ export function AppShell({ children, bleed = false }: { children: ReactNode; ble
               aria-label="Notifications"
               className="relative flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
             >
-              <Bell className="h-[18px] w-[18px]" />
+              <Bell className="h-6 w-6" />
               <CountBadge count={unreadCount} pulse className="absolute -top-0.5 -right-0.5 h-4 min-w-4 px-1 text-[10px]" />
             </Link>
           )}
