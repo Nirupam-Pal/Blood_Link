@@ -4,26 +4,12 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import {
-  Building2,
-  Mail,
-  Lock,
-  Phone,
-  MapPin,
-  FileBadge,
-  Eye,
-  EyeOff,
-  AlertCircle,
-  Loader2,
-  CheckCircle2,
-  ArrowLeft,
-} from 'lucide-react';
+import { ArrowRight, Building2, Eye, EyeOff, Loader2, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ThemeToggle } from '@/components/ui/theme-toggle';
-import { AmbientOrbs } from '@/components/ui/ambient-orbs';
+import { AppShell } from '@/components/layout/app-shell';
+import { FieldLabel, Notice, PageHeader, Panel, SectionHeading } from '@/components/ui/state-views';
 import { useAuthStore } from '@/stores/auth.store';
 import { useBloodBankStore } from '@/stores/blood-bank.store';
 import { RegisterBloodBankDto } from '@/types/blood-bank.types';
@@ -108,188 +94,130 @@ export default function RegisterBloodBankPage() {
   };
 
   return (
-    <div className="relative min-h-screen bg-cosmic text-foreground flex flex-col overflow-hidden">
-      <AmbientOrbs />
-      <main className="relative z-10 flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        {/* Back Link + Theme Toggle */}
-        <div className="flex items-center justify-between mb-6">
-          <Link
-            href="/register"
-            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to portal selection
-          </Link>
-          <ThemeToggle />
-        </div>
+    <AppShell>
+      <div className="mx-auto max-w-3xl">
+        {success ? (
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+            <Panel className="py-16 px-6 text-center">
+              <CheckCircle2 className="h-12 w-12 text-success mx-auto mb-5" />
+              <h1 className="text-2xl font-bold">Registration successful</h1>
+              <p className="mt-2 text-muted-foreground">Your blood bank facility has been registered. Redirecting to login...</p>
+            </Panel>
+          </motion.div>
+        ) : (
+          <>
+            <PageHeader
+              icon={Building2}
+              title="Register blood bank"
+              description="Register your licensed organization to manage emergency stock. We'll email a one-time code to verify the address."
+            />
 
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: 'easeOut' }}
-        >
-        <div className="flex items-center gap-3 mb-8">
-          <div className="h-10 w-10 rounded-xl bg-red-600 flex items-center justify-center text-white font-bold shadow-lg shadow-red-600/30">
-            <Building2 className="h-5 w-5" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-extrabold">Register Blood Bank</h1>
-            <p className="text-sm text-muted-foreground">
-              Register your licensed organization to manage emergency stock and donor requests
-            </p>
-          </div>
-        </div>
+            {(localError || storeError) && (
+              <Notice tone="brand" className="mb-6">
+                {localError || storeError}
+              </Notice>
+            )}
 
-        <Card className="p-6 sm:p-8 bg-card border-border shadow-xl rounded-2xl">
-          {success ? (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="text-center py-10 space-y-3"
-            >
-              <CheckCircle2 className="h-14 w-14 text-emerald-500 mx-auto animate-bounce" />
-              <h3 className="text-xl font-bold">Registration Successful</h3>
-              <p className="text-sm text-muted-foreground">
-                Your blood bank facility has been registered. Redirecting to login...
-              </p>
-            </motion.div>
-          ) : (
             <form onSubmit={handleSubmit} className="space-y-6">
-              {(localError || storeError) && (
-                <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm flex items-center gap-2">
-                  <AlertCircle className="h-4 w-4 shrink-0" />
-                  <span>{localError || storeError}</span>
-                </div>
-              )}
-
-              {/* Organization Identification */}
-              <div className="space-y-4">
-                <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground border-b border-border pb-2">
-                  Facility Information
-                </h2>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-medium">Facility Name</label>
-                    <div className="relative">
-                      <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        name="bloodBankName"
-                        value={formData.bloodBankName}
-                        onChange={handleChange}
-                        required
-                        placeholder="e.g. Agartala Govt Blood Bank"
-                        className="pl-9 h-11 bg-background"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-medium">License / Accreditation Number</label>
-                    <div className="relative">
-                      <FileBadge className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        name="licenseNumber"
-                        value={formData.licenseNumber}
-                        onChange={handleChange}
-                        required
-                        placeholder="e.g. TR-BB-2026-001"
-                        className="pl-9 h-11 bg-background"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-medium">Official Contact Email</label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        type="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleChange}
-                        required
-                        placeholder="bloodbank@facility.org"
-                        className="pl-9 h-11 bg-background"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-medium">Emergency Phone (10 digits)</label>
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        type="tel"
-                        name="phoneNumber"
-                        value={formData.phoneNumber}
-                        onChange={handleChange}
-                        required
-                        maxLength={10}
-                        placeholder="9876543210"
-                        className="pl-9 h-11 bg-background"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium">Portal Access Password</label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Panel className="p-6 sm:p-8">
+                <SectionHeading>Facility information</SectionHeading>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <FieldLabel htmlFor="bloodBankName">Facility name</FieldLabel>
                     <Input
-                      type={showPassword ? 'text' : 'password'}
-                      name="password"
-                      value={formData.password}
+                      id="bloodBankName"
+                      name="bloodBankName"
+                      value={formData.bloodBankName}
                       onChange={handleChange}
                       required
-                      placeholder="Min 8 chars: 1 upper, 1 lower, 1 digit, 1 symbol"
-                      className="pl-9 pr-10 h-11 bg-background"
+                      placeholder="e.g. Agartala Govt Blood Bank"
                     />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
+                  </div>
+                  <div>
+                    <FieldLabel htmlFor="licenseNumber">License / accreditation number</FieldLabel>
+                    <Input
+                      id="licenseNumber"
+                      name="licenseNumber"
+                      value={formData.licenseNumber}
+                      onChange={handleChange}
+                      required
+                      placeholder="e.g. TR-BB-2026-001"
+                    />
+                  </div>
+                  <div>
+                    <FieldLabel htmlFor="email">Official contact email</FieldLabel>
+                    <Input
+                      id="email"
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      required
+                      placeholder="bloodbank@facility.org"
+                    />
+                  </div>
+                  <div>
+                    <FieldLabel htmlFor="phoneNumber" hint="10 digits">Emergency phone</FieldLabel>
+                    <Input
+                      id="phoneNumber"
+                      type="tel"
+                      name="phoneNumber"
+                      value={formData.phoneNumber}
+                      onChange={handleChange}
+                      required
+                      maxLength={10}
+                      placeholder="9876543210"
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <FieldLabel htmlFor="password">Portal access password</FieldLabel>
+                    <div className="relative">
+                      <Input
+                        id="password"
+                        type={showPassword ? 'text' : 'password'}
+                        name="password"
+                        value={formData.password}
+                        onChange={handleChange}
+                        required
+                        placeholder="Min 8 chars: 1 upper, 1 lower, 1 digit, 1 symbol"
+                        className="pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        aria-label={showPassword ? 'Hide password' : 'Show password'}
+                        className="absolute right-1 top-1 h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground cursor-pointer"
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </Panel>
 
-              {/* Geographic Address */}
-              <div className="space-y-4 pt-2">
-                <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground border-b border-border pb-2">
-                  Location & Address
-                </h2>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium">Street / Campus Address</label>
-                  <div className="relative">
-                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Panel className="p-6 sm:p-8">
+                <SectionHeading>Location & address</SectionHeading>
+                <div className="grid gap-4 sm:grid-cols-6">
+                  <div className="sm:col-span-6">
+                    <FieldLabel htmlFor="address">Street / campus address</FieldLabel>
                     <Input
+                      id="address"
                       name="address"
                       value={formData.address}
                       onChange={handleChange}
                       required
                       placeholder="e.g. GB Pant Hospital Road, Kunjaban"
-                      className="pl-9 h-11 bg-background"
                     />
                   </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-medium">State</label>
+                  <div className="sm:col-span-2">
+                    <FieldLabel>State</FieldLabel>
                     <Select
                       value={formData.state}
                       onValueChange={(val) =>
                         setFormData((prev) => ({ ...prev, state: val || 'Tripura' }))
                       }
                     >
-                      <SelectTrigger className="h-11 bg-background w-full">
+                      <SelectTrigger className="w-full">
                         <SelectValue placeholder="State" />
                       </SelectTrigger>
                       <SelectContent>
@@ -299,88 +227,58 @@ export default function RegisterBloodBankPage() {
                       </SelectContent>
                     </Select>
                   </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-medium">District</label>
-                    <Input
-                      name="district"
-                      value={formData.district}
-                      onChange={handleChange}
-                      required
-                      placeholder="e.g. West Tripura"
-                      className="h-11 bg-background"
-                    />
+                  <div className="sm:col-span-2">
+                    <FieldLabel htmlFor="district">District</FieldLabel>
+                    <Input id="district" name="district" value={formData.district} onChange={handleChange} required placeholder="e.g. West Tripura" />
                   </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-medium">Sub-Division</label>
-                    <Input
-                      name="subDivision"
-                      value={formData.subDivision}
-                      onChange={handleChange}
-                      required
-                      placeholder="e.g. Sadar"
-                      className="h-11 bg-background"
-                    />
+                  <div className="sm:col-span-2">
+                    <FieldLabel htmlFor="subDivision">Sub-division</FieldLabel>
+                    <Input id="subDivision" name="subDivision" value={formData.subDivision} onChange={handleChange} required placeholder="e.g. Sadar" />
                   </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-medium">City / Town</label>
-                    <Input
-                      name="city"
-                      value={formData.city}
-                      onChange={handleChange}
-                      required
-                      placeholder="e.g. Agartala"
-                      className="h-11 bg-background"
-                    />
+                  <div className="sm:col-span-3">
+                    <FieldLabel htmlFor="city">City / town</FieldLabel>
+                    <Input id="city" name="city" value={formData.city} onChange={handleChange} required placeholder="e.g. Agartala" />
                   </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-medium">Postal Pin Code</label>
+                  <div className="sm:col-span-3">
+                    <FieldLabel htmlFor="pinCode" hint="6 digits">Postal PIN code</FieldLabel>
                     <Input
+                      id="pinCode"
                       name="pinCode"
                       value={formData.pinCode}
                       onChange={handleChange}
                       required
                       maxLength={6}
                       placeholder="799006"
-                      className="h-11 bg-background"
                     />
                   </div>
                 </div>
-              </div>
+              </Panel>
 
-              <div className="pt-4 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
-                <p className="text-xs text-muted-foreground">
+              <div className="flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-4">
+                <p className="text-sm text-muted-foreground">
                   Already registered?{' '}
-                  <Link href="/login" className="text-red-600 hover:underline font-medium">
-                    Sign In
+                  <Link href="/login" className="font-medium text-foreground hover:text-brand">
+                    Sign in
                   </Link>
                 </p>
-
-                <Button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full sm:w-auto h-11 px-8 bg-red-600 hover:bg-red-700 text-white font-semibold cursor-pointer"
-                >
+                <Button type="submit" disabled={isSubmitting} size="lg" className="sm:min-w-52">
                   {isSubmitting ? (
                     <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      <Loader2 className="h-4 w-4 animate-spin" />
                       Sending OTP...
                     </>
                   ) : (
-                    'Register Blood Bank'
+                    <>
+                      Register blood bank
+                      <ArrowRight className="h-4 w-4" />
+                    </>
                   )}
                 </Button>
               </div>
             </form>
-          )}
-        </Card>
-        </motion.div>
-      </main>
-    </div>
+          </>
+        )}
+      </div>
+    </AppShell>
   );
 }

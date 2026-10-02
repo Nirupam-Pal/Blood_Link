@@ -7,10 +7,7 @@ import {
   ShieldCheck,
   Clock,
   MapPin,
-  CheckCircle2,
-  XCircle,
   Bell,
-  HeartHandshake,
   Building2,
   MessageSquare,
   Send,
@@ -20,24 +17,31 @@ import {
   ClipboardCheck,
   Mail,
   ArrowRight,
+  Check,
+  X,
+  Droplet,
+  Paperclip,
+  UserCheck,
 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Navbar } from '@/components/layout/navbar';
-import { AmbientOrbs } from '@/components/ui/ambient-orbs';
+import { SiteNavbar } from '@/components/layout/site-navbar';
+import { Logo, StatCard } from '@/components/ui/state-views';
 import { useAuthStore } from '@/stores/auth.store';
+import { cn } from '@/lib/utils';
 
 const fadeInUp: Variants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: 'easeOut' } },
+  hidden: { opacity: 0, y: 16 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } },
 };
 
 const staggerContainer: Variants = {
   hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.15 } },
+  visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
 };
+
+const inView = { initial: 'hidden', whileInView: 'visible', viewport: { once: true, margin: '-80px' } } as const;
 
 // Pain points of the way blood donors are usually found today
 const PROBLEMS = [
@@ -109,39 +113,6 @@ const WORKFLOW = [
   },
 ];
 
-const FEATURES = [
-  {
-    icon: MapPin,
-    title: 'Location-Based Donor Search',
-    desc: 'Find donors by blood group across state, district, sub-division and city, instead of hoping the right person sees a post.',
-  },
-  {
-    icon: ShieldCheck,
-    title: 'Medical Eligibility Screening',
-    desc: 'Donors are listed only after passing a health questionnaire, so the people you reach are fit to donate.',
-  },
-  {
-    icon: Send,
-    title: 'Connection Requests',
-    desc: 'Reach a donor directly with your patient details. Track whether each request is pending, accepted or declined.',
-  },
-  {
-    icon: MessageSquare,
-    title: 'Real-Time Private Chat',
-    desc: 'Accepted requests open a one-to-one chat with instant messages, so there are no missed calls or forwarded numbers.',
-  },
-  {
-    icon: Bell,
-    title: 'In-App Notifications',
-    desc: 'Donors are alerted when someone needs them, and requesters are alerted the moment a donor responds.',
-  },
-  {
-    icon: Building2,
-    title: 'Blood Bank Directory',
-    desc: 'Blood banks list their available blood stock, so you can also check nearby banks while you look for donors.',
-  },
-];
-
 const FAQS = [
   {
     q: 'Is BloodLink free to use?',
@@ -165,305 +136,537 @@ const FAQS = [
   },
 ];
 
+const COMPARE = [
+  {
+    name: 'Social media posts',
+    tagline: 'WhatsApp statuses & Facebook stories',
+    points: [
+      { ok: false, text: 'You wait for the right person to happen to see your post.' },
+      { ok: false, text: 'Only reaches your own contacts and whoever they forward it to.' },
+      { ok: false, text: "No idea of a person's blood group, location or fitness to donate." },
+      { ok: false, text: 'Posts expire or get buried, and have to be shared again.' },
+    ],
+  },
+  {
+    name: 'BloodLink',
+    tagline: 'Free for patients, families and donors',
+    featured: true,
+    points: [
+      { ok: true, text: 'You search for donors yourself, right when you need them.' },
+      { ok: true, text: 'Filter by blood group, state, district, sub-division and city.' },
+      { ok: true, text: 'Every listed donor has passed a medical eligibility check.' },
+      { ok: true, text: 'Requests, notifications and chat keep everything in one place.' },
+    ],
+  },
+  {
+    name: 'For blood banks',
+    tagline: 'Licensed facilities',
+    points: [
+      { ok: true, text: 'Register with your license number' },
+      { ok: true, text: 'Verify your email' },
+      { ok: true, text: 'Keep your blood stock updated' },
+      { ok: true, text: 'Appear in blood bank searches' },
+    ],
+  },
+];
+
+function SectionTitle({ title, desc, className }: { title: React.ReactNode; desc?: string; className?: string }) {
+  return (
+    <motion.div {...inView} variants={fadeInUp} className={cn('mx-auto max-w-2xl text-center mb-14', className)}>
+      <h2 className="text-3xl sm:text-5xl font-bold tracking-tight text-foreground text-balance">{title}</h2>
+      {desc && <p className="mt-4 text-[15px] sm:text-base leading-relaxed text-muted-foreground">{desc}</p>}
+    </motion.div>
+  );
+}
+
+/** Small card wrapper used by every bento cell. */
+function BentoCard({ title, desc, children, className }: { title: string; desc: string; children: React.ReactNode; className?: string }) {
+  return (
+    <motion.div {...inView} variants={fadeInUp} className={cn('group flex flex-col rounded-3xl bg-surface p-2 shadow-card', className)}>
+      <div className="relative flex-1 overflow-hidden rounded-2xl bg-background p-5 shadow-card min-h-56">{children}</div>
+      <div className="px-4 pb-4 pt-5">
+        <h3 className="text-base font-semibold text-foreground">{title}</h3>
+        <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{desc}</p>
+      </div>
+    </motion.div>
+  );
+}
+
 export default function LandingPage() {
 
   const user = useAuthStore((state) => state.user)
   const isDonor = Boolean(user?.donor);
 
   return (
-    <div className="relative min-h-screen bg-cosmic text-foreground font-sans antialiased selection:bg-crimson-500 selection:text-white">
-      <Navbar />
+    <div className="min-h-dvh bg-background text-foreground overflow-x-hidden">
+      <SiteNavbar />
 
-      {/* HERO SECTION */}
-      <section className="relative pt-32 pb-20 md:pt-44 md:pb-32 overflow-hidden">
-        <AmbientOrbs />
-        {/* Ambient Glows */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-200 h-200 bg-crimson-600/10 dark:bg-crimson-600/15 rounded-full blur-[140px] pointer-events-none animate-pulse-slow" />
+      {/* ───────────── HERO ───────────── */}
+      <section className="px-3 pt-20 sm:px-4">
+        <div className="relative mx-auto max-w-7xl overflow-hidden rounded-[2rem] bg-linear-to-b from-background via-red-100/70 via-55% to-red-800 dark:from-background dark:via-red-950/20 dark:to-red-900/40">
+          {/* concentric rings */}
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center" aria-hidden="true">
+            {[1100, 820, 560].map((s) => (
+              <div
+                key={s}
+                className="absolute rounded-full border border-white/60 dark:border-white/10"
+                style={{ width: s, height: s, bottom: -s / 2 }}
+              />
+            ))}
+          </div>
+          <div className="pointer-events-none absolute inset-0 bg-grid mask-radial opacity-40" aria-hidden="true" />
 
-        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 relative z-10">
-            <motion.div
-              className="text-center"
-              initial="hidden"
-              animate="visible"
-              variants={staggerContainer}
+          <motion.div
+            className="relative px-5 pt-20 sm:pt-28 text-center"
+            initial="hidden"
+            animate="visible"
+            variants={staggerContainer}
+          >
+            <motion.div variants={fadeInUp} className="mx-auto mb-6 inline-flex items-center gap-2 rounded-full bg-background/80 px-3 py-1 text-xs font-medium text-muted-foreground shadow-card backdrop-blur">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inset-0 rounded-full bg-brand animate-ping opacity-60" />
+                <span className="relative h-2 w-2 rounded-full bg-brand" />
+              </span>
+              Every second matters
+            </motion.div>
+
+            <motion.h1
+              variants={fadeInUp}
+              className="mx-auto max-w-4xl text-[40px] sm:text-6xl lg:text-7xl font-bold leading-[1.05] tracking-tight text-foreground text-balance"
             >
-              <motion.div variants={fadeInUp} className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-muted/80 border border-border text-xs font-semibold uppercase tracking-wide text-rose-600 dark:text-rose-400 mb-6 shadow-xs">
-                <span className="flex h-2 w-2 rounded-full bg-crimson-500 animate-ping" />
-                Every Second Matters
-              </motion.div>
+              Find a Blood <span className="text-gradient-brand">Donor</span> Without the <span className="text-gradient-brand">Wait</span>
+            </motion.h1>
 
-              <motion.h1 variants={fadeInUp} className="text-4xl sm:text-6xl lg:text-7xl font-semibold tracking-[0.02em] text-foreground leading-[1.05] text-balance">
-                Find a Blood Donor <br />
-                <span className="bg-linear-to-r from-red-950 via-rose-500 to-rose-400 bg-clip-text text-transparent">
-                  Without the Wait
-                </span>
-              </motion.h1>
+            <motion.p variants={fadeInUp} className="mx-auto mt-6 max-w-2xl text-[15px] sm:text-lg leading-relaxed text-muted-foreground">
+              Don&apos;t depend on WhatsApp statuses and Facebook stories in an emergency. Search medically screened donors by
+              blood group and location, send them a request, and chat with them directly.
+            </motion.p>
 
-              <motion.p variants={fadeInUp} className="mt-6 text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto font-normal leading-relaxed tracking-[0.01em]">
-                Don&apos;t depend on WhatsApp statuses and Facebook stories in an emergency. BloodLink lets you search
-                medically screened donors by blood group and location, send them a request, and chat with them directly.
-              </motion.p>
-
-              {/* CTAs */}
-              <motion.div variants={fadeInUp} className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
-                {!isDonor && user?.role === 'USER' && (
-                  <Link href='/register/donor'>
-                    <Button size="lg" className="h-13 px-8 rounded-xl bg-linear-to-r from-red-950 via-rose-800 to-rose-700 text-white font-semibold hover:scale-[1.02] transition-transform text-base">
-                      <Heart className="mr-2 h-5 w-5 fill-white" />
-                      Become a Donor
-                    </Button>
-                  </Link>
-                )}
-
-                <Link href="/dashboard/donor">
-                  <Button size="lg" variant="outline" className="h-13 px-8 rounded-xl border-border bg-card/60 hover:bg-muted text-foreground font-semibold backdrop-blur-xs text-base">
-                    <Search className="mr-2 h-5 w-5 text-crimson-500" />
-                    Find a Donor
+            <motion.div variants={fadeInUp} className="mt-8 flex flex-col sm:flex-row justify-center gap-3">
+              <Link href="/dashboard/donor">
+                <Button size="lg" className="w-full sm:w-auto">
+                  <Search className="h-4 w-4" />
+                  Find a Donor
+                </Button>
+              </Link>
+              <Link href="/dashboard/blood-banks">
+                <Button size="lg" variant="outline" className="w-full sm:w-auto">
+                  <Building2 className="h-4 w-4" />
+                  Find Blood Banks
+                </Button>
+              </Link>
+              {!isDonor && user?.role === 'USER' && (
+                <Link href="/register/donor">
+                  <Button size="lg" variant="brand" className="w-full sm:w-auto">
+                    <Heart className="h-4 w-4 fill-current" />
+                    Become a Donor
                   </Button>
                 </Link>
+              )}
+            </motion.div>
 
-                <Link href="/dashboard/blood-banks">
-                  <Button size="lg" variant="outline" className="h-13 px-8 rounded-xl border-border bg-card/60 hover:bg-muted text-foreground font-semibold backdrop-blur-xs text-base">
-                    <Building2 className="mr-2 h-5 w-5 text-crimson-500" />
-                    Find Blood Banks
-                  </Button>
-                </Link>
+            {/* Phone mock-up peeking from the bottom */}
+            <motion.div
+              initial={{ opacity: 0, y: 60 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.35, duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+              className="relative mx-auto mt-16 w-[290px] sm:w-[320px] h-[300px] sm:h-[340px] overflow-hidden"
+            >
+              <div className="absolute inset-0 overflow-hidden rounded-t-[2.6rem] border-[10px] border-b-0 border-neutral-900 bg-background px-4 pt-3 pb-0 dark:border-neutral-700">
+                <div className="mx-auto mb-3 h-6 w-24 rounded-full bg-neutral-900 dark:bg-neutral-700" />
+                <div className="flex items-center justify-between text-left">
+                  <span className="flex items-center gap-1.5 text-sm font-semibold">
+                    <Search className="h-3.5 w-3.5" /> Donors nearby
+                  </span>
+                  <span className="text-xs text-muted-foreground">See all</span>
+                </div>
+                <div className="mt-3 space-y-2.5 text-left">
+                  {[
+                    { g: 'O−', n: 'Riya Das', l: 'Agartala · 2 km', c: 'bg-red-50 dark:bg-red-950/40' },
+                    { g: 'B+', n: 'Arjun Paul', l: 'Udaipur · 5 km', c: 'bg-red-100/70 dark:bg-red-950/40' },
+                    { g: 'A+', n: 'Meera Sen', l: 'Sonamura · 8 km', c: 'bg-neutral-100 dark:bg-neutral-800' },
+                  ].map((d) => (
+                    <div key={d.n} className={cn('flex items-center gap-3 rounded-2xl p-3', d.c)}>
+                      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-linear-to-br from-red-600 to-red-800 text-xs font-bold text-white">
+                        {d.g}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[13px] font-semibold">{d.n}</p>
+                        <p className="text-[11px] text-muted-foreground">{d.l}</p>
+                      </div>
+                      <span className="rounded-full bg-background px-2 py-0.5 text-[10px] font-medium shadow-card">Request</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        </div>
+      </section>
 
+      {/* Coverage strip */}
+      <section className="py-14">
+        <p className="text-center text-sm font-medium text-muted-foreground">Helping families find blood across</p>
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-x-10 gap-y-4 px-6">
+          {['Tripura', 'Assam', 'West Bengal'].map((s) => (
+            <span key={s} className="flex items-center gap-2 text-lg font-semibold text-foreground/70">
+              <MapPin className="h-4 w-4 text-brand" />
+              {s}
+            </span>
+          ))}
+        </div>
+      </section>
+
+      {/* ───────────── STATS + PROBLEM ───────────── */}
+      <section id="problem" className="scroll-mt-24 px-5 py-16 sm:px-8">
+        <div className="mx-auto max-w-6xl">
+          <motion.div {...inView} variants={staggerContainer} className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-24">
+            {[
+              { value: '₹0', label: 'Free for everyone, always' },
+              { value: '8', label: 'Blood groups you can search' },
+              { value: '18–65', label: 'Age range for eligible donors' },
+              { value: '1:1', label: 'Private chat after acceptance' },
+            ].map((s) => (
+              <motion.div key={s.label} variants={fadeInUp}>
+                <StatCard value={s.value} label={s.label} />
               </motion.div>
+            ))}
+          </motion.div>
 
-              {/* Highlights */}
-              <motion.div variants={fadeInUp} className="mt-12 pt-8 border-t border-border grid grid-cols-2 sm:grid-cols-4 gap-6 text-center max-w-2xl mx-auto">
+          <SectionTitle
+            title={<>Finding Blood Still Depends on <span className="text-gradient-brand">Social Media</span></>}
+            desc="When a patient urgently needs blood, most families post a request on WhatsApp statuses, Facebook stories and groups, then wait for someone with the right blood group to notice it. That search can take hours."
+          />
+
+          <motion.div {...inView} variants={staggerContainer} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {PROBLEMS.map((item) => (
+              <motion.div key={item.title} variants={fadeInUp} className="rounded-2xl bg-card p-6 shadow-card">
+                <div className="mb-5 flex h-10 w-10 items-center justify-center rounded-xl bg-muted">
+                  <item.icon className="h-5 w-5 text-foreground" />
+                </div>
+                <h3 className="font-semibold text-foreground">{item.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{item.desc}</p>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ───────────── FEATURES BENTO ───────────── */}
+      <section id="features" className="scroll-mt-24 px-5 py-24 sm:px-8">
+        <div className="mx-auto max-w-6xl">
+          <SectionTitle
+            title={<>Features Built for <span className="text-gradient-brand">Emergencies</span></>}
+            desc="Everything you need to go from 'we need blood' to 'a donor is on the way' — in one place."
+          />
+
+          <div className="grid gap-4 md:grid-cols-3">
+            {/* Search */}
+            <BentoCard
+              className="md:col-span-2"
+              title="Location-Based Donor Search"
+              desc="Find donors by blood group across state, district, sub-division and city, instead of hoping the right person sees a post."
+            >
+              <div className="flex flex-wrap gap-2">
+                {['O−', 'Tripura', 'West Tripura', 'Agartala'].map((c, i) => (
+                  <span key={c} className={cn('rounded-full px-3 py-1 text-xs font-medium', i === 0 ? 'bg-brand text-white' : 'bg-muted text-foreground')}>
+                    {c}
+                  </span>
+                ))}
+              </div>
+              <div className="mt-5 space-y-2">
                 {[
-                  { icon: Heart, label: '100% Free' },
-                  { icon: ShieldCheck, label: 'Screened Donors' },
-                  { icon: MapPin, label: 'Location-Based Search' },
-                  { icon: MessageSquare, label: 'Real-Time Chat' },
-                ].map((item) => (
-                  <div key={item.label} className="flex flex-col items-center">
-                    <item.icon className="h-6 w-6 text-crimson-500" />
-                    <div className="text-xs text-muted-foreground font-medium mt-2">{item.label}</div>
+                  { n: 'Riya Das', l: 'Agartala, West Tripura' },
+                  { n: 'Sourav Nath', l: 'Agartala, West Tripura' },
+                ].map((d) => (
+                  <div key={d.n} className="flex items-center gap-3 rounded-xl border border-border p-3 transition-transform group-hover:translate-x-1">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-red-600 to-red-800 text-[11px] font-bold text-white">O−</span>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">{d.n}</p>
+                      <p className="text-xs text-muted-foreground">{d.l}</p>
+                    </div>
+                    <span className="flex items-center gap-1 text-xs text-success"><span className="h-1.5 w-1.5 rounded-full bg-success" />Active</span>
                   </div>
                 ))}
-              </motion.div>
-            </motion.div>
-        </div>
-      </section>
-
-      {/* PROBLEM STATEMENT */}
-      <section id="problem" className="py-24 border-y border-border bg-muted/30">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2 className="text-xs font-semibold uppercase tracking-[0.3em] text-crimson-600 dark:text-crimson-400 mb-3">The Problem</h2>
-            <p className="text-3xl sm:text-5xl font-semibold text-foreground tracking-[0.01em] text-balance">
-              Finding Blood Still Depends on Social Media
-            </p>
-            <p className="mt-6 text-base sm:text-lg text-muted-foreground leading-relaxed">
-              When a patient urgently needs blood, most families post a request on WhatsApp statuses, Facebook stories
-              and groups, then wait for someone with the right blood group to notice it. That search can take hours,
-              and for a patient in need, every second matters.
-            </p>
-          </div>
-
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {PROBLEMS.map((item) => (
-              <Card key={item.title} className="p-6 bg-card border-border hover:border-rose-500/40 transition-all rounded-2xl">
-                <div className="h-11 w-11 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center mb-4">
-                  <item.icon className="h-5 w-5" />
-                </div>
-                <h3 className="text-lg font-bold text-foreground mb-2">{item.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
-              </Card>
-            ))}
-          </div>
-
-          {/* The solution */}
-          <Card className="mt-10 p-8 rounded-2xl bg-linear-to-r from-red-600/10 via-rose-600/5 to-transparent border-red-600/20 flex flex-col md:flex-row md:items-center gap-6">
-            <div className="h-14 w-14 rounded-2xl bg-red-600 text-white flex items-center justify-center shadow-md shadow-red-600/30 shrink-0">
-              <HeartHandshake className="h-7 w-7" />
-            </div>
-            <div>
-              <h3 className="text-xl font-bold text-foreground">Our Solution: BloodLink</h3>
-              <p className="mt-2 text-sm sm:text-base text-muted-foreground leading-relaxed">
-                BloodLink keeps a searchable list of willing, medically screened donors in one place. Instead of
-                broadcasting a status and waiting, you search by blood group and location, reach the right donors
-                directly, and talk to them in real time, cutting the time it takes to find blood.
-              </p>
-            </div>
-          </Card>
-        </div>
-      </section>
-
-      {/* HOW IT WORKS */}
-      <section id="how-it-works" className="py-24 relative">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2 className="text-xs font-semibold uppercase tracking-[0.3em] text-crimson-600 dark:text-crimson-400 mb-3">How It Works</h2>
-            <p className="text-3xl sm:text-5xl font-semibold text-foreground tracking-[0.01em] text-balance">From Search to Donation in 6 Steps</p>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {WORKFLOW.map((item) => (
-              <Card key={item.step} className="p-6 bg-card border-border hover:border-crimson-500/40 transition-all rounded-2xl">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="text-4xl font-extrabold text-muted-foreground/30">{item.step}</div>
-                  <span className="px-2.5 py-1 rounded-full bg-red-600/10 text-red-600 dark:text-rose-400 text-[10px] font-semibold uppercase tracking-wider">
-                    {item.who}
-                  </span>
-                </div>
-                <item.icon className="h-8 w-8 text-crimson-500 mb-4" />
-                <h3 className="text-xl font-bold text-foreground mb-2">{item.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
-              </Card>
-            ))}
-          </div>
-
-          {/* Blood bank flow */}
-          <Card className="mt-8 p-6 rounded-2xl bg-card border-border">
-            <div className="flex items-center gap-3 mb-5">
-              <Building2 className="h-6 w-6 text-crimson-500" />
-              <h3 className="text-lg font-bold text-foreground">For Blood Banks</h3>
-            </div>
-            <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 text-sm text-muted-foreground">
-              {['Register with your license number', 'Verify your email', 'Keep your blood stock updated', 'Appear in blood bank searches'].map((text, idx, arr) => (
-                <div key={text} className="flex items-center gap-3 md:gap-4">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
-                    <span>{text}</span>
-                  </div>
-                  {idx < arr.length - 1 && <ArrowRight className="hidden md:block h-4 w-4 text-muted-foreground/50 shrink-0" />}
-                </div>
-              ))}
-            </div>
-          </Card>
-        </div>
-      </section>
-
-      {/* FEATURES */}
-      <section id="features" className="py-24 bg-muted/20 border-t border-border">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2 className="text-xs font-semibold uppercase tracking-[0.3em] text-crimson-600 dark:text-crimson-400 mb-3">Features</h2>
-            <p className="text-3xl sm:text-5xl font-semibold text-foreground tracking-[0.01em] text-balance">Built for Emergencies</p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {FEATURES.map((feature) => (
-              <div key={feature.title} className="p-8 rounded-2xl bg-card border border-border hover:border-crimson-500/40 transition-all group">
-                <feature.icon className="h-10 w-10 text-crimson-500 mb-6 group-hover:scale-110 transition-transform" />
-                <h3 className="text-xl font-bold text-foreground mb-3">{feature.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{feature.desc}</p>
               </div>
+            </BentoCard>
+
+            {/* Screening */}
+            <BentoCard
+              title="Medical Eligibility Screening"
+              desc="Donors are listed only after passing a health questionnaire, so the people you reach are fit to donate."
+            >
+              <div className="space-y-2.5">
+                {['Age 18–65', 'Weight ≥ 45 kg', 'No recent tattoo', 'No chronic disease'].map((t, i) => (
+                  <motion.div
+                    key={t}
+                    initial={{ opacity: 0, x: -8 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.15 * i }}
+                    className="flex items-center gap-2.5 rounded-lg bg-muted px-3 py-2 text-sm"
+                  >
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-success text-white"><Check className="h-3 w-3" strokeWidth={3} /></span>
+                    {t}
+                  </motion.div>
+                ))}
+              </div>
+              <div className="absolute bottom-4 right-4 flex items-center gap-1.5 rounded-full bg-success-soft px-2.5 py-1 text-xs font-medium text-success">
+                <ShieldCheck className="h-3.5 w-3.5" /> Cleared
+              </div>
+            </BentoCard>
+
+            {/* Chat */}
+            <BentoCard
+              title="Real-Time Private Chat"
+              desc="Accepted requests open a one-to-one chat with instant messages, so there are no missed calls or forwarded numbers."
+            >
+              <div className="space-y-2">
+                <div className="w-fit rounded-xl rounded-bl-sm border border-border px-3 py-1.5 text-xs">Hi, I can donate today.</div>
+                <div className="w-fit max-w-[85%] rounded-xl rounded-bl-sm border border-border px-3 py-1.5 text-xs">Which hospital should I come to?</div>
+                <div className="ml-auto w-fit rounded-xl rounded-br-sm bg-linear-to-b from-red-600 to-red-800 px-3 py-1.5 text-xs text-white">GB Pant Hospital, 4 pm 🙏</div>
+              </div>
+              <div className="mt-4 flex items-center gap-2 rounded-xl border border-border px-3 py-2 text-xs text-muted-foreground">
+                <span className="flex-1">Write a message</span>
+                <Paperclip className="h-3.5 w-3.5" />
+                <Send className="h-3.5 w-3.5" />
+              </div>
+            </BentoCard>
+
+            {/* Requests */}
+            <BentoCard
+              title="Connection Requests"
+              desc="Reach a donor directly with your patient details. Track whether each request is pending, accepted or declined."
+            >
+              <div className="relative h-40">
+                <div className="absolute inset-x-2 top-3 rotate-3 rounded-xl border border-border bg-background p-3 shadow-card transition-transform group-hover:rotate-6">
+                  <span className="rounded-md bg-warning-soft px-2 py-0.5 text-[11px] font-medium text-warning">Pending</span>
+                </div>
+                <div className="absolute inset-x-0 top-0 -rotate-1 rounded-xl border border-border bg-background p-3 shadow-card transition-transform group-hover:-rotate-2">
+                  <div className="flex items-center justify-between">
+                    <span className="rounded-md bg-brand px-2 py-0.5 text-[11px] font-medium text-white">Urgent</span>
+                    <span className="rounded-md bg-success-soft px-2 py-0.5 text-[11px] font-medium text-success">Accepted</span>
+                  </div>
+                  <p className="mt-2 text-sm font-semibold">B+ needed at GB Pant</p>
+                  <p className="text-xs text-muted-foreground">Patient in surgery tomorrow morning. 2 units required.</p>
+                </div>
+              </div>
+            </BentoCard>
+
+            {/* Notifications */}
+            <BentoCard
+              title="In-App Notifications"
+              desc="Donors are alerted when someone needs them, and requesters are alerted the moment a donor responds."
+            >
+              <div className="space-y-2">
+                {[
+                  { i: UserCheck, t: 'Request accepted', c: 'text-success bg-success-soft' },
+                  { i: MessageSquare, t: 'New message from Riya', c: 'text-foreground bg-muted' },
+                  { i: Bell, t: 'Someone needs O− blood', c: 'text-brand bg-brand-soft' },
+                ].map(({ i: Icon, t, c }, idx) => (
+                  <motion.div
+                    key={t}
+                    initial={{ opacity: 0, y: 8 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.15 * idx }}
+                    className="flex items-center gap-2.5 rounded-xl border border-border p-2.5"
+                  >
+                    <span className={cn('flex h-7 w-7 items-center justify-center rounded-lg', c)}><Icon className="h-3.5 w-3.5" /></span>
+                    <span className="text-xs font-medium">{t}</span>
+                  </motion.div>
+                ))}
+              </div>
+            </BentoCard>
+
+            {/* Blood bank directory */}
+            <BentoCard
+              className="md:col-span-3"
+              title="Blood Bank Directory"
+              desc="Blood banks list their available blood stock, so you can also check nearby banks while you look for donors."
+            >
+              <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
+                <div className="flex items-center gap-3 sm:w-64">
+                  <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-muted"><Building2 className="h-5 w-5" /></span>
+                  <div>
+                    <p className="text-sm font-semibold">City Blood Bank</p>
+                    <p className="text-xs text-muted-foreground">Example stock view</p>
+                  </div>
+                </div>
+                <div className="grid flex-1 grid-cols-4 sm:grid-cols-8 gap-2">
+                  {[['A+', 24], ['A−', 6], ['B+', 31], ['B−', 3], ['O+', 40], ['O−', 2], ['AB+', 12], ['AB−', 4]].map(([g, u]) => (
+                    <div key={g as string} className="rounded-xl border border-border p-2 text-center">
+                      <p className="text-[11px] text-muted-foreground">{g}</p>
+                      <p className={cn('text-lg font-semibold tabular-nums', (u as number) < 5 && 'text-brand')}>{u}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </BentoCard>
+          </div>
+        </div>
+      </section>
+
+      {/* ───────────── HOW IT WORKS ───────────── */}
+      <section id="how-it-works" className="scroll-mt-24 px-5 py-24 sm:px-8">
+        <div className="mx-auto grid max-w-6xl gap-14 lg:grid-cols-[1fr_1.2fr]">
+          <motion.div {...inView} variants={fadeInUp} className="lg:sticky lg:top-28 self-start">
+            <h2 className="text-3xl sm:text-5xl font-bold tracking-tight">
+              From Search to Donation in <span className="text-gradient-brand">6 Steps</span>
+            </h2>
+            <p className="mt-4 text-muted-foreground leading-relaxed max-w-md">
+              BloodLink keeps a searchable list of willing, medically screened donors in one place — so you reach the right
+              people directly and talk to them in real time.
+            </p>
+            <ul className="mt-6 space-y-3">
+              {['Search instead of broadcasting', 'Reach screened, nearby donors', 'Coordinate privately in real time'].map((t) => (
+                <li key={t} className="flex items-center gap-3 text-sm">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-brand-soft text-brand"><Check className="h-3 w-3" strokeWidth={3} /></span>
+                  {t}
+                </li>
+              ))}
+            </ul>
+            <Link href="/register" className="mt-8 inline-block">
+              <Button size="lg" className="rounded-full">
+                Get Started
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
+          </motion.div>
+
+          <motion.ol {...inView} variants={staggerContainer} className="relative space-y-4">
+            <span className="absolute left-[27px] top-6 bottom-6 w-px bg-border" aria-hidden="true" />
+            {WORKFLOW.map((item) => (
+              <motion.li key={item.step} variants={fadeInUp} className="relative flex gap-4">
+                <span className="relative z-10 flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-card shadow-card">
+                  <item.icon className="h-5 w-5 text-brand" />
+                </span>
+                <div className="flex-1 rounded-2xl bg-card p-5 shadow-card">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-xs font-medium text-muted-foreground">Step {item.step}</span>
+                    <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">{item.who}</span>
+                  </div>
+                  <h3 className="mt-1.5 font-semibold">{item.title}</h3>
+                  <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{item.desc}</p>
+                </div>
+              </motion.li>
             ))}
-          </div>
+          </motion.ol>
         </div>
       </section>
 
-      {/* WHY CHOOSE COMPARISON */}
-      <section id="why-choose" className="py-24">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <p className="text-3xl sm:text-5xl font-semibold text-foreground tracking-[0.01em] text-balance">Social Media vs BloodLink</p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-8">
-            <div className="p-8 rounded-2xl bg-card border border-rose-500/20">
-              <h3 className="text-xl font-bold text-rose-600 dark:text-rose-400 mb-6 flex items-center gap-2">
-                <XCircle className="h-6 w-6 text-rose-500" /> WhatsApp Statuses & Facebook Stories
-              </h3>
-              <ul className="space-y-4 text-muted-foreground text-sm">
-                <li className="flex items-start gap-3"><XCircle className="h-5 w-5 text-rose-500 shrink-0 mt-0.5" /> You wait for the right person to happen to see your post.</li>
-                <li className="flex items-start gap-3"><XCircle className="h-5 w-5 text-rose-500 shrink-0 mt-0.5" /> Only reaches your own contacts and whoever they forward it to.</li>
-                <li className="flex items-start gap-3"><XCircle className="h-5 w-5 text-rose-500 shrink-0 mt-0.5" /> No idea of a person&apos;s blood group, location or fitness to donate.</li>
-                <li className="flex items-start gap-3"><XCircle className="h-5 w-5 text-rose-500 shrink-0 mt-0.5" /> Posts expire or get buried, and have to be shared again.</li>
-              </ul>
-            </div>
-
-            <div className="p-8 rounded-2xl bg-card border border-emerald-500/30 shadow-xl">
-              <h3 className="text-xl font-bold text-emerald-600 dark:text-emerald-400 mb-6 flex items-center gap-2">
-                <CheckCircle2 className="h-6 w-6 text-emerald-500" /> The BloodLink Platform
-              </h3>
-              <ul className="space-y-4 text-foreground text-sm">
-                <li className="flex items-start gap-3"><CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" /> You search for donors yourself, right when you need them.</li>
-                <li className="flex items-start gap-3"><CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" /> Filter by blood group, state, district, sub-division and city.</li>
-                <li className="flex items-start gap-3"><CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" /> Every listed donor has passed a medical eligibility check.</li>
-                <li className="flex items-start gap-3"><CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" /> Requests, notifications and chat keep everything in one place.</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* FAQ SECTION */}
-      <section id="faq" className="py-24 bg-muted/20 border-t border-border">
-        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-foreground">Frequently Asked Questions</h2>
-          </div>
-
-          <Accordion className="w-full space-y-4">
-            {FAQS.map((faq, idx) => (
-              <AccordionItem
-                key={idx}
-                value={`item-${idx}`}
-                className="border border-border bg-card rounded-xl px-6"
+      {/* ───────────── COMPARISON (pricing-card layout) ───────────── */}
+      <section id="why-choose" className="scroll-mt-24 px-5 py-24 sm:px-8">
+        <div className="mx-auto max-w-6xl">
+          <SectionTitle
+            title={<><span className="text-gradient-brand">Social Media</span> vs BloodLink</>}
+            desc="Here's why searching beats broadcasting when every hour counts."
+          />
+          <motion.div {...inView} variants={staggerContainer} className="grid items-center gap-5 lg:grid-cols-3">
+            {COMPARE.map((plan) => (
+              <motion.div
+                key={plan.name}
+                variants={fadeInUp}
+                className={cn(
+                  'rounded-3xl p-2',
+                  plan.featured ? 'bg-linear-to-b from-red-600 to-red-800 shadow-2xl shadow-red-500/20 lg:-my-4' : 'bg-surface shadow-card'
+                )}
               >
-                <AccordionTrigger className="text-foreground hover:text-rose-500 font-medium text-left">
-                  {faq.q}
-                </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground text-sm leading-relaxed">
-                  {faq.a}
-                </AccordionContent>
+                <div className="rounded-[1.25rem] bg-background p-6 sm:p-7">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold">{plan.name}</h3>
+                    {plan.featured && <span className="rounded-full bg-brand-soft px-2.5 py-0.5 text-xs font-medium text-brand">Recommended</span>}
+                  </div>
+                  <p className="mt-1 text-sm text-muted-foreground">{plan.tagline}</p>
+                  {plan.featured ? (
+                    <Link href="/dashboard/donor" className="mt-6 block">
+                      <Button size="lg" variant="brand" className="w-full">Find a Donor</Button>
+                    </Link>
+                  ) : plan.name === 'For blood banks' ? (
+                    <Link href="/register/blood-bank" className="mt-6 block">
+                      <Button size="lg" className="w-full">Register Facility</Button>
+                    </Link>
+                  ) : (
+                    <Button size="lg" variant="secondary" disabled className="mt-6 w-full">Hours of waiting</Button>
+                  )}
+                  <ul className="mt-6 space-y-3">
+                    {plan.points.map((p) => (
+                      <li key={p.text} className="flex items-start gap-3 text-sm">
+                        <span
+                          className={cn(
+                            'mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full',
+                            p.ok ? 'bg-brand text-white' : 'bg-muted text-muted-foreground'
+                          )}
+                        >
+                          {p.ok ? <Check className="h-3 w-3" strokeWidth={3} /> : <X className="h-3 w-3" strokeWidth={3} />}
+                        </span>
+                        <span className={p.ok ? 'text-foreground' : 'text-muted-foreground'}>{p.text}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ───────────── FAQ ───────────── */}
+      <section id="faq" className="scroll-mt-24 px-5 py-24 sm:px-8">
+        <div className="mx-auto max-w-3xl">
+          <SectionTitle title={<>Frequently Asked <span className="text-gradient-brand">Questions</span></>} />
+          <Accordion className="space-y-3">
+            {FAQS.map((faq, idx) => (
+              <AccordionItem key={idx} value={`item-${idx}`} className="rounded-2xl bg-card px-5 shadow-card not-last:border-b-0">
+                <AccordionTrigger>{faq.q}</AccordionTrigger>
+                <AccordionContent className="pb-5 text-muted-foreground leading-relaxed">{faq.a}</AccordionContent>
               </AccordionItem>
             ))}
           </Accordion>
         </div>
       </section>
 
-      {/* FINAL CALL TO ACTION */}
-      <section className="py-24 relative overflow-hidden bg-linear-to-br from-crimson-950/10 via-background to-background border-t border-border">
-        <div className="mx-auto max-w-5xl px-4 text-center relative z-10">
-          <h2 className="text-4xl sm:text-6xl font-extrabold text-foreground tracking-tight">
-            Someone Needs Blood Today. <br /> You Can Make The Difference.
+      {/* ───────────── CTA with floating icons ───────────── */}
+      <section className="px-5 pt-20 pb-10 sm:px-8">
+        <div className="mx-auto max-w-4xl text-center">
+          <div className="mb-12 flex items-center justify-center gap-5 sm:gap-10">
+            {[Heart, Droplet, MessageSquare, Bell, ShieldCheck].map((Icon, i) => (
+              <span
+                key={i}
+                className={cn(
+                  'float-slow flex items-center justify-center rounded-full bg-card shadow-card',
+                  i === 2 ? 'h-16 w-16 sm:h-20 sm:w-20' : i % 2 ? 'h-12 w-12 sm:h-16 sm:w-16' : 'h-10 w-10 sm:h-12 sm:w-12'
+                )}
+                style={{ animationDelay: `${i * 0.6}s` }}
+              >
+                <Icon className={cn('h-5 w-5', i === 2 ? 'text-brand sm:h-7 sm:w-7' : 'text-foreground')} />
+              </span>
+            ))}
+          </div>
+          <h2 className="text-3xl sm:text-5xl font-bold tracking-tight text-balance">
+            Someone Needs Blood Today. <span className="text-gradient-brand">You</span> Can Make the Difference.
           </h2>
-          <p className="mt-6 text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="mx-auto mt-5 max-w-2xl text-muted-foreground leading-relaxed">
             Register as a donor so people can find you when it matters most, or search for a donor the moment you need one.
           </p>
-
-          <div className="mt-8 flex flex-col sm:flex-row justify-center gap-4">
-            {/* Fixed Register as Donor Button */}
+          <div className="mt-8 flex flex-col sm:flex-row justify-center gap-3">
             {!isDonor && user?.role === 'USER' && (
-              <Link href='/register/donor'>
-                <Button
-                  size="lg"
-                  className="h-13 px-8 rounded-xl bg-linear-to-r from-red-700 via-crimson-600 to-rose-600 hover:from-red-800 hover:to-rose-700 text-white font-semibold active:scale-[0.98] transition-all text-base border-none"
-                >
-                  <Heart className="mr-2 h-5 w-5 fill-white text-white" />
+              <Link href="/register/donor">
+                <Button size="lg" variant="brand" className="w-full sm:w-auto rounded-full">
+                  <Heart className="h-4 w-4 fill-current" />
                   Register as Donor
                 </Button>
               </Link>
-
             )}
-
-
-            {/* Fixed Search Blood Availability Button */}
-            <Link href='/dashboard/donor'>
-              <Button
-                size="lg"
-                variant="outline"
-                className="h-13 px-8 rounded-xl border-border bg-card hover:bg-muted text-foreground font-semibold backdrop-blur-xs text-base transition-all"
-              >
-                <Search className="mr-2 h-5 w-5 text-crimson-600 dark:text-crimson-400" />
+            <Link href="/dashboard/donor">
+              <Button size="lg" className="w-full sm:w-auto rounded-full">
+                <Search className="h-4 w-4" />
                 Search for Donor
               </Button>
             </Link>
-
-            <Link href='/dashboard/blood-banks'>
-              <Button
-                size="lg"
-                variant="outline"
-                className="h-13 px-8 rounded-xl border-border bg-card hover:bg-muted text-foreground font-semibold backdrop-blur-xs text-base transition-all"
-              >
-                <Building2 className="mr-2 h-5 w-5 text-crimson-600 dark:text-crimson-400" />
+            <Link href="/dashboard/blood-banks">
+              <Button size="lg" variant="outline" className="w-full sm:w-auto rounded-full">
+                <Building2 className="h-4 w-4" />
                 Find Blood Banks
               </Button>
             </Link>
@@ -471,20 +674,57 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* FOOTER */}
-      <footer className="py-12 border-t border-border bg-card text-muted-foreground text-sm">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-6">
-          <div className="flex items-center gap-2">
-            <div className="h-7 w-7 rounded-lg bg-crimson-600 flex items-center justify-center">
-              <HeartHandshake className="h-4 w-4 text-white" />
+      {/* ───────────── FOOTER ───────────── */}
+      <footer className="px-3 pb-3 pt-16 sm:px-4">
+        <div className="mx-auto max-w-7xl rounded-[2rem] bg-surface px-6 py-12 sm:px-12">
+          <div className="grid gap-10 md:grid-cols-[1.4fr_repeat(3,1fr)]">
+            <div>
+              <Logo />
+              <p className="mt-4 max-w-xs text-lg font-medium leading-snug">Search donors. Send requests. Save lives.</p>
             </div>
-            <span className="font-bold text-foreground text-base">BloodLink</span>
+            {[
+              {
+                t: 'Directory',
+                l: [
+                  { h: '/dashboard/donor', n: 'Find donors' },
+                  { h: '/dashboard/blood-banks', n: 'Blood banks' },
+                  { h: '/register/donor', n: 'Become a donor' },
+                ],
+              },
+              {
+                t: 'Learn',
+                l: [
+                  { h: '#problem', n: 'The problem' },
+                  { h: '#how-it-works', n: 'How it works' },
+                  { h: '#faq', n: 'FAQ' },
+                ],
+              },
+              {
+                t: 'Account',
+                l: [
+                  { h: '/login', n: 'Sign in' },
+                  { h: '/register/user', n: 'Register' },
+                  { h: '/register/blood-bank', n: 'Blood bank sign-up' },
+                ],
+              },
+            ].map((col) => (
+              <div key={col.t}>
+                <p className="text-sm font-semibold">{col.t}</p>
+                <ul className="mt-4 space-y-2.5">
+                  {col.l.map((link) => (
+                    <li key={link.n}>
+                      <Link href={link.h} className="text-sm text-muted-foreground hover:text-foreground">
+                        {link.n}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
-          <p>© 2026 BloodLink. Built to make finding blood donors faster.</p>
-          <div className="flex gap-6">
-            <Link href="#problem" className="hover:text-foreground">The Problem</Link>
-            <Link href="#how-it-works" className="hover:text-foreground">How It Works</Link>
-            <Link href="#faq" className="hover:text-foreground">FAQ</Link>
+          <div className="mt-12 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-t border-border pt-6">
+            <p className="text-sm text-muted-foreground">© 2026 BloodLink. Built to make finding blood donors faster.</p>
+            <p className="text-sm text-muted-foreground">Free for patients, donors and blood banks.</p>
           </div>
         </div>
       </footer>

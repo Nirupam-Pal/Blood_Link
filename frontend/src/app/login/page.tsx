@@ -3,13 +3,11 @@
 import { useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { motion } from 'framer-motion';
-import { HeartHandshake, LogIn, Loader2, ArrowLeft, CheckCircle2, AlertCircle } from 'lucide-react';
+import { ArrowRight, Eye, EyeOff, Loader2, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card } from '@/components/ui/card';
-import { ThemeToggle } from '@/components/ui/theme-toggle';
-import { AmbientOrbs } from '@/components/ui/ambient-orbs';
+import { AppShell } from '@/components/layout/app-shell';
+import { FieldLabel, Notice, PageHeader, Panel } from '@/components/ui/state-views';
 import { useAuthStore } from '@/stores/auth.store';
 
 function LoginFormContent() {
@@ -50,137 +48,103 @@ function LoginFormContent() {
   };
 
   return (
-    <Card className="p-6 sm:p-8 bg-card border-border shadow-2xl rounded-2xl hover:shadow-crimson-600/10 transition-shadow duration-500">
+    <>
       {isJustRegistered && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-6 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-sm flex items-center gap-3"
-        >
-          <CheckCircle2 className="h-5 w-5 shrink-0" />
-          <span>Account registered successfully! Please sign in with your credentials.</span>
-        </motion.div>
+        <Notice tone="success" className="mb-5">
+          Account registered successfully! Please sign in with your credentials.
+        </Notice>
       )}
 
       {storeError && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-6 p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-sm flex items-center gap-3"
-        >
-          <AlertCircle className="h-5 w-5 shrink-0" />
-          <span>{storeError}</span>
-        </motion.div>
+        <Notice tone="brand" className="mb-5">
+          {storeError}
+        </Notice>
       )}
 
-      <form onSubmit={handleLogin} className="space-y-5">
-        <div>
-          <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">
-            Email Address
-          </label>
-          <Input
-            type="email"
-            placeholder="name@example.com"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="h-11 bg-background"
-          />
-        </div>
-
-        <div>
-          <div className="flex items-center justify-between mb-1.5">
-            <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block">
-              Password
-            </label>
-            <Link
-              href="/forgot-password"
-              className="text-xs text-crimson-600 dark:text-rose-400 hover:underline font-medium"
-            >
-              Forgot password?
-            </Link>
+      <Panel className="p-6 sm:p-8">
+        <form onSubmit={handleLogin} className="space-y-5">
+          <div>
+            <FieldLabel htmlFor="email">Email address</FieldLabel>
+            <Input
+              id="email"
+              type="email"
+              autoComplete="email"
+              placeholder="name@example.com"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
           </div>
-          <Input
-            type="password"
-            placeholder="••••••••"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="h-11 bg-background"
-          />
-        </div>
 
-        <Button
-          type="submit"
-          disabled={loading}
-          className="w-full h-11 bg-linear-to-r from-red-700 via-crimson-600 to-rose-600 hover:from-red-800 hover:to-rose-700 text-white font-semibold transition-all border-none"
-        >
-          {loading ? (
-            <Loader2 className="h-5 w-5 animate-spin" />
-          ) : (
-            <span className="flex items-center gap-2">
-              <LogIn className="h-4 w-4" />
-              Sign In
-            </span>
-          )}
-        </Button>
-      </form>
+          <div>
+            <FieldLabel
+              htmlFor="password"
+              hint={
+                <Link href="/forgot-password" className="font-medium text-brand hover:underline">
+                  Forgot password?
+                </Link>
+              }
+            >
+              Password
+            </FieldLabel>
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                autoComplete="current-password"
+                placeholder="••••••••"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                className="absolute right-1 top-1 h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground cursor-pointer"
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+          </div>
 
-      <div className="mt-6 text-center text-sm text-muted-foreground">
+          <Button type="submit" disabled={loading} size="lg" className="w-full">
+            {loading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <>
+                Sign in
+                <ArrowRight className="h-4 w-4" />
+              </>
+            )}
+          </Button>
+        </form>
+      </Panel>
+
+      <p className="mt-6 text-center text-sm text-muted-foreground">
         Don&apos;t have an account?{' '}
-        <Link href="/register" className="text-crimson-600 dark:text-rose-400 font-semibold hover:underline">
+        <Link href="/register" className="font-medium text-foreground hover:text-brand">
           Register now
         </Link>
-      </div>
-    </Card>
+      </p>
+    </>
   );
 }
 
 export default function LoginPage() {
   return (
-    <div className="relative min-h-screen bg-cosmic text-foreground flex flex-col justify-between p-4 sm:p-6 lg:p-8 overflow-hidden">
-      <AmbientOrbs />
-      <header className="relative z-10 flex items-center justify-between max-w-7xl w-full mx-auto">
-        <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="h-10 w-10 rounded-xl bg-linear-to-tr from-crimson-600 to-rose-500 flex items-center justify-center shadow-lg shadow-crimson-600/30 group-hover:scale-105 transition-transform">
-            <HeartHandshake className="h-5 w-5 text-white" />
-          </div>
-          <span className="text-xl font-bold tracking-tight text-foreground">
-            Blood<span className="text-crimson-500">Link</span>
-          </span>
-        </Link>
-        <ThemeToggle />
-      </header>
-
-      <motion.main
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: 'easeOut' }}
-        className="relative z-10 max-w-md w-full mx-auto my-12"
-      >
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to landing page
-        </Link>
-
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-black tracking-tight">Welcome Back</h1>
-          <p className="mt-2 text-muted-foreground text-sm">
-            Sign in to manage emergency blood requests & donations
-          </p>
-        </div>
-
-        <Suspense fallback={<div className="p-8 text-center text-muted-foreground">Loading form...</div>}>
+    <AppShell>
+      <div className="mx-auto max-w-md">
+        <PageHeader
+          icon={LogIn}
+          title="Welcome back"
+          description="Sign in to manage emergency blood requests and donations."
+        />
+        <Suspense fallback={<p className="text-sm text-muted-foreground">Loading form…</p>}>
           <LoginFormContent />
         </Suspense>
-      </motion.main>
-
-      <footer className="text-center text-xs text-muted-foreground py-4">
-        © 2026 BloodLink Ecosystem. All rights reserved.
-      </footer>
-    </div>
+      </div>
+    </AppShell>
   );
 }

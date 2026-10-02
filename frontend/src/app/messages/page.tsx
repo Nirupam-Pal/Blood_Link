@@ -1,53 +1,51 @@
 'use client';
 
-import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { motion } from 'framer-motion';
-import {
-  Droplet,
-  MessageSquare,
-  Send,
-  ArrowLeft,
-  AlertCircle,
-  Search,
-  X,
-  RefreshCw,
-  Users,
-} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowDown, ArrowLeft, Lock, MessageSquare, MessagesSquare, RefreshCw, Search, Send, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Navbar } from '@/components/layout/navbar';
-import { AmbientOrbs } from '@/components/ui/ambient-orbs';
+import { AppShell } from '@/components/layout/app-shell';
+import { Avatar, BloodBadge, EmptyState, Notice, PageLoader, Skeleton, StatusBadge } from '@/components/ui/state-views';
 import { useAuthStore } from '@/stores/auth.store';
 import { useChatStore } from '@/stores/chat.store';
-import { Conversation } from '@/types/chat.types';
+import { ChatMessage, Conversation } from '@/types/chat.types';
 import { PublicUser } from '@/types/connection.types';
-import { formatBloodGroup, formatLocation, formatTime, getCurrentUserId, getInitials, timeAgo } from '@/lib/format';
+import { formatBloodGroup, formatLocation, formatTime, getCurrentUserId, timeAgo } from '@/lib/format';
+import { cn } from '@/lib/utils';
 
 const MAX_MESSAGE_LENGTH = 2000;
+// Consecutive messages from one sender within this window are visually grouped.
+const GROUP_WINDOW_MS = 5 * 60 * 1000;
 
 export default function MessagesPage() {
   return (
-    <Suspense fallback={<FullScreenLoader />}>
+    <Suspense fallback={<PageLoader />}>
       <MessagesContent />
     </Suspense>
   );
 }
 
-function FullScreenLoader() {
-  return (
-    <div className="min-h-screen bg-cosmic flex items-center justify-center">
-      <div className="flex flex-col items-center gap-3">
-        <Droplet className="h-10 w-10 text-crimson-600 animate-bounce" />
-        <p className="text-sm text-muted-foreground">Authenticating session...</p>
-      </div>
-    </div>
-  );
-}
-
 function getOtherParticipant(conversation: Conversation, currentUserId: string | null): PublicUser | null {
   return conversation.participantIds.find((p) => p && p._id !== currentUserId) ?? null;
+}
+
+function dayLabel(date?: string): string {
+  if (!date) return '';
+  const d = new Date(date);
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const startOfDay = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  const diffDays = Math.round((startOfToday - startOfDay) / (24 * 60 * 60 * 1000));
+  if (diffDays === 0) return 'Today';
+  if (diffDays === 1) return 'Yesterday';
+  return d.toLocaleDateString([], {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    ...(d.getFullYear() !== now.getFullYear() ? { year: 'numeric' } : {}),
+  });
 }
 
 function MessagesContent() {
@@ -80,9 +78,13 @@ function MessagesContent() {
 
   const [draft, setDraft] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isNearBottom, setIsNearBottom] = useState(true);
   // Derived from the access token once the session is authenticated
   const currentUserId = useMemo(() => (status === 'authenticated' ? getCurrentUserId() : null), [status]);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const followedConversationRef = useRef<string | null>(null);
 
   // Auth Guard
   useEffect(() => {
@@ -121,10 +123,45 @@ function MessagesContent() {
     [activeConversationId, messages]
   );
 
-  // Keep the newest message in view
+  const lastMessage = activeMessages[activeMessages.length - 1];
+
+  // Jump to the newest message instantly when a conversation opens
+  // (the resulting scroll event resets isNearBottom).
+  useLayoutEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'auto' });
+  }, [activeConversationId]);
+
+  // Follow new messages smoothly — but only when the newest message changes
+  // (so loading older history doesn't yank the view) and only if the reader is
+  // already near the bottom or sent it themselves.
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [activeMessages.length, activeConversationId]);
+    if (!lastMessage) return;
+    // First batch for a freshly opened conversation: always land on the newest message
+    if (followedConversationRef.current !== activeConversationId) {
+      followedConversationRef.current = activeConversationId;
+      bottomRef.current?.scrollIntoView({ behavior: 'auto' });
+      return;
+    }
+    const isMine = String(lastMessage.senderId) === currentUserId;
+    if (isNearBottom || isMine) {
+      bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lastMessage?._id]);
+
+  // Auto-grow the composer up to its max height
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${Math.min(el.scrollHeight, 144)}px`;
+  }, [draft]);
+
+  const handleScroll = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setIsNearBottom(el.scrollHeight - el.scrollTop - el.clientHeight < 120);
+  };
 
   const activeConversation = conversations.find((c) => c._id === activeConversationId) || null;
   const activePartner = activeConversation ? getOtherParticipant(activeConversation, currentUserId) : null;
@@ -137,6 +174,27 @@ function MessagesContent() {
       return (other?.fullName || '').toLowerCase().includes(query);
     });
   }, [conversations, searchQuery, currentUserId]);
+
+  // Annotate each message with day separators and grouping hints
+  const renderedMessages = useMemo(() => {
+    return activeMessages.map((message, i) => {
+      const prev: ChatMessage | undefined = activeMessages[i - 1];
+      const next: ChatMessage | undefined = activeMessages[i + 1];
+      const label = dayLabel(message.createdAt);
+      const showDay = !prev || dayLabel(prev.createdAt) !== label;
+      const sameAsPrev =
+        !!prev &&
+        !showDay &&
+        String(prev.senderId) === String(message.senderId) &&
+        new Date(message.createdAt).getTime() - new Date(prev.createdAt).getTime() < GROUP_WINDOW_MS;
+      const sameAsNext =
+        !!next &&
+        dayLabel(next.createdAt) === label &&
+        String(next.senderId) === String(message.senderId) &&
+        new Date(next.createdAt).getTime() - new Date(message.createdAt).getTime() < GROUP_WINDOW_MS;
+      return { message, showDay, label, sameAsPrev, sameAsNext };
+    });
+  }, [activeMessages]);
 
   const openConversation = (id: string | null) => {
     setActiveConversation(id);
@@ -156,207 +214,308 @@ function MessagesContent() {
   };
 
   if (isInitializing || status === 'idle') {
-    return <FullScreenLoader />;
+    return <PageLoader label="Authenticating session" />;
   }
 
+  const showConversationSkeleton = isLoadingConversations && conversations.length === 0;
+  const showMessageSkeleton = isLoadingMessages && activeMessages.length === 0;
+  const remaining = MAX_MESSAGE_LENGTH - draft.length;
+  const partnerGroup = formatBloodGroup(activePartner?.bloodGroup);
+
   return (
-    <div className="relative min-h-screen bg-cosmic text-foreground flex flex-col overflow-hidden">
-      <AmbientOrbs />
-      <Navbar />
-
-      <main className="relative z-10 flex-1 max-w-7xl w-full mx-auto mt-18 px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex items-end justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-2xl font-black tracking-tight">
-              <span className="text-red-600">Messages</span>
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1">Coordinate donations privately with your connections.</p>
-          </div>
-          <span
-            className={`flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider ${
-              isConnected ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'
-            }`}
-          >
-            <span className={`h-2 w-2 rounded-full ${isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-muted-foreground'}`} />
-            {isConnected ? 'Live' : 'Connecting...'}
-          </span>
-        </div>
-
-        {error && (
-          <Card className="mb-4 p-3 rounded-2xl border-rose-500/20 bg-rose-500/5 flex flex-row items-center justify-between gap-3">
-            <p className="text-xs text-rose-500 font-medium flex items-center gap-1.5">
-              <AlertCircle className="h-3.5 w-3.5" />
-              {error}
-            </p>
-            <button onClick={clearError} className="text-muted-foreground hover:text-foreground cursor-pointer" aria-label="Dismiss error">
-              <X className="h-4 w-4" />
-            </button>
-          </Card>
-        )}
-
-        <Card className="bg-card border-border rounded-2xl overflow-hidden p-0 gap-0 h-[calc(100vh-15rem)] min-h-105 flex flex-row">
-          {/* Conversation list */}
-          <aside
-            className={`w-full md:w-80 md:shrink-0 border-r border-border flex-col ${
-              activeConversationId ? 'hidden md:flex' : 'flex'
-            }`}
-          >
-            <div className="p-3 border-b border-border">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                <Input
-                  placeholder="Search conversations..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 h-9 bg-background text-xs w-full"
-                />
-              </div>
+    <AppShell bleed>
+      <div className="flex h-full">
+        {/* ───────────── Conversations ───────────── */}
+        <aside
+          className={cn(
+            'w-full lg:w-80 xl:w-88 lg:shrink-0 flex-col border-r border-border',
+            activeConversationId ? 'hidden lg:flex' : 'flex'
+          )}
+          aria-label="Conversations"
+        >
+          <div className="px-4 pt-6 pb-4">
+            <div className="flex items-center justify-between gap-3">
+              <h1 className="text-xl font-bold tracking-tight">Messages</h1>
+              <StatusBadge tone={isConnected ? 'success' : 'warning'} live>
+                {isConnected ? 'Live' : 'Connecting…'}
+              </StatusBadge>
             </div>
+            <div className="relative mt-4">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+              <Input
+                type="search"
+                placeholder="Search conversations..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                aria-label="Search conversations"
+                className="pl-9"
+              />
+            </div>
+          </div>
 
-            <div className="flex-1 overflow-y-auto">
-              {filteredConversations.length === 0 ? (
-                <div className="p-8 text-center">
-                  <MessageSquare className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                  <p className="text-sm font-semibold">
-                    {isLoadingConversations ? 'Loading...' : 'No conversations yet'}
-                  </p>
-                  {!isLoadingConversations && (
-                    <>
-                      <p className="text-xs text-muted-foreground mt-1">Chats open once a connection request is accepted.</p>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => router.push('/connections')}
-                        className="mt-4 h-8 gap-1.5 text-xs cursor-pointer"
-                      >
-                        <Users className="h-3.5 w-3.5" />
-                        View Connections
-                      </Button>
-                    </>
-                  )}
-                </div>
+          <div className="flex-1 overflow-y-auto scrollbar-thin px-2 pb-3">
+            {showConversationSkeleton ? (
+              <div role="status" aria-label="Loading conversations" className="space-y-1">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="flex items-center gap-3 px-3 py-3">
+                    <Skeleton className="h-10 w-10 rounded-full shrink-0" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-3 w-2/5" />
+                      <Skeleton className="h-2.5 w-4/5" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : filteredConversations.length === 0 ? (
+              searchQuery.trim() ? (
+                <EmptyState icon={Search} title="No matches" description={`No conversations match “${searchQuery.trim()}”.`} />
               ) : (
-                filteredConversations.map((conversation) => {
+                <EmptyState
+                  icon={MessagesSquare}
+                  title="No conversations yet"
+                  description="Chats open once a connection request is accepted."
+                  action={
+                    <Button variant="outline" size="sm" onClick={() => router.push('/connections')}>
+                      <Users className="h-3.5 w-3.5" />
+                      View connections
+                    </Button>
+                  }
+                />
+              )
+            ) : (
+              <ul className="space-y-0.5">
+                {filteredConversations.map((conversation) => {
                   const other = getOtherParticipant(conversation, currentUserId);
                   const last = conversation.lastMessageId;
                   const isActive = conversation._id === activeConversationId;
                   const isMine = last && String(last.senderId) === currentUserId;
+                  const bloodGroup = formatBloodGroup(other?.bloodGroup);
 
                   return (
-                    <button
-                      key={conversation._id}
-                      onClick={() => openConversation(conversation._id)}
-                      className={`w-full text-left px-4 py-3 flex items-center gap-3 border-b border-border/60 transition-colors cursor-pointer ${
-                        isActive ? 'bg-red-600/10' : 'hover:bg-muted/60'
-                      }`}
-                    >
-                      <div className="h-11 w-11 rounded-2xl bg-red-600/10 text-red-600 font-extrabold flex items-center justify-center text-sm border border-red-600/20 shrink-0">
-                        {getInitials(other?.fullName)}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="font-semibold text-sm truncate">{other?.fullName || 'Unavailable account'}</span>
-                          <span className="text-[10px] text-muted-foreground shrink-0">
-                            {timeAgo(last?.createdAt || conversation.lastMessageAt)}
-                          </span>
+                    <motion.li key={conversation._id} layout transition={{ duration: 0.25 }}>
+                      <button
+                        onClick={() => openConversation(conversation._id)}
+                        aria-current={isActive ? 'true' : undefined}
+                        className={cn(
+                          'relative flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left cursor-pointer focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/30',
+                          isActive ? 'text-foreground' : 'hover:bg-surface'
+                        )}
+                      >
+                        {isActive && (
+                          <motion.span
+                            layoutId="active-conversation"
+                            className="absolute inset-0 rounded-xl bg-surface shadow-card"
+                            transition={{ type: 'spring', stiffness: 500, damping: 40 }}
+                          />
+                        )}
+                        <div className="relative">
+                          <Avatar name={other?.fullName} />
+                          {bloodGroup && (
+                            <span className="absolute -bottom-1 -right-1 rounded-md bg-linear-to-br from-red-600 to-red-800 px-1 text-[9px] font-bold leading-4 text-white ring-2 ring-background">
+                              {bloodGroup}
+                            </span>
+                          )}
                         </div>
-                        <p className="text-xs text-muted-foreground truncate mt-0.5">
-                          {last ? `${isMine ? 'You: ' : ''}${last.content}` : 'Say hello 👋'}
-                        </p>
-                      </div>
-                    </button>
-                  );
-                })
-              )}
-            </div>
-          </aside>
-
-          {/* Chat pane */}
-          <section className={`flex-1 flex-col min-w-0 ${activeConversationId ? 'flex' : 'hidden md:flex'}`}>
-            {!activeConversation ? (
-              <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
-                <div className="h-14 w-14 rounded-2xl bg-red-600/10 text-red-600 flex items-center justify-center mb-3">
-                  <MessageSquare className="h-6 w-6" />
-                </div>
-                <h3 className="text-lg font-semibold">Select a conversation</h3>
-                <p className="text-sm text-muted-foreground mt-1">Choose a connection from the list to start chatting.</p>
-              </div>
-            ) : (
-              <>
-                {/* Chat header */}
-                <div className="px-4 py-3 border-b border-border flex items-center gap-3">
-                  <button
-                    onClick={() => openConversation(null)}
-                    className="md:hidden p-1 text-muted-foreground hover:text-foreground cursor-pointer"
-                    aria-label="Back to conversations"
-                  >
-                    <ArrowLeft className="h-5 w-5" />
-                  </button>
-                  <div className="h-10 w-10 rounded-xl bg-red-600/10 text-red-600 font-extrabold flex items-center justify-center text-xs border border-red-600/20 shrink-0">
-                    {formatBloodGroup(activePartner?.bloodGroup) || getInitials(activePartner?.fullName)}
-                  </div>
-                  <div className="min-w-0">
-                    <h3 className="font-bold text-sm truncate">{activePartner?.fullName || 'Unavailable account'}</h3>
-                    <p className="text-[11px] text-muted-foreground truncate">
-                      {[formatLocation(activePartner), activePartner?.email].filter(Boolean).join(' · ')}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Messages */}
-                <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2">
-                  {hasMore[activeConversation._id] && (
-                    <div className="flex justify-center pb-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        disabled={isLoadingMessages}
-                        onClick={() => loadOlderMessages(activeConversation._id)}
-                        className="gap-1.5 text-xs text-muted-foreground cursor-pointer"
-                      >
-                        <RefreshCw className={`h-3.5 w-3.5 ${isLoadingMessages ? 'animate-spin' : ''}`} />
-                        Load older messages
-                      </Button>
-                    </div>
-                  )}
-
-                  {activeMessages.length === 0 && !isLoadingMessages && (
-                    <p className="text-center text-xs text-muted-foreground py-8">
-                      No messages yet. Start the conversation!
-                    </p>
-                  )}
-
-                  {activeMessages.map((message) => {
-                    const isMine = String(message.senderId) === currentUserId;
-                    return (
-                      <motion.div
-                        key={message._id}
-                        initial={{ opacity: 0, y: 6 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}
-                      >
-                        <div
-                          className={`max-w-[80%] sm:max-w-[65%] rounded-2xl px-3.5 py-2 text-sm shadow-xs ${
-                            isMine
-                              ? 'bg-linear-to-r from-red-600 to-rose-600 text-white rounded-br-md'
-                              : 'bg-muted text-foreground rounded-bl-md'
-                          }`}
-                        >
-                          <p className="whitespace-pre-wrap break-words">{message.content}</p>
-                          <p className={`text-[10px] mt-1 text-right ${isMine ? 'text-white/70' : 'text-muted-foreground'}`}>
-                            {formatTime(message.createdAt)}
+                        <div className="relative min-w-0 flex-1">
+                          <div className="flex items-baseline justify-between gap-2">
+                            <span className="truncate text-sm font-semibold">{other?.fullName || 'Unavailable account'}</span>
+                            <span className="shrink-0 text-[11px] text-muted-foreground tabular-nums">
+                              {timeAgo(last?.createdAt || conversation.lastMessageAt)}
+                            </span>
+                          </div>
+                          <p className="mt-0.5 truncate text-[13px] text-muted-foreground">
+                            {last ? `${isMine ? 'You: ' : ''}${last.content}` : 'Say hello 👋'}
                           </p>
                         </div>
-                      </motion.div>
-                    );
-                  })}
-                  <div ref={bottomRef} />
-                </div>
+                      </button>
+                    </motion.li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+        </aside>
 
-                {/* Composer */}
-                <form onSubmit={handleSend} className="p-3 border-t border-border flex items-end gap-2">
+        {/* ───────────── Chat pane ───────────── */}
+        <section
+          className={cn('relative flex-1 flex-col min-w-0', activeConversationId ? 'flex' : 'hidden lg:flex')}
+          aria-label="Conversation"
+        >
+          {!activeConversation ? (
+            <div className="relative flex flex-1 items-center justify-center">
+              <div className="pointer-events-none absolute inset-0 bg-dots mask-radial opacity-70" />
+              <EmptyState
+                icon={MessageSquare}
+                title="Select a conversation"
+                description="Choose a connection from the list to start chatting."
+                action={
+                  <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <Lock className="h-3 w-3" />
+                    Messages are private to you and your connection
+                  </span>
+                }
+                className="relative"
+              />
+            </div>
+          ) : (
+            <>
+              {/* Chat header */}
+              <header className="flex h-16 shrink-0 items-center gap-3 border-b border-border px-4 sm:px-6">
+                <button
+                  onClick={() => openConversation(null)}
+                  className="lg:hidden -ml-1 flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
+                  aria-label="Back to conversations"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </button>
+                {partnerGroup ? <BloodBadge group={partnerGroup} size="sm" /> : <Avatar name={activePartner?.fullName} />}
+                <div className="min-w-0 flex-1">
+                  <h2 className="truncate text-sm font-semibold">{activePartner?.fullName || 'Unavailable account'}</h2>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {[formatLocation(activePartner), activePartner?.email].filter(Boolean).join(' · ')}
+                  </p>
+                </div>
+                <span className="hidden sm:inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Lock className="h-3 w-3" />
+                  Private
+                </span>
+              </header>
+
+              {error && (
+                <Notice tone="brand" onDismiss={clearError} className="mx-4 mt-3">
+                  {error}
+                </Notice>
+              )}
+
+              {/* Messages */}
+              <div
+                ref={scrollRef}
+                onScroll={handleScroll}
+                className="flex-1 overflow-y-auto scrollbar-thin bg-surface/60 px-4 py-6 sm:px-8"
+                aria-live="polite"
+                aria-relevant="additions"
+              >
+                {hasMore[activeConversation._id] && (
+                  <div className="flex justify-center pb-4">
+                    <Button
+                      variant="outline"
+                      size="xs"
+                      disabled={isLoadingMessages}
+                      onClick={() => loadOlderMessages(activeConversation._id)}
+                      className="rounded-full"
+                    >
+                      <RefreshCw className={`h-3 w-3 ${isLoadingMessages ? 'animate-spin' : ''}`} />
+                      Load older messages
+                    </Button>
+                  </div>
+                )}
+
+                {showMessageSkeleton && (
+                  <div className="space-y-3" role="status" aria-label="Loading messages">
+                    {[46, 62, 34, 54, 40].map((w, i) => (
+                      <div key={i} className={`flex ${i % 2 ? 'justify-end' : 'justify-start'}`}>
+                        <Skeleton className="h-10 rounded-2xl" style={{ width: `${w}%` }} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {activeMessages.length === 0 && !isLoadingMessages && (
+                  <EmptyState
+                    icon={Send}
+                    title="No messages yet"
+                    description={`Say hello to ${activePartner?.fullName?.split(' ')[0] || 'your connection'} and share the details of your request.`}
+                  />
+                )}
+
+                {renderedMessages.map(({ message, showDay, label, sameAsPrev, sameAsNext }) => {
+                  const isMine = String(message.senderId) === currentUserId;
+                  const corner = isMine
+                    ? cn(sameAsPrev && 'rounded-tr-md', sameAsNext ? 'rounded-br-md' : 'rounded-br-sm')
+                    : cn(sameAsPrev && 'rounded-tl-md', sameAsNext ? 'rounded-bl-md' : 'rounded-bl-sm');
+
+                  return (
+                    <div key={message._id}>
+                      {showDay && (
+                        <div className="my-5 flex justify-center first:mt-0" role="separator">
+                          <span className="rounded-full bg-background px-3 py-1 text-[11px] font-medium text-muted-foreground shadow-card">{label}</span>
+                        </div>
+                      )}
+                      <motion.div
+                        initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                        className={cn('flex', isMine ? 'justify-end' : 'justify-start', sameAsPrev ? 'mt-1' : 'mt-3')}
+                      >
+                        <div
+                          title={new Date(message.createdAt).toLocaleString()}
+                          className={cn(
+                            'max-w-[85%] sm:max-w-[65%] rounded-2xl px-3.5 py-2 text-sm leading-relaxed',
+                            corner,
+                            isMine
+                              ? 'bg-linear-to-b from-red-500 to-red-600 text-white shadow-md shadow-red-500/20'
+                              : 'bg-background text-foreground shadow-card'
+                          )}
+                        >
+                          <p className="whitespace-pre-wrap wrap-break-word">{message.content}</p>
+                          {!sameAsNext && (
+                            <p className={cn('mt-1 text-right text-[10px] tabular-nums', isMine ? 'text-white/75' : 'text-muted-foreground')}>
+                              {formatTime(message.createdAt)}
+                            </p>
+                          )}
+                        </div>
+                      </motion.div>
+                    </div>
+                  );
+                })}
+
+                {/* Outgoing message in flight */}
+                <AnimatePresence>
+                  {isSending && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0 }}
+                      className="mt-2 flex justify-end"
+                      aria-label="Sending message"
+                    >
+                      <div className="flex items-center gap-1 rounded-2xl rounded-br-sm bg-brand-soft px-3.5 py-3">
+                        {[0, 1, 2].map((i) => (
+                          <motion.span
+                            key={i}
+                            className="h-1.5 w-1.5 rounded-full bg-brand"
+                            animate={{ opacity: [0.3, 1, 0.3], y: [0, -2, 0] }}
+                            transition={{ duration: 0.9, repeat: Infinity, delay: i * 0.15 }}
+                          />
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+                <div ref={bottomRef} className="h-px" />
+              </div>
+
+              {/* Jump-to-latest */}
+              <AnimatePresence>
+                {!isNearBottom && activeMessages.length > 0 && (
+                  <motion.button
+                    initial={{ opacity: 0, y: 8, scale: 0.9 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 8, scale: 0.9 }}
+                    onClick={() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' })}
+                    className="absolute right-6 bottom-24 flex h-9 w-9 items-center justify-center rounded-full bg-background text-muted-foreground shadow-float hover:text-foreground cursor-pointer"
+                    aria-label="Scroll to latest message"
+                  >
+                    <ArrowDown className="h-4 w-4" />
+                  </motion.button>
+                )}
+              </AnimatePresence>
+
+              {/* Composer */}
+              <form onSubmit={handleSend} className="shrink-0 border-t border-border p-3 sm:px-6">
+                <div className="flex items-end gap-2 rounded-2xl bg-muted p-1.5 pl-4 transition-shadow focus-within:bg-background focus-within:shadow-card focus-within:ring-3 focus-within:ring-ring/15">
                   <textarea
+                    ref={textareaRef}
                     value={draft}
                     onChange={(e) => setDraft(e.target.value.slice(0, MAX_MESSAGE_LENGTH))}
                     onKeyDown={(e) => {
@@ -366,23 +525,32 @@ function MessagesContent() {
                       }
                     }}
                     rows={1}
-                    placeholder={isConnected ? 'Type a message...' : 'Connecting to chat...'}
-                    className="flex-1 resize-none max-h-32 min-h-10 rounded-lg border border-input bg-background dark:bg-input/30 px-3 py-2 text-sm outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 transition-all"
+                    aria-label="Message"
+                    placeholder={isConnected ? 'Write a message…' : 'Connecting to chat…'}
+                    className="max-h-36 flex-1 resize-none bg-transparent py-2 text-sm outline-none placeholder:text-muted-foreground/80 scrollbar-thin"
                   />
                   <Button
                     type="submit"
+                    variant="brand"
+                    size="icon"
                     disabled={!draft.trim() || isSending || !isConnected}
-                    className="h-10 w-10 p-0 bg-red-600 hover:bg-red-700 text-white cursor-pointer shrink-0"
                     aria-label="Send message"
+                    className="rounded-xl"
                   >
                     {isSending ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                   </Button>
-                </form>
-              </>
-            )}
-          </section>
-        </Card>
-      </main>
-    </div>
+                </div>
+                <div className="mt-1.5 flex items-center justify-between px-1 text-[11px] text-muted-foreground">
+                  <span className="hidden sm:inline">Enter to send · Shift + Enter for a new line</span>
+                  {remaining <= 200 && (
+                    <span className={cn('ml-auto tabular-nums', remaining <= 50 && 'font-semibold text-brand')}>{remaining} characters left</span>
+                  )}
+                </div>
+              </form>
+            </>
+          )}
+        </section>
+      </div>
+    </AppShell>
   );
 }

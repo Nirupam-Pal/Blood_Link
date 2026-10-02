@@ -2,125 +2,95 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { User, Building2, ArrowRight, HeartHandshake, ShieldCheck } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { ThemeToggle } from '@/components/ui/theme-toggle';
-import { AmbientOrbs } from '@/components/ui/ambient-orbs';
+import { ArrowRight, Building2, Check, User, UserPlus } from 'lucide-react';
+import { AppShell } from '@/components/layout/app-shell';
+import { PageHeader } from '@/components/ui/state-views';
+import { cn } from '@/lib/utils';
+
+const OPTIONS = [
+  {
+    href: '/register/user',
+    icon: User,
+    title: 'Individual Donor / Patient',
+    desc: 'Register as a blood donor or request blood during emergencies. Manage your eligibility status and requests.',
+    points: ['Search donors near you', 'Send connection requests', 'Become a verified donor'],
+    cta: 'Continue as Individual',
+    featured: true,
+  },
+  {
+    href: '/register/blood-bank',
+    icon: Building2,
+    title: 'Blood Bank Organization',
+    desc: 'Register your certified medical institution. Manage blood stock and update unit availability in real time.',
+    points: ['Licence-verified listing', 'Live inventory console', 'Appear in directory searches'],
+    cta: 'Continue as Blood Bank',
+  },
+];
 
 export default function RegisterSelectionPage() {
   return (
-    <div className="relative min-h-screen bg-cosmic text-foreground flex flex-col justify-between p-4 sm:p-6 lg:p-8 overflow-hidden">
-      <AmbientOrbs />
-      {/* Header */}
-      <header className="relative z-10 flex items-center justify-between max-w-7xl w-full mx-auto">
-        <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="h-10 w-10 rounded-xl bg-linear-to-tr from-red-600 to-rose-500 flex items-center justify-center shadow-lg shadow-red-600/30 group-hover:scale-105 transition-transform">
-            <HeartHandshake className="h-5 w-5 text-white" />
-          </div>
-          <span className="text-xl font-bold tracking-tight text-foreground">
-            Blood<span className="text-red-600">Link</span>
-          </span>
+    <AppShell>
+      <PageHeader
+        icon={UserPlus}
+        title={<>How will you be using <span className="text-gradient-brand">BloodLink</span>?</>}
+        description="Select the account type that best describes you to continue setup."
+      />
+
+      <div className="grid gap-5 md:grid-cols-2">
+        {OPTIONS.map((opt, i) => {
+          const Icon = opt.icon;
+          return (
+            <motion.div
+              key={opt.href}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.08 * i }}
+            >
+              <Link
+                href={opt.href}
+                className={cn(
+                  'group block h-full rounded-3xl p-2 transition-transform hover:-translate-y-1',
+                  opt.featured ? 'bg-linear-to-b from-red-600 to-red-800 shadow-xl shadow-red-500/15' : 'bg-surface shadow-card'
+                )}
+              >
+                <div className="flex h-full flex-col rounded-[1.25rem] bg-background p-6">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-soft text-brand">
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <h2 className="mt-5 text-lg font-semibold">{opt.title}</h2>
+                  <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{opt.desc}</p>
+                  <ul className="mt-5 flex-1 space-y-2.5">
+                    {opt.points.map((p) => (
+                      <li key={p} className="flex items-center gap-2.5 text-sm">
+                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-brand text-white">
+                          <Check className="h-3 w-3" strokeWidth={3} />
+                        </span>
+                        {p}
+                      </li>
+                    ))}
+                  </ul>
+                  <span
+                    className={cn(
+                      'mt-6 flex h-10 items-center justify-center gap-2 rounded-lg text-sm font-medium',
+                      opt.featured ? 'btn-brand' : 'btn-ink'
+                    )}
+                  >
+                    {opt.cta}
+                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                  </span>
+                </div>
+              </Link>
+            </motion.div>
+          );
+        })}
+      </div>
+
+      <p className="mt-8 text-sm text-muted-foreground">
+        Already have an account?{' '}
+        <Link href="/login" className="font-medium text-foreground hover:text-brand">
+          Sign in
         </Link>
-
-        <div className="flex items-center gap-3">
-          <ThemeToggle />
-          <Link href="/login">
-            <Button variant="ghost" className="text-muted-foreground hover:text-foreground">
-              Sign In
-            </Button>
-          </Link>
-        </div>
-      </header>
-
-      {/* Main Selection Card Container */}
-      <main className="relative z-10 max-w-4xl w-full mx-auto my-12">
-        <div className="text-center mb-12">
-          <motion.div 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-muted border border-border text-xs font-semibold text-red-600 dark:text-red-400 mb-4"
-          >
-            <ShieldCheck className="h-3.5 w-3.5" />
-            Choose Account Type
-          </motion.div>
-          <motion.h1 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="text-3xl sm:text-5xl font-black tracking-tight"
-          >
-            How will you be using BloodLink?
-          </motion.h1>
-          <motion.p 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="mt-3 text-muted-foreground text-base sm:text-lg"
-          >
-            Select the category that best describes you to continue setup.
-          </motion.p>
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-6">
-          {/* Individual User / Donor Card */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            <Card className="p-8 h-full bg-card border-border hover:border-red-600/50 transition-all duration-300 hover:shadow-xl flex flex-col justify-between group">
-              <div>
-                <div className="h-14 w-14 rounded-2xl bg-red-500/10 text-red-600 dark:text-red-400 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                  <User className="h-7 w-7" />
-                </div>
-                <h2 className="text-2xl font-bold mb-2">Individual Donor / Patient</h2>
-                <p className="text-muted-foreground text-sm leading-relaxed mb-6">
-                  Register as a blood donor or request blood during emergencies. Manage your eligibility status and donation history.
-                </p>
-              </div>
-
-              <Link href="/register/user">
-                <Button className="w-full h-11 bg-linear-to-r from-red-700 to-rose-600 hover:from-red-800 hover:to-rose-700 text-white font-medium gap-2">
-                  Continue as Individual
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-            </Card>
-          </motion.div>
-
-          {/* Blood Bank Organization Card */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.4 }}
-          >
-            <Card className="p-8 h-full bg-card border-border hover:border-red-600/50 transition-all duration-300 hover:shadow-xl flex flex-col justify-between group">
-              <div>
-                <div className="h-14 w-14 rounded-2xl bg-red-500/10 text-red-600 dark:text-red-400 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                  <Building2 className="h-7 w-7" />
-                </div>
-                <h2 className="text-2xl font-bold mb-2">Blood Bank Organization</h2>
-                <p className="text-muted-foreground text-sm leading-relaxed mb-6">
-                  Register your certified medical institution. Manage blood stock inventories, verify donor requests, and update unit availability in real time.
-                </p>
-              </div>
-
-              <Link href="/register/blood-bank">
-                <Button variant="outline" className="w-full h-11 border-border hover:bg-muted text-foreground font-medium gap-2">
-                  Continue as Blood Bank
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-            </Card>
-          </motion.div>
-        </div>
-      </main>
-
-      {/* Footer */}
-      <footer className="text-center text-xs text-muted-foreground py-4">
-        © 2026 BloodLink Ecosystem. All rights reserved.
-      </footer>
-    </div>
+      </p>
+    </AppShell>
   );
 }

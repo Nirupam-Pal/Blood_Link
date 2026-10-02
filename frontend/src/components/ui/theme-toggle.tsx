@@ -1,12 +1,11 @@
 'use client';
 
 import * as React from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
 import { Moon, Sun } from 'lucide-react';
 import { useTheme } from '@/components/theme-provider';
-import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
-export function ThemeToggle() {
+export function ThemeToggle({ className, showLabel = false }: { className?: string; showLabel?: boolean }) {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
 
@@ -15,42 +14,24 @@ export function ThemeToggle() {
   }, []);
 
   if (!mounted) {
-    return <div className="w-9 h-9" />;
+    return <div className={cn('h-9', showLabel ? 'w-full' : 'w-9', className)} />;
   }
 
+  const isDark = theme === 'dark';
+
   return (
-    <Button
-      variant="ghost"
-      size="icon"
-      onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-      className="relative overflow-hidden rounded-xl text-muted-foreground hover:text-foreground hover:scale-105 active:scale-95 transition-transform"
-      aria-label="Toggle theme"
+    <button
+      type="button"
+      onClick={() => setTheme(isDark ? 'light' : 'dark')}
+      aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+      className={cn(
+        'inline-flex h-9 items-center gap-2.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer',
+        showLabel ? 'w-full px-3' : 'w-9 justify-center',
+        className
+      )}
     >
-      <AnimatePresence mode="wait" initial={false}>
-        {theme === 'dark' ? (
-          <motion.span
-            key="sun"
-            initial={{ opacity: 0, rotate: -90, scale: 0.5 }}
-            animate={{ opacity: 1, rotate: 0, scale: 1 }}
-            exit={{ opacity: 0, rotate: 90, scale: 0.5 }}
-            transition={{ duration: 0.3, ease: 'easeInOut' }}
-            className="flex items-center justify-center"
-          >
-            <Sun className="h-5 w-5 text-amber-400" />
-          </motion.span>
-        ) : (
-          <motion.span
-            key="moon"
-            initial={{ opacity: 0, rotate: 90, scale: 0.5 }}
-            animate={{ opacity: 1, rotate: 0, scale: 1 }}
-            exit={{ opacity: 0, rotate: -90, scale: 0.5 }}
-            transition={{ duration: 0.3, ease: 'easeInOut' }}
-            className="flex items-center justify-center"
-          >
-            <Moon className="h-5 w-5 text-slate-700" />
-          </motion.span>
-        )}
-      </AnimatePresence>
-    </Button>
+      {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+      {showLabel && <span className="text-sm">{isDark ? 'Light mode' : 'Dark mode'}</span>}
+    </button>
   );
 }

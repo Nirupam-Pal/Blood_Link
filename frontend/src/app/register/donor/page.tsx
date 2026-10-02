@@ -4,26 +4,32 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  HeartHandshake,
-  ArrowLeft,
-  ShieldCheck,
-  AlertCircle,
-  Loader2,
-  CheckCircle2,
-  XCircle,
-  Activity,
-  FileText,
-  UserCheck
-} from 'lucide-react';
+import { AlertCircle, ArrowLeft, ArrowRight, Check, CheckCircle2, HeartPulse, Loader2, UserCheck, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card } from '@/components/ui/card';
+import { AppShell } from '@/components/layout/app-shell';
+import { FieldLabel, Notice, PageHeader, PageLoader, Panel, SectionHeading } from '@/components/ui/state-views';
 import { useAuthStore } from '@/stores/auth.store';
 import { useDonorStore } from '@/stores/donor.store';
 import { RegisterDonorDto, DonorAssessmentResult } from '@/types/donor.types';
-import { Navbar } from '@/components/layout/navbar';
-import { AmbientOrbs } from '@/components/ui/ambient-orbs';
+import { cn } from '@/lib/utils';
+
+const MEDICAL_QUESTIONS = [
+  { key: 'takingMedication', label: 'Are you currently taking any prescription medication or antibiotics?' },
+  { key: 'recentTattoo', label: 'Have you gotten a tattoo or body piercing in the last 6 months?' },
+  { key: 'recentSurgery', label: 'Have you undergone major surgical procedures in the last 6 months?' },
+  { key: 'hepatitis', label: 'Have you ever tested positive for Hepatitis B or Hepatitis C?' },
+  { key: 'hiv', label: 'Have you ever tested positive for HIV / AIDS?' },
+  { key: 'diabetes', label: 'Do you have insulin-dependent diabetes?' },
+  { key: 'highBloodPressure', label: 'Do you currently suffer from uncontrolled high blood pressure?' },
+  { key: 'chronicDisease', label: 'Do you have any chronic cardiovascular, renal, or respiratory diseases?' },
+];
+
+const CONSENT_ITEMS = [
+  { key: 'consentInformation', label: 'I declare that all personal and medical information submitted above is accurate and truthful.' },
+  { key: 'consentContact', label: 'I consent to being contacted by patients or certified blood banks in cases of emergency blood needs.' },
+  { key: 'consentPrivacy', label: 'I agree to the BloodLink Donor Privacy Policy & Terms of Service regarding blood health records.' },
+];
 
 export default function RegisterDonorPage() {
   const router = useRouter();
@@ -126,296 +132,263 @@ export default function RegisterDonorPage() {
   };
 
   if (isInitializing || status === 'idle' || (user && user.role !== 'USER')) {
-    return (
-      <div className="min-h-screen bg-cosmic flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <Activity className="h-8 w-8 text-crimson-600 animate-spin" />
-          <p className="text-sm text-muted-foreground">Checking authentication status...</p>
-        </div>
-      </div>
-    );
+    return <PageLoader label="Checking authentication status" />;
   }
 
   // Already Registered Donor State
   if (user?.donor && !assessmentCompleted) {
     return (
-      <div className="relative min-h-screen bg-cosmic text-foreground flex flex-col overflow-hidden">
-        <AmbientOrbs />
-        <Navbar />
-        <main className="relative z-10 flex-1 max-w-2xl w-full mx-auto mt-24 px-4 py-8">
-          <Card className="p-8 bg-card border-border shadow-xl rounded-2xl text-center">
-            <div className="h-16 w-16 bg-emerald-500/10 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-500/20">
-              <UserCheck className="h-8 w-8" />
+      <AppShell>
+        <div className="mx-auto max-w-xl">
+          <Panel className="relative overflow-hidden p-10 text-center">
+            <div className="pointer-events-none absolute inset-0 bg-grid mask-fade-b opacity-60" />
+            <div className="relative mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-success-soft text-success">
+              <UserCheck className="h-7 w-7" />
             </div>
-            <h1 className="text-2xl font-black mb-2">Active Donor Clearance Verified</h1>
-            <p className="text-sm text-muted-foreground mb-6">
+            <h1 className="relative text-2xl font-bold">Active donor clearance verified</h1>
+            <p className="relative mt-2 text-muted-foreground">
               You are already registered and marked as an active, eligible blood donor in the BloodLink ecosystem.
             </p>
-            <div className="flex justify-center gap-3">
-              <Button onClick={() => router.push('/dashboard/donor')} className="bg-crimson-600 hover:bg-crimson-700 text-white">
-                Go to Donor Portal
-              </Button>
-            </div>
-          </Card>
-        </main>
-      </div>
+            <Button onClick={() => router.push('/dashboard/donor')} size="lg" className="relative mt-6">
+              Go to donor portal
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </Panel>
+        </div>
+      </AppShell>
     );
   }
 
   const activeError = localError || storeError;
+  const answeredYes = Object.values(medicalAnswers).filter(Boolean).length;
+  const consentCount = Object.values(consents).filter(Boolean).length;
 
   return (
-    <div className="relative min-h-screen bg-cosmic text-foreground flex flex-col overflow-hidden">
-      <AmbientOrbs />
-      <Navbar />
+    <AppShell>
+      <Link href="/dashboard/donor" className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+        <ArrowLeft className="h-4 w-4" />
+        Back to dashboard
+      </Link>
 
-      <main className="relative z-10 flex-1 max-w-3xl w-full mx-auto mt-20 px-4 sm:px-6 lg:px-8 py-8">
-        <Link
-          href="/dashboard/donor"
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to Dashboard
-        </Link>
-
-        {/* Assessment Evaluation Modal / View */}
-        <AnimatePresence>
-          {assessmentCompleted && assessmentResult && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="mb-8"
+      {/* Assessment Evaluation */}
+      <AnimatePresence>
+        {assessmentCompleted && assessmentResult && (
+          <motion.div initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} className="mx-auto max-w-2xl">
+            <div
+              className={cn(
+                'rounded-3xl p-2 shadow-xl',
+                assessmentResult.eligible ? 'bg-linear-to-b from-emerald-400 to-emerald-600 shadow-emerald-500/20' : 'bg-linear-to-b from-red-600 to-red-800 shadow-red-500/20'
+              )}
             >
-              <Card className={`p-6 sm:p-8 border shadow-2xl rounded-2xl ${assessmentResult.eligible
-                  ? 'bg-emerald-500/5 border-emerald-500/20'
-                  : 'bg-rose-500/5 border-rose-500/20'
-                }`}>
-                <div className="flex items-start gap-4">
-                  {assessmentResult.eligible ? (
-                    <div className="h-12 w-12 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center shrink-0">
-                      <CheckCircle2 className="h-6 w-6" />
-                    </div>
-                  ) : (
-                    <div className="h-12 w-12 rounded-2xl bg-rose-500/10 text-rose-600 flex items-center justify-center shrink-0">
-                      <XCircle className="h-6 w-6" />
-                    </div>
+              <div className="rounded-[1.25rem] bg-background p-8">
+                <div
+                  className={cn(
+                    'mb-5 flex h-14 w-14 items-center justify-center rounded-2xl',
+                    assessmentResult.eligible ? 'bg-success-soft text-success' : 'bg-brand-soft text-brand'
                   )}
-
-                  <div className="flex-1">
-                    <h2 className="text-xl font-bold">
-                      {assessmentResult.eligible ? 'Clearance Granted: Eligible Donor' : 'Eligibility Requirements Not Met'}
-                    </h2>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {assessmentResult.eligible
-                        ? 'Your profile has been updated. You are now registered as an active blood donor in BloodLink.'
-                        : 'Based on your medical assessment responses, you are currently ineligible to donate blood:'}
-                    </p>
-
-                    {!assessmentResult.eligible && assessmentResult.reasons && assessmentResult.reasons.length > 0 && (
-                      <ul className="mt-4 space-y-2">
-                        {assessmentResult.reasons.map((reason, idx) => (
-                          <li key={idx} className="flex items-center gap-2 text-xs text-rose-600 dark:text-rose-400 font-medium">
-                            <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-                            <span>{reason}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-
-                    <div className="mt-6 flex gap-3">
-                      {assessmentResult.eligible ? (
-                        <Button
-                          onClick={() => router.push('/dashboard/donor')}
-                          className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold"
-                        >
-                          View Donor Dashboard
-                        </Button>
-                      ) : (
-                        <Button
-                          variant="outline"
-                          onClick={() => setAssessmentCompleted(false)}
-                          className="text-xs"
-                        >
-                          Retake Assessment
-                        </Button>
-                      )}
-                    </div>
-                  </div>
+                >
+                  {assessmentResult.eligible ? <CheckCircle2 className="h-7 w-7" /> : <XCircle className="h-7 w-7" />}
                 </div>
-              </Card>
-            </motion.div>
-          )}
-        </AnimatePresence>
+                <h2 className="text-2xl font-bold">
+                  {assessmentResult.eligible ? 'Clearance granted: eligible donor' : 'Eligibility requirements not met'}
+                </h2>
+                <p className="mt-2 text-muted-foreground">
+                  {assessmentResult.eligible
+                    ? 'Your profile has been updated. You are now registered as an active blood donor in BloodLink.'
+                    : 'Based on your medical assessment responses, you are currently ineligible to donate blood:'}
+                </p>
 
-        {!assessmentCompleted && (
-          <>
-            <div className="flex items-center gap-3 mb-6">
-              <div className="h-11 w-11 rounded-2xl bg-crimson-600/10 text-crimson-600 border border-crimson-600/20 flex items-center justify-center font-bold">
-                <HeartHandshake className="h-6 w-6" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-black">Donor Medical Eligibility Clearance</h1>
-                <p className="text-xs text-muted-foreground">Complete this quick screening questionnaire to register as an active donor.</p>
+                {!assessmentResult.eligible && assessmentResult.reasons && assessmentResult.reasons.length > 0 && (
+                  <ul className="mt-5 space-y-2">
+                    {assessmentResult.reasons.map((reason, idx) => (
+                      <li key={idx} className="flex items-center gap-2.5 rounded-xl bg-brand-soft px-3.5 py-2.5 text-sm text-brand">
+                        <AlertCircle className="h-4 w-4 shrink-0" />
+                        {reason}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                <div className="mt-7">
+                  {assessmentResult.eligible ? (
+                    <Button size="lg" onClick={() => router.push('/dashboard/donor')}>
+                      View donor dashboard
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  ) : (
+                    <Button variant="outline" size="lg" onClick={() => setAssessmentCompleted(false)}>
+                      Retake assessment
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-            {/* Error Banner */}
-            {activeError && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mb-6 p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-sm flex items-center gap-3"
-              >
-                <AlertCircle className="h-5 w-5 shrink-0" />
-                <span>{activeError}</span>
-              </motion.div>
-            )}
+      {!assessmentCompleted && (
+        <>
+          <PageHeader
+            icon={HeartPulse}
+            title={<>Donor <span className="text-gradient-brand">eligibility</span> check</>}
+            description="Complete this quick screening questionnaire to register as an active donor."
+          />
 
-            <Card className="p-6 sm:p-8 bg-card border-border shadow-xl rounded-2xl">
-              <form onSubmit={handleSubmit} className="space-y-8">
+          {activeError && (
+            <Notice tone="brand" className="mb-6">
+              {activeError}
+            </Notice>
+          )}
 
-                {/* Section 1: Physical Assessment */}
-                <div>
-                  <h2 className="text-xs font-bold uppercase tracking-wider text-crimson-600 flex items-center gap-2 mb-4">
-                    <Activity className="h-4 w-4" />
-                    1. Physical Metrics
-                  </h2>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="min-w-0">
-                      <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
-                        Body Weight (kg) <span className="text-crimson-600">*</span>
-                      </label>
-                      <Input
-                        type="number"
-                        placeholder="e.g. 60"
-                        required
-                        min={45}
-                        value={weight}
-                        onChange={(e) => setWeight(e.target.value === '' ? '' : Number(e.target.value))}
-                        className="h-11 w-full bg-background"
-                      />
-                      <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed">Minimum safe donation weight requirement is usually 18 kg.</p>
-                    </div>
-                    <div className="min-w-0">
-                      <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
-                        Age <span className="text-crimson-600">*</span>
-                      </label>
-                      <Input
-                        type="number"
-                        placeholder="e.g. 25"
-                        required
-                        min={18}
-                        max={65}
-                        value={age}
-                        onChange={(e) => setAge(e.target.value === '' ? '' : Number(e.target.value))}
-                        className="h-11 w-full bg-background"
-                      />
-                      <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed">Minimum safe donation age requirement is usually 18.</p>
-                    </div>
+          <form onSubmit={handleSubmit} className="grid gap-6 xl:grid-cols-[1fr_18rem]">
+            <div className="space-y-6 min-w-0">
+              {/* Section 1: Physical Assessment */}
+              <Panel className="p-6 sm:p-8">
+                <SectionHeading>1. Physical metrics</SectionHeading>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <FieldLabel htmlFor="weight" required hint="Minimum 45 kg">Body weight (kg)</FieldLabel>
+                    <Input
+                      id="weight"
+                      type="number"
+                      placeholder="e.g. 60"
+                      required
+                      min={45}
+                      value={weight}
+                      onChange={(e) => setWeight(e.target.value === '' ? '' : Number(e.target.value))}
+                    />
+                  </div>
+                  <div>
+                    <FieldLabel htmlFor="age" required hint="18 – 65">Age</FieldLabel>
+                    <Input
+                      id="age"
+                      type="number"
+                      placeholder="e.g. 25"
+                      required
+                      min={18}
+                      max={65}
+                      value={age}
+                      onChange={(e) => setAge(e.target.value === '' ? '' : Number(e.target.value))}
+                    />
                   </div>
                 </div>
+              </Panel>
 
-                {/* Section 2: Medical History Questions */}
-                <div className="pt-6 border-t border-border">
-                  <h2 className="text-xs font-bold uppercase tracking-wider text-crimson-600 flex items-center gap-2 mb-4">
-                    <ShieldCheck className="h-4 w-4" />
-                    2. Medical History & Health Status
-                  </h2>
+              {/* Section 2: Medical History Questions */}
+              <Panel className="p-6 sm:p-8">
+                <SectionHeading>2. Medical history & health status</SectionHeading>
+                <div className="space-y-2.5">
+                  {MEDICAL_QUESTIONS.map(({ key, label }) => {
+                    const typedKey = key as keyof typeof medicalAnswers;
+                    const isYes = medicalAnswers[typedKey];
 
-                  <div className="space-y-3">
-                    {[
-                      { key: 'takingMedication', label: 'Are you currently taking any prescription medication or antibiotics?' },
-                      { key: 'recentTattoo', label: 'Have you gotten a tattoo or body piercing in the last 6 months?' },
-                      { key: 'recentSurgery', label: 'Have you undergone major surgical procedures in the last 6 months?' },
-                      { key: 'hepatitis', label: 'Have you ever tested positive for Hepatitis B or Hepatitis C?' },
-                      { key: 'hiv', label: 'Have you ever tested positive for HIV / AIDS?' },
-                      { key: 'diabetes', label: 'Do you have insulin-dependent diabetes?' },
-                      { key: 'highBloodPressure', label: 'Do you currently suffer from uncontrolled high blood pressure?' },
-                      { key: 'chronicDisease', label: 'Do you have any chronic cardiovascular, renal, or respiratory diseases?' },
-                    ].map(({ key, label }) => {
-                      const typedKey = key as keyof typeof medicalAnswers;
-                      const isYes = medicalAnswers[typedKey];
-
-                      return (
-                        <div key={key} className="p-3.5 rounded-xl bg-muted/40 border border-border/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                          <span className="text-xs font-medium text-foreground">{label}</span>
-                          <div className="flex items-center gap-2 shrink-0">
-                            <button
-                              type="button"
-                              onClick={() => handleMedicalToggle(typedKey, false)}
-                              className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all ${!isYes
-                                  ? 'bg-emerald-600 text-white'
-                                  : 'bg-background text-muted-foreground hover:text-foreground'
-                                }`}
-                            >
-                              No
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleMedicalToggle(typedKey, true)}
-                              className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all ${isYes
-                                  ? 'bg-rose-600 text-white'
-                                  : 'bg-background text-muted-foreground hover:text-foreground'
-                                }`}
-                            >
-                              Yes
-                            </button>
-                          </div>
+                    return (
+                      <div key={key} className="flex flex-col gap-3 rounded-xl bg-surface p-3.5 sm:flex-row sm:items-center sm:justify-between">
+                        <span className="text-sm text-foreground">{label}</span>
+                        <div className="inline-flex shrink-0 gap-1 self-start rounded-lg bg-muted p-1 sm:self-auto" role="radiogroup" aria-label={label}>
+                          <button
+                            type="button"
+                            role="radio"
+                            aria-checked={!isYes}
+                            onClick={() => handleMedicalToggle(typedKey, false)}
+                            className={cn(
+                              'rounded-md px-3.5 py-1 text-xs font-semibold cursor-pointer transition-all',
+                              !isYes ? 'bg-card text-foreground shadow-card' : 'text-muted-foreground hover:text-foreground'
+                            )}
+                          >
+                            No
+                          </button>
+                          <button
+                            type="button"
+                            role="radio"
+                            aria-checked={isYes}
+                            onClick={() => handleMedicalToggle(typedKey, true)}
+                            className={cn(
+                              'rounded-md px-3.5 py-1 text-xs font-semibold cursor-pointer transition-all',
+                              isYes ? 'bg-brand text-white shadow-card' : 'text-muted-foreground hover:text-foreground'
+                            )}
+                          >
+                            Yes
+                          </button>
                         </div>
-                      );
-                    })}
-                  </div>
+                      </div>
+                    );
+                  })}
                 </div>
+              </Panel>
 
-                {/* Section 3: Legal & Privacy Consents */}
-                <div className="pt-6 border-t border-border">
-                  <h2 className="text-xs font-bold uppercase tracking-wider text-crimson-600 flex items-center gap-2 mb-4">
-                    <FileText className="h-4 w-4" />
-                    3. Legal Acknowledgement & Consent
-                  </h2>
-
-                  <div className="space-y-3">
-                    {[
-                      { key: 'consentInformation', label: 'I declare that all personal and medical information submitted above is accurate and truthful.' },
-                      { key: 'consentContact', label: 'I consent to being contacted by patients or certified blood banks in cases of emergency blood needs.' },
-                      { key: 'consentPrivacy', label: 'I agree to the BloodLink Donor Privacy Policy & Terms of Service regarding blood health records.' },
-                    ].map(({ key, label }) => {
-                      const typedKey = key as keyof typeof consents;
-                      return (
-                        <label key={key} className="flex items-start gap-3 cursor-pointer select-none">
-                          <input
-                            type="checkbox"
-                            checked={consents[typedKey]}
-                            onChange={() => handleConsentToggle(typedKey)}
-                            className="mt-0.5 h-4 w-4 rounded-sm border-border text-crimson-600 focus:ring-crimson-500 accent-crimson-600"
-                          />
-                          <span className="text-xs text-muted-foreground leading-relaxed">{label}</span>
-                        </label>
-                      );
-                    })}
-                  </div>
+              {/* Section 3: Legal & Privacy Consents */}
+              <Panel className="p-6 sm:p-8">
+                <SectionHeading>3. Legal acknowledgement & consent</SectionHeading>
+                <div className="space-y-3">
+                  {CONSENT_ITEMS.map(({ key, label }) => {
+                    const typedKey = key as keyof typeof consents;
+                    const checked = consents[typedKey];
+                    return (
+                      <label key={key} className="group flex cursor-pointer select-none items-start gap-3">
+                        <input type="checkbox" checked={checked} onChange={() => handleConsentToggle(typedKey)} className="peer sr-only" />
+                        <span
+                          aria-hidden="true"
+                          className={cn(
+                            'mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md transition-colors peer-focus-visible:ring-3 peer-focus-visible:ring-ring/30',
+                            checked ? 'bg-brand text-white' : 'bg-muted ring-1 ring-inset ring-border group-hover:ring-foreground/30'
+                          )}
+                        >
+                          {checked && <Check className="h-3.5 w-3.5" strokeWidth={3} />}
+                        </span>
+                        <span className="text-sm leading-relaxed text-muted-foreground">{label}</span>
+                      </label>
+                    );
+                  })}
                 </div>
+              </Panel>
+            </div>
 
+            {/* Summary */}
+            <aside className="self-start xl:sticky xl:top-8">
+              <Panel className="p-5">
+                <p className="text-sm font-semibold">Summary</p>
+                <dl className="mt-4 space-y-3 text-sm">
+                  <div className="flex justify-between">
+                    <dt className="text-muted-foreground">Weight</dt>
+                    <dd className="font-medium">{weight === '' ? '—' : `${weight} kg`}</dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-muted-foreground">Age</dt>
+                    <dd className="font-medium">{age === '' ? '—' : `${age} yrs`}</dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-muted-foreground">Health flags</dt>
+                    <dd className={cn('font-medium', answeredYes > 0 ? 'text-brand' : 'text-success')}>{answeredYes} / 8</dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-muted-foreground">Consents</dt>
+                    <dd className={cn('font-medium', consentCount === 3 && 'text-success')}>{consentCount} / 3</dd>
+                  </div>
+                </dl>
+                <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-muted">
+                  <motion.div
+                    className="h-full rounded-full bg-linear-to-r from-red-600 to-red-800"
+                    animate={{ width: `${((weight !== '' ? 1 : 0) + (age !== '' ? 1 : 0) + consentCount) * 20}%` }}
+                  />
+                </div>
                 {/* Submit Action */}
-                <Button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full h-12 bg-linear-to-r from-red-700 via-rose-600 to-red-600 hover:from-red-800 hover:to-rose-700 text-white font-semibold text-sm border-none"
-                >
+                <Button type="submit" variant="brand" size="lg" disabled={isSubmitting} className="mt-5 w-full">
                   {isSubmitting ? (
-                    <span className="flex items-center gap-2">
+                    <>
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      Evaluating Clearance...
-                    </span>
+                      Evaluating clearance...
+                    </>
                   ) : (
-                    'Submit Assessment & Activate Donor Profile'
+                    'Submit assessment'
                   )}
                 </Button>
-              </form>
-            </Card>
-          </>
-        )}
-      </main>
-    </div>
+              </Panel>
+            </aside>
+          </form>
+        </>
+      )}
+    </AppShell>
   );
 }

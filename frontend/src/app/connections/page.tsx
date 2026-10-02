@@ -3,57 +3,42 @@
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Droplet,
-  Inbox,
-  Send,
-  Users,
-  MapPin,
-  Check,
-  X,
-  Ban,
-  MessageSquare,
-  RefreshCw,
-  AlertCircle,
-  CheckCircle2,
-  Clock,
-} from 'lucide-react';
+import { Inbox, Send, Users, MapPin, Check, X, Ban, MessageSquare, RefreshCw, Clock, Search, Quote } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Navbar } from '@/components/layout/navbar';
-import { AmbientOrbs } from '@/components/ui/ambient-orbs';
+import { AppShell } from '@/components/layout/app-shell';
+import {
+  Avatar,
+  BloodBadge,
+  CardGridSkeleton,
+  EmptyState,
+  ListSkeleton,
+  Notice,
+  PageHeader,
+  PageLoader,
+  Panel,
+  Segmented,
+  StatusBadge,
+} from '@/components/ui/state-views';
 import { useAuthStore } from '@/stores/auth.store';
 import { useConnectionStore } from '@/stores/connection.store';
 import { useChatStore } from '@/stores/chat.store';
 import { Connection, ConnectionRequest, ConnectionRequestStatus, PublicUser } from '@/types/connection.types';
-import { formatBloodGroup, formatLocation, getCurrentUserId, getInitials, refId, timeAgo } from '@/lib/format';
+import { formatBloodGroup, formatLocation, getCurrentUserId, refId, timeAgo } from '@/lib/format';
 
 type Tab = 'received' | 'sent' | 'connected';
 
-const STATUS_STYLES: Record<ConnectionRequestStatus, string> = {
-  PENDING: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
-  ACCEPTED: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
-  REJECTED: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20',
-  CANCELLED: 'bg-muted text-muted-foreground border-border',
+const STATUS_META: Record<ConnectionRequestStatus, { label: string; tone: 'warning' | 'success' | 'brand' | 'neutral' }> = {
+  PENDING: { label: 'Pending', tone: 'warning' },
+  ACCEPTED: { label: 'Accepted', tone: 'success' },
+  REJECTED: { label: 'Declined', tone: 'brand' },
+  CANCELLED: { label: 'Cancelled', tone: 'neutral' },
 };
 
 export default function ConnectionsPage() {
   return (
-    <Suspense fallback={<FullScreenLoader />}>
+    <Suspense fallback={<PageLoader label="Authenticating session" />}>
       <ConnectionsContent />
     </Suspense>
-  );
-}
-
-function FullScreenLoader() {
-  return (
-    <div className="min-h-screen bg-cosmic flex items-center justify-center">
-      <div className="flex flex-col items-center gap-3">
-        <Droplet className="h-10 w-10 text-crimson-600 animate-bounce" />
-        <p className="text-sm text-muted-foreground">Authenticating session...</p>
-      </div>
-    </div>
   );
 }
 
@@ -143,190 +128,129 @@ function ConnectionsContent() {
   };
 
   if (isInitializing || status === 'idle') {
-    return <FullScreenLoader />;
+    return <PageLoader label="Authenticating session" />;
   }
 
-  const tabs: { id: Tab; label: string; icon: typeof Inbox; count: number }[] = [
-    { id: 'received', label: 'Received', icon: Inbox, count: pendingReceivedCount },
-    { id: 'sent', label: 'Sent', icon: Send, count: pendingSentCount },
-    { id: 'connected', label: 'Connected', icon: Users, count: connections.length },
-  ];
-
   return (
-    <div className="relative min-h-screen bg-cosmic text-foreground flex flex-col overflow-hidden">
-      <AmbientOrbs />
-      <Navbar />
-
-      <main className="relative z-10 flex-1 max-w-5xl w-full mx-auto mt-18 px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-2xl font-black tracking-tight">
-              Blood <span className="text-red-600">Connections</span>
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Manage requests between blood seekers and donors. Accepted requests open a private chat.
-            </p>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleRefresh}
-            disabled={isLoading}
-            className="gap-2 text-xs text-muted-foreground cursor-pointer self-start sm:self-auto"
-          >
+    <AppShell>
+      <PageHeader
+        icon={Users}
+        title={<>Blood <span className="text-gradient-brand">connections</span></>}
+        description="Manage requests between blood seekers and donors. Accepted requests open a private chat."
+        actions={
+          <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isLoading}>
             <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
-        </div>
+        }
+      />
 
-        {/* Accept success banner */}
-        <AnimatePresence>
-          {acceptedConversationId && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10, height: 0, marginBottom: 0 }}
-              className="mb-6 overflow-hidden"
-            >
-              <Card className="relative p-4 pr-12 bg-linear-to-r from-emerald-500/10 via-emerald-500/5 to-transparent border-emerald-500/20 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <button
-                  type="button"
-                  aria-label="Dismiss"
-                  onClick={() => setAcceptedConversationId(null)}
-                  className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 transition hover:bg-emerald-500/20 cursor-pointer"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-                <div className="flex items-center gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
-                  <p className="text-sm font-medium">Connection accepted. You can now chat with this person.</p>
-                </div>
-                <Button
-                  onClick={() => router.push(`/messages?c=${acceptedConversationId}`)}
-                  className="bg-red-600 hover:bg-red-700 text-white text-xs shrink-0 gap-1.5 cursor-pointer"
-                >
+      {/* Accept success banner */}
+      <AnimatePresence>
+        {acceptedConversationId && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+            className="mb-6 overflow-hidden"
+          >
+            <Notice
+              tone="success"
+              onDismiss={() => setAcceptedConversationId(null)}
+              action={
+                <Button size="sm" onClick={() => router.push(`/messages?c=${acceptedConversationId}`)} className="shrink-0">
                   <MessageSquare className="h-3.5 w-3.5" />
-                  Start Chatting
+                  Start chatting
                 </Button>
-              </Card>
-            </motion.div>
+              }
+            >
+              Connection accepted. You can now chat with this person.
+            </Notice>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {error && (
+        <Notice tone="brand" onDismiss={clearError} className="mb-6">
+          {error}
+        </Notice>
+      )}
+
+      <Segmented<Tab>
+        label="Connection views"
+        layoutId="connections-tab"
+        value={activeTab}
+        onChange={setActiveTab}
+        className="mb-6"
+        options={[
+          { id: 'received', label: 'Received', icon: Inbox, count: pendingReceivedCount, pulse: true },
+          { id: 'sent', label: 'Sent', icon: Send, count: pendingSentCount },
+          { id: 'connected', label: 'Connected', icon: Users, count: connections.length },
+        ]}
+      />
+
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeTab}
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -6 }}
+          transition={{ duration: 0.18 }}
+        >
+          {activeTab === 'received' && (
+            <RequestList
+              requests={receivedRequests}
+              direction="received"
+              isLoading={isLoading}
+              actingRequestId={actingRequestId}
+              emptyIcon={Inbox}
+              emptyTitle="No requests received"
+              emptyText={
+                user?.donor
+                  ? 'When someone needs your blood group, their request will appear here.'
+                  : 'Only verified donors receive connection requests.'
+              }
+              onAccept={handleAccept}
+              onReject={handleReject}
+            />
           )}
-        </AnimatePresence>
 
-        {/* Error */}
-        {error && (
-          <Card className="mb-6 p-4 rounded-2xl border-rose-500/20 bg-rose-500/5 flex flex-row items-center justify-between gap-3">
-            <p className="text-xs text-rose-500 font-medium flex items-center gap-1.5">
-              <AlertCircle className="h-3.5 w-3.5" />
-              {error}
-            </p>
-            <button onClick={clearError} className="text-muted-foreground hover:text-foreground cursor-pointer" aria-label="Dismiss error">
-              <X className="h-4 w-4" />
-            </button>
-          </Card>
-        )}
+          {activeTab === 'sent' && (
+            <RequestList
+              requests={sentRequests}
+              direction="sent"
+              isLoading={isLoading}
+              actingRequestId={actingRequestId}
+              emptyIcon={Send}
+              emptyTitle="No requests sent"
+              emptyText="Find a matching donor on the dashboard and send them a connection request."
+              emptyAction={
+                <Button onClick={() => router.push('/dashboard/donor')}>
+                  <Search className="h-4 w-4" />
+                  Find donors
+                </Button>
+              }
+              onCancel={handleCancel}
+            />
+          )}
 
-        {/* Tabs */}
-        <div className="flex gap-2 p-1 mb-6 rounded-2xl bg-card border border-border w-full sm:w-fit overflow-x-auto">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
-                  isActive
-                    ? 'bg-red-600 text-white shadow-md shadow-red-600/30'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                }`}
-              >
-                <Icon className="h-3.5 w-3.5" />
-                {tab.label}
-                {tab.count > 0 && (
-                  <span
-                    className={`min-w-5 h-5 px-1.5 rounded-full text-[10px] flex items-center justify-center ${
-                      isActive ? 'bg-white/20 text-white' : 'bg-red-600/10 text-red-600'
-                    }`}
-                  >
-                    {tab.count}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Tab content */}
-        {activeTab === 'received' && (
-          <RequestList
-            requests={receivedRequests}
-            direction="received"
-            isLoading={isLoading}
-            actingRequestId={actingRequestId}
-            emptyTitle="No Requests Received"
-            emptyText={
-              user?.donor
-                ? 'When someone needs your blood group, their request will appear here.'
-                : 'Only verified donors receive connection requests.'
-            }
-            onAccept={handleAccept}
-            onReject={handleReject}
-          />
-        )}
-
-        {activeTab === 'sent' && (
-          <RequestList
-            requests={sentRequests}
-            direction="sent"
-            isLoading={isLoading}
-            actingRequestId={actingRequestId}
-            emptyTitle="No Requests Sent"
-            emptyText="Find a matching donor on the dashboard and send them a connection request."
-            emptyAction={
-              <Button
-                onClick={() => router.push('/dashboard/donor')}
-                className="mt-4 bg-red-600 hover:bg-red-700 text-white text-xs cursor-pointer"
-              >
-                Find Donors
-              </Button>
-            }
-            onCancel={handleCancel}
-          />
-        )}
-
-        {activeTab === 'connected' && (
-          <ConnectionList
-            connections={connections}
-            isLoading={isLoading}
-            conversationByConnection={conversationByConnection}
-            onOpenChat={(conversationId) => router.push(`/messages?c=${conversationId}`)}
-          />
-        )}
-      </main>
-    </div>
+          {activeTab === 'connected' && (
+            <ConnectionList
+              connections={connections}
+              isLoading={isLoading}
+              conversationByConnection={conversationByConnection}
+              onOpenChat={(conversationId) => router.push(`/messages?c=${conversationId}`)}
+            />
+          )}
+        </motion.div>
+      </AnimatePresence>
+    </AppShell>
   );
 }
 
-function PersonAvatar({ person }: { person: PublicUser | null }) {
+function PersonMark({ person }: { person: PublicUser | null }) {
   const bg = formatBloodGroup(person?.bloodGroup);
-  return (
-    <div className="h-12 w-12 rounded-2xl bg-red-600/10 text-red-600 font-extrabold flex items-center justify-center text-sm border border-red-600/20 shrink-0">
-      {bg || getInitials(person?.fullName)}
-    </div>
-  );
-}
-
-function EmptyState({ title, text, action }: { title: string; text: string; action?: React.ReactNode }) {
-  return (
-    <Card className="p-12 text-center bg-card border-border rounded-2xl">
-      <AlertCircle className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-      <h3 className="text-lg font-semibold">{title}</h3>
-      <p className="text-sm text-muted-foreground mt-1">{text}</p>
-      {action}
-    </Card>
-  );
+  return bg ? <BloodBadge group={bg} /> : <Avatar name={person?.fullName} className="h-12 w-12" />;
 }
 
 interface RequestListProps {
@@ -334,6 +258,7 @@ interface RequestListProps {
   direction: 'received' | 'sent';
   isLoading: boolean;
   actingRequestId: string | null;
+  emptyIcon: typeof Inbox;
   emptyTitle: string;
   emptyText: string;
   emptyAction?: React.ReactNode;
@@ -347,6 +272,7 @@ function RequestList({
   direction,
   isLoading,
   actingRequestId,
+  emptyIcon,
   emptyTitle,
   emptyText,
   emptyAction,
@@ -355,99 +281,90 @@ function RequestList({
   onCancel,
 }: RequestListProps) {
   if (requests.length === 0) {
+    if (isLoading) return <ListSkeleton rows={3} />;
     return (
-      <EmptyState
-        title={isLoading ? 'Loading...' : emptyTitle}
-        text={isLoading ? 'Fetching your connection requests...' : emptyText}
-        action={isLoading ? undefined : emptyAction}
-      />
+      <Panel>
+        <EmptyState icon={emptyIcon} title={emptyTitle} description={emptyText} action={emptyAction} />
+      </Panel>
     );
   }
 
   return (
-    <div className="space-y-4">
-      {requests.map((request) => {
-        const other = (direction === 'received' ? request.senderId : request.receiverId) as PublicUser | null;
-        const isActing = actingRequestId === request._id;
-        const isPending = request.status === 'PENDING';
+    <ul className="space-y-3">
+      <AnimatePresence initial={false}>
+        {requests.map((request) => {
+          const other = (direction === 'received' ? request.senderId : request.receiverId) as PublicUser | null;
+          const isActing = actingRequestId === request._id;
+          const isPending = request.status === 'PENDING';
+          const meta = STATUS_META[request.status];
 
-        return (
-          <motion.div key={request._id} layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-            <Card className="p-5 bg-card border-border hover:border-red-600/40 hover:shadow-lg transition-all rounded-2xl">
-              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                <div className="flex items-start gap-3 flex-1 min-w-0">
-                  <PersonAvatar person={other} />
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="font-bold text-base text-foreground leading-tight truncate">
-                        {other?.fullName || 'Unavailable account'}
-                      </h3>
-                      <Badge className={`text-[10px] ${STATUS_STYLES[request.status]}`}>{request.status.toLowerCase()}</Badge>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-xs text-muted-foreground">
-                      {formatLocation(other) && (
+          return (
+            <motion.li
+              key={request._id}
+              layout
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+              transition={{ duration: 0.25 }}
+            >
+              <Panel className={`p-5 transition-shadow hover:shadow-float ${isPending ? '' : 'opacity-80'}`}>
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                  <div className="flex flex-1 items-start gap-4 min-w-0">
+                    <PersonMark person={other} />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="truncate font-semibold">{other?.fullName || 'Unavailable account'}</h3>
+                        <StatusBadge tone={meta.tone}>{meta.label}</StatusBadge>
+                      </div>
+                      <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                        {formatLocation(other) && (
+                          <span className="flex items-center gap-1.5">
+                            <MapPin className="h-3.5 w-3.5" />
+                            {formatLocation(other)}
+                          </span>
+                        )}
                         <span className="flex items-center gap-1.5">
-                          <MapPin className="h-3.5 w-3.5 text-red-600 shrink-0" />
-                          {formatLocation(other)}
+                          <Clock className="h-3.5 w-3.5" />
+                          {direction === 'received' ? 'Received' : 'Sent'} {timeAgo(request.createdAt)}
                         </span>
+                      </div>
+                      {request.message && (
+                        <div className="mt-3 flex gap-2 rounded-xl bg-surface px-3.5 py-2.5 text-sm text-foreground/90">
+                          <Quote className="mt-0.5 h-3.5 w-3.5 shrink-0 text-brand" />
+                          <p className="break-words leading-relaxed">{request.message}</p>
+                        </div>
                       )}
-                      <span className="flex items-center gap-1.5">
-                        <Clock className="h-3.5 w-3.5 shrink-0" />
-                        {direction === 'received' ? 'Received' : 'Sent'} {timeAgo(request.createdAt)}
-                      </span>
                     </div>
-                    {request.message && (
-                      <p className="mt-3 text-sm text-foreground/90 bg-muted/60 rounded-xl px-3.5 py-2.5 break-words">
-                        &ldquo;{request.message}&rdquo;
-                      </p>
-                    )}
                   </div>
-                </div>
 
-                {isPending && (
-                  <div className="flex gap-2 shrink-0 sm:self-center">
-                    {direction === 'received' ? (
-                      <>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={isActing}
-                          onClick={() => onReject?.(request._id)}
-                          className="h-9 gap-1.5 text-xs cursor-pointer"
-                        >
-                          <X className="h-3.5 w-3.5" />
-                          Decline
+                  {isPending && (
+                    <div className="flex shrink-0 gap-2">
+                      {direction === 'received' ? (
+                        <>
+                          <Button variant="outline" disabled={isActing} onClick={() => onReject?.(request._id)} className="flex-1 sm:flex-none">
+                            <X className="h-4 w-4" />
+                            Decline
+                          </Button>
+                          <Button variant="brand" disabled={isActing} onClick={() => onAccept?.(request._id)} className="flex-1 sm:flex-none">
+                            {isActing ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                            Accept
+                          </Button>
+                        </>
+                      ) : (
+                        <Button variant="outline" disabled={isActing} onClick={() => onCancel?.(request._id)} className="w-full sm:w-auto">
+                          {isActing ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Ban className="h-4 w-4" />}
+                          Cancel request
                         </Button>
-                        <Button
-                          size="sm"
-                          disabled={isActing}
-                          onClick={() => onAccept?.(request._id)}
-                          className="h-9 bg-red-600 hover:bg-red-700 text-white text-xs gap-1.5 cursor-pointer"
-                        >
-                          {isActing ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
-                          Accept
-                        </Button>
-                      </>
-                    ) : (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={isActing}
-                        onClick={() => onCancel?.(request._id)}
-                        className="h-9 gap-1.5 text-xs cursor-pointer"
-                      >
-                        {isActing ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Ban className="h-3.5 w-3.5" />}
-                        Cancel Request
-                      </Button>
-                    )}
-                  </div>
-                )}
-              </div>
-            </Card>
-          </motion.div>
-        );
-      })}
-    </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </Panel>
+            </motion.li>
+          );
+        })}
+      </AnimatePresence>
+    </ul>
   );
 }
 
@@ -462,64 +379,56 @@ function ConnectionList({ connections, isLoading, conversationByConnection, onOp
   const currentUserId = getCurrentUserId();
 
   if (connections.length === 0) {
+    if (isLoading) return <CardGridSkeleton count={4} className="xl:grid-cols-2" />;
     return (
-      <EmptyState
-        title={isLoading ? 'Loading...' : 'No Connections Yet'}
-        text={isLoading ? 'Fetching your connections...' : 'Accepted connection requests will appear here.'}
-      />
+      <Panel>
+        <EmptyState icon={Users} title="No connections yet" description="Accepted connection requests will appear here." />
+      </Panel>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {connections.map((connection) => {
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {connections.map((connection, i) => {
         const iAmRequester = refId(connection.userId) === currentUserId;
         const other = iAmRequester ? connection.donorId : connection.userId;
         const conversationId = conversationByConnection.get(connection._id);
 
         return (
-          <motion.div key={connection._id} layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-            <Card className="p-6 bg-card border-border hover:border-red-600/40 hover:shadow-lg transition-all rounded-2xl flex flex-col justify-between h-full">
-              <div>
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <PersonAvatar person={other} />
-                    <div className="min-w-0">
-                      <h3 className="font-bold text-base text-foreground leading-tight truncate">
-                        {other?.fullName || 'Unavailable account'}
-                      </h3>
-                      <span className="text-xs text-muted-foreground">
-                        {iAmRequester ? 'Donor' : 'Blood Seeker'} · connected {timeAgo(connection.connectedAt)}
-                      </span>
-                    </div>
+          <motion.div
+            key={connection._id}
+            layout
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: Math.min(i, 8) * 0.04 }}
+            className="rounded-3xl bg-surface p-1.5 shadow-card transition-transform hover:-translate-y-1"
+          >
+            <div className="flex h-full flex-col rounded-[1.1rem] bg-background p-5 shadow-card">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <PersonMark person={other} />
+                  <div className="min-w-0">
+                    <h3 className="truncate font-semibold">{other?.fullName || 'Unavailable account'}</h3>
+                    <p className="text-xs text-muted-foreground">
+                      {iAmRequester ? 'Donor' : 'Blood Seeker'} · connected {timeAgo(connection.connectedAt)}
+                    </p>
                   </div>
-                  <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-[10px] flex items-center gap-1">
-                    <Users className="h-3 w-3" />
-                    Connected
-                  </Badge>
                 </div>
-
-                <div className="space-y-2 text-xs text-muted-foreground mb-6">
-                  {formatLocation(other) && (
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-3.5 w-3.5 text-red-600 shrink-0" />
-                      <span>{formatLocation(other)}</span>
-                    </div>
-                  )}
-                </div>
+                <StatusBadge tone="success">Connected</StatusBadge>
               </div>
 
-              <div className="pt-4 border-t border-border">
-                <Button
-                  disabled={!conversationId}
-                  onClick={() => conversationId && onOpenChat(conversationId)}
-                  className="w-full h-9 bg-linear-to-r from-red-700 to-red-950 hover:from-red-800 hover:to-rose-700 text-white text-xs font-semibold gap-1.5 cursor-pointer border-none"
-                >
-                  <MessageSquare className="h-3.5 w-3.5" />
-                  {conversationId ? 'Open Chat' : 'Chat unavailable'}
-                </Button>
-              </div>
-            </Card>
+              {formatLocation(other) && (
+                <p className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
+                  <MapPin className="h-4 w-4 shrink-0" />
+                  {formatLocation(other)}
+                </p>
+              )}
+
+              <Button disabled={!conversationId} onClick={() => conversationId && onOpenChat(conversationId)} className="mt-5 w-full">
+                <MessageSquare className="h-4 w-4" />
+                {conversationId ? 'Open chat' : 'Chat unavailable'}
+              </Button>
+            </div>
           </motion.div>
         );
       })}
