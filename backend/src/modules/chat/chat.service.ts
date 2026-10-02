@@ -1,17 +1,23 @@
-import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Conversation } from './schemas/conversation.schema';
 import { ClientSession, Model, Types } from 'mongoose';
 import { Message } from './schemas/message.schema';
+import { NotificationsService } from '../notifications/notifications.service';
+import { UsersRepository } from '../users/repositories/users.repository';
 
 const MAX_MESSAGE_LENGTH = 2000;
 const MAX_PAGE_SIZE = 100;
 
 @Injectable()
 export class ChatService {
+    private readonly logger = new Logger(ChatService.name);
+
     constructor(
         @InjectModel(Conversation.name) private readonly conversationModel: Model<Conversation>,
         @InjectModel(Message.name) private readonly messageModel: Model<Message>,
+        private readonly notificationsService: NotificationsService,
+        private readonly usersRepository: UsersRepository,
     ) {}
 
     async getOrCreateConversation(userId: string, donorId: string, connectionId: string, session?: ClientSession) {
@@ -86,6 +92,33 @@ export class ChatService {
         conversation.lastMessageAt = new Date();
         await conversation.save();
 
+        // Notifying is a side effect; never let it fail or delay the message itself
+        void this.notifyReceiver(conversation._id!.toString(), senderId, receiverId.toString()).catch((error) =>
+            this.logger.error(`Failed to notify user ${receiverId.toString()} of new message`, error),
+        );
+
         return message;
+    }
+
+    /**
+     * Creates one NEW_MESSAGE notification (and email) per conversation until the
+     * receiver reads it, so an active chat doesn't flood their inbox.
+     */
+    private async notifyReceiver(conversationId: string, senderId: string, receiverId: string) {
+        if (await this.notificationsService.hasUnread(receiverId, 'NEW_MESSAGE', conversationId)) {
+            return;
+        }
+
+        const sender = await this.usersRepository.findById(senderId);
+        const senderName = sender?.fullName ?? 'A BloodLink member';
+
+        await this.notificationsService.createNotification({
+            userId: receiverId,
+            type: 'NEW_MESSAGE',
+            title: 'New Message',
+            message: `${senderName} sent you a new message.`,
+            referenceId: conversationId,
+            actionPath: `/messages?c=${conversationId}`,
+        });
     }
 }

@@ -120,7 +120,11 @@ export default function NotificationsPage() {
 
   const handleOpen = async (notification: Notification) => {
     await markAsRead(notification._id);
-    const href = TYPE_META[notification.type]?.href;
+    // Message notifications reference their conversation, so open it directly
+    const href =
+      notification.type === 'NEW_MESSAGE' && notification.referenceId
+        ? `/messages?c=${notification.referenceId}`
+        : TYPE_META[notification.type]?.href;
     if (href) router.push(href);
   };
 

@@ -4,6 +4,8 @@ import { NotFoundException } from '@nestjs/common';
 import { Types } from 'mongoose';
 import { NotificationsService } from './notifications.service';
 import { Notification } from './schemas/notification.schema';
+import { UsersRepository } from '../users/repositories/users.repository';
+import { EmailService } from '../../common/services/email.service';
 
 describe('NotificationsService', () => {
   let service: NotificationsService;
@@ -14,6 +16,8 @@ describe('NotificationsService', () => {
     findOneAndUpdate: jest.fn(),
     updateMany: jest.fn(),
   };
+  const usersRepository = { findById: jest.fn() };
+  const emailService = { sendNotificationEmail: jest.fn() };
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -21,6 +25,8 @@ describe('NotificationsService', () => {
       providers: [
         NotificationsService,
         { provide: getModelToken(Notification.name), useValue: notificationModel },
+        { provide: UsersRepository, useValue: usersRepository },
+        { provide: EmailService, useValue: emailService },
       ],
     }).compile();
 
@@ -36,5 +42,28 @@ describe('NotificationsService', () => {
     await expect(
       service.markAsRead(new Types.ObjectId().toString(), new Types.ObjectId().toString()),
     ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('emails the user when a notification is created', async () => {
+    const userId = new Types.ObjectId().toString();
+    notificationModel.create.mockResolvedValue({ _id: new Types.ObjectId() });
+    usersRepository.findById.mockResolvedValue({ email: 'donor@example.com', fullName: 'Donor', isActive: true });
+
+    await service.createNotification({
+      userId,
+      type: 'CONNECTION_REQUEST_RECEIVED',
+      title: 'New Connection Request',
+      message: 'You have received a blood connection request.',
+      actionPath: '/connections?tab=received',
+    });
+    await new Promise(process.nextTick);
+
+    expect(emailService.sendNotificationEmail).toHaveBeenCalledWith({
+      to: 'donor@example.com',
+      name: 'Donor',
+      title: 'New Connection Request',
+      message: 'You have received a blood connection request.',
+      actionPath: '/connections?tab=received',
+    });
   });
 });

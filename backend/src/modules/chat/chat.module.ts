@@ -7,9 +7,13 @@ import { Conversation, ConversationSchema } from './schemas/conversation.schema'
 import { Message, MessageSchema } from './schemas/message.schema';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { NotificationsModule } from '../notifications/notifications.module';
+import { UsersModule } from '../users/users.module';
 
 @Module({
   imports: [
+    NotificationsModule,
+    UsersModule,
     MongooseModule.forFeature([
       { name: Conversation.name, schema: ConversationSchema },
       { name: Message.name, schema: MessageSchema }

@@ -87,12 +87,16 @@ export class ConnectionRequestsService {
         throw error;
         }
 
+        const senderUser = await this.usersRepository.findById(senderId);
         await this.notificationService.createNotification({
         userId: donorId,
         type: 'CONNECTION_REQUEST_RECEIVED',
         title: 'New Connection Request',
-        message: `You have received a blood connection request.`,
+        message: senderUser?.fullName
+            ? `${senderUser.fullName} has sent you a blood connection request.`
+            : `You have received a blood connection request.`,
         referenceId: request._id.toString(),
+        actionPath: '/connections?tab=received',
         });
 
         return request;
@@ -186,6 +190,7 @@ export class ConnectionRequestsService {
             title: 'Connection Accepted',
             message: 'Your blood connection request has been accepted!',
             referenceId: connection._id!.toString(),
+            actionPath: `/messages?c=${conversationId}`,
         });
 
         return { connection, conversationId };
@@ -216,6 +221,7 @@ export class ConnectionRequestsService {
             title: 'Connection Rejected',
             message: 'Your blood connection request was declined.',
             referenceId: request._id!.toString(),
+            actionPath: '/connections?tab=sent',
         });
 
         return updated;

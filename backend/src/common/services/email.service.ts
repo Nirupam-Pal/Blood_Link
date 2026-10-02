@@ -11,6 +11,14 @@ const SENDER_NAME = 'BloodLink Ecosystem';
 
 type EmailMessage = { to: string; subject: string; html: string };
 
+const escapeHtml = (value: string) =>
+  value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+
 /**
  * Sends email through Brevo's HTTPS API when BREVO_API_KEY is set (production —
  * hosts like Render's free tier block outbound SMTP ports), otherwise falls back
@@ -21,10 +29,15 @@ export class EmailService {
   private readonly logger = new Logger(EmailService.name);
   private readonly brevoApiKey?: string;
   private readonly senderEmail?: string;
+  private readonly frontendUrl: string;
   private transporter?: nodemailer.Transporter;
 
   constructor(private readonly configService: ConfigService) {
     this.brevoApiKey = this.configService.get<string>('BREVO_API_KEY');
+    // Base URL used for links in notification emails
+    this.frontendUrl = this.configService
+      .get<string>('FRONTEND_URL', 'http://localhost:3000')
+      .replace(/\/+$/, '');
     // Must be a sender verified in Brevo (Senders, Domains & Dedicated IPs → Senders)
     this.senderEmail =
       this.configService.get<string>('EMAIL_FROM') ||
@@ -76,6 +89,45 @@ export class EmailService {
       throw new InternalServerErrorException(
         'Failed to dispatch verification email. Please try again later.',
       );
+    }
+  }
+
+  /**
+   * Mirrors an in-app notification to the user's inbox. Never throws — a failed
+   * email must not break the action that triggered the notification.
+   */
+  async sendNotificationEmail(data: {
+    to: string;
+    name: string;
+    title: string;
+    message: string;
+    actionPath?: string;
+  }): Promise<void> {
+    const actionUrl = `${this.frontendUrl}${data.actionPath ?? '/notifications'}`;
+    const message: EmailMessage = {
+      to: data.to,
+      subject: `BloodLink - ${data.title}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; padding: 20px; background-color: #f9f9f9;">
+          <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-radius: 8px; border: 1px solid #e0e0e0;">
+            <h2 style="color: #d9534f; margin-top: 0;">${escapeHtml(data.title)}</h2>
+            <p>Hello ${escapeHtml(data.name)},</p>
+            <p>${escapeHtml(data.message)}</p>
+            <div style="text-align: center; margin: 28px 0;">
+              <a href="${escapeHtml(actionUrl)}" style="background-color: #d9534f; color: #ffffff; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold; display: inline-block;">Open BloodLink</a>
+            </div>
+            <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
+            <p style="color: #999; font-size: 12px; margin-bottom: 0;">You are receiving this email because you have an account on BloodLink.</p>
+          </div>
+        </div>
+      `,
+    };
+
+    try {
+      await this.send(message);
+      this.logger.log(`Notification email "${data.title}" sent to ${data.to}`);
+    } catch (error) {
+      this.logger.error(`Failed to send notification email to ${data.to}`, error);
     }
   }
 

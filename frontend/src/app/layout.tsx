@@ -32,7 +32,9 @@ export default function RootLayout({
       <head>
         <script suppressHydrationWarning dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
+      {/* Extensions (e.g. ColorZilla's cz-shortcut-listen) inject attributes on <body> before hydration */}
       <body
+        suppressHydrationWarning
         className={`${geist.variable} font-sans antialiased bg-background text-foreground`}
       >
         <ThemeProvider>
