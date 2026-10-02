@@ -170,6 +170,33 @@ const COMPARE = [
   },
 ];
 
+// lucide-react no longer ships brand logos, so these two are inline SVGs.
+function InstagramIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+      <rect x="2" y="2" width="20" height="20" rx="5" />
+      <circle cx="12" cy="12" r="4" />
+      <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+    </svg>
+  );
+}
+
+function LinkedinIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+      <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z" />
+      <rect x="2" y="9" width="4" height="12" />
+      <circle cx="4" cy="4" r="2" />
+    </svg>
+  );
+}
+
+const SOCIAL_LINKS = [
+  { href: 'https://www.instagram.com/nirupam._.pal/', label: 'Instagram', icon: InstagramIcon },
+  { href: 'https://www.linkedin.com/in/nirupam-pal-22b959250/', label: 'LinkedIn', icon: LinkedinIcon },
+  { href: 'mailto:nirupampal14@gmail.com', label: 'Email', icon: Mail },
+];
+
 function SectionTitle({ title, desc, className }: { title: React.ReactNode; desc?: string; className?: string }) {
   return (
     <motion.div {...inView} variants={fadeInUp} className={cn('mx-auto max-w-2xl text-center mb-14', className)}>
@@ -677,7 +704,7 @@ export default function LandingPage() {
       {/* ───────────── FOOTER ───────────── */}
       <footer className="px-3 pb-3 pt-16 sm:px-4">
         <div className="mx-auto max-w-7xl rounded-[2rem] bg-surface px-6 py-12 sm:px-12">
-          <div className="grid gap-10 md:grid-cols-[1.4fr_repeat(3,1fr)]">
+          <div className="grid gap-10 sm:grid-cols-2 md:grid-cols-[1.4fr_repeat(3,1fr)]">
             <div>
               <Logo />
               <p className="mt-4 max-w-xs text-lg font-medium leading-snug">Search donors. Send requests. Save lives.</p>
@@ -699,14 +726,6 @@ export default function LandingPage() {
                   { h: '#faq', n: 'FAQ' },
                 ],
               },
-              {
-                t: 'Account',
-                l: [
-                  { h: '/login', n: 'Sign in' },
-                  { h: '/register/user', n: 'Register' },
-                  { h: '/register/blood-bank', n: 'Blood bank sign-up' },
-                ],
-              },
             ].map((col) => (
               <div key={col.t}>
                 <p className="text-sm font-semibold">{col.t}</p>
@@ -721,10 +740,40 @@ export default function LandingPage() {
                 </ul>
               </div>
             ))}
+
+            {/* Creator's social links */}
+            <div>
+              <p className="text-sm font-semibold">Connect</p>
+              <ul className="mt-4 space-y-2.5">
+                {SOCIAL_LINKS.map(({ href, label, icon: Icon }) => (
+                  <li key={label}>
+                    <a
+                      href={href}
+                      {...(href.startsWith('http') ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                      className="group inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+                    >
+                      <span className="flex h-6 w-6 items-center justify-center rounded-md bg-background shadow-card transition-colors group-hover:bg-red-900 group-hover:text-white">
+                        <Icon className="h-3.5 w-3.5" />
+                      </span>
+                      {label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
-          <div className="mt-12 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-t border-border pt-6">
+
+          <div className="mt-12 grid gap-4 border-t border-border pt-6 md:grid-cols-[1fr_auto_1fr] md:items-center">
             <p className="text-sm text-muted-foreground">© 2026 BloodLink. Built to make finding blood donors faster.</p>
-            <p className="text-sm text-muted-foreground">Free for patients, donors and blood banks.</p>
+            <a
+              href="https://www.linkedin.com/in/nirupam-pal-22b959250/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group inline-flex w-fit items-center gap-2 rounded-full bg-background px-4 py-2 text-sm shadow-card transition-transform hover:-translate-y-0.5 md:justify-self-center"
+            >
+              Designed & crafted with love by <span className="font-semibold text-gradient-brand">Nirupam Pal</span>
+            </a>
+            <p className="text-sm text-muted-foreground md:text-right">Free for patients, donors and blood banks.</p>
           </div>
         </div>
       </footer>
