@@ -213,7 +213,7 @@ export default function NotificationsPage() {
                               )}
                             >
                               <span className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-transform group-hover:scale-105', meta.className)}>
-                                <Icon className="h-[18px] w-[18px]" />
+                                <Icon className="h-6 w-6" />
                               </span>
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-start justify-between gap-3">

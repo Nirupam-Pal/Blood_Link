@@ -297,9 +297,9 @@ export default function LandingPage() {
               initial={{ opacity: 0, y: 60 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.35, duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-              className="relative mx-auto mt-16 w-[290px] sm:w-[320px] h-[300px] sm:h-[340px] overflow-hidden"
+              className="relative mx-auto mt-16 w-[290px] sm:w-[320px] h-100 sm:h-[340px] overflow-hidden"
             >
-              <div className="absolute inset-0 overflow-hidden rounded-t-[2.6rem] border-[10px] border-b-0 border-neutral-900 bg-background px-4 pt-3 pb-0 dark:border-neutral-700">
+              <div className="absolute inset-0 overflow-hidden rounded-t-[2.6rem] border-10 border-b-0 border-neutral-900 bg-background px-4 pt-3 pb-0 dark:border-neutral-700">
                 <div className="mx-auto mb-3 h-6 w-24 rounded-full bg-neutral-900 dark:bg-neutral-700" />
                 <div className="flex items-center justify-between text-left">
                   <span className="flex items-center gap-1.5 text-sm font-semibold">
@@ -562,7 +562,7 @@ export default function LandingPage() {
           </motion.div>
 
           <motion.ol {...inView} variants={staggerContainer} className="relative space-y-4">
-            <span className="absolute left-[27px] top-6 bottom-6 w-px bg-border" aria-hidden="true" />
+            <span className="absolute left-9 top-6 bottom-6 w-px bg-border" aria-hidden="true" />
             {WORKFLOW.map((item) => (
               <motion.li key={item.step} variants={fadeInUp} className="relative flex gap-4">
                 <span className="relative z-10 flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-card shadow-card">

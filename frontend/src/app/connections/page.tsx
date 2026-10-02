@@ -331,7 +331,7 @@ function RequestList({
                       {request.message && (
                         <div className="mt-3 flex gap-2 rounded-xl bg-surface px-3.5 py-2.5 text-sm text-foreground/90">
                           <Quote className="mt-0.5 h-3.5 w-3.5 shrink-0 text-brand" />
-                          <p className="break-words leading-relaxed">{request.message}</p>
+                          <p className="wrap-break-word leading-relaxed">{request.message}</p>
                         </div>
                       )}
                     </div>
