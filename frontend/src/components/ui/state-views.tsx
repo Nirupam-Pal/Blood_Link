@@ -1,9 +1,9 @@
 'use client';
 
-import type { CSSProperties, ReactNode } from 'react';
+import { useId, type CSSProperties, type ReactNode } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { AlertCircle, CheckCircle2, HeartHandshake, Info, X, type LucideIcon } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Info, X, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getInitials } from '@/lib/format';
 
@@ -11,16 +11,59 @@ import { getInitials } from '@/lib/format';
    Shared UI kit used by every page.
    ───────────────────────────────────────────────────────────────────────── */
 
-/** Brand mark: the BloodLink heart-handshake tile + wordmark. */
+const MARK_DROP = 'M25 13C26.5 23.71 37.5 29.5 37.5 38.5A12.5 12.5 0 0 1 12.5 38.5C12.5 29.5 23.5 23.71 25 13Z';
+const MARK_PIN = 'M39 51C40.5 40.29 51.5 34.5 51.5 25.5A12.5 12.5 0 0 0 26.5 25.5C26.5 34.5 37.5 40.29 39 51Z';
+const MARK_PIN_HOLE = 'M34.4 25.5a4.6 4.6 0 1 0 9.2 0a4.6 4.6 0 1 0-9.2 0Z';
+
+/**
+ * BloodLink symbol: a blood drop (tip up) and a location pin (tip down) —
+ * blood, found where it's needed. The pin sits in front, separated by a cut-out gap.
+ * Keep in sync with public/logo-mark.svg and app/icon.svg.
+ */
+export function BrandMark({ className }: { className?: string }) {
+  // useId contains characters like ':' that break url(#id) references
+  const maskId = `bl-gap-${useId().replace(/[^a-zA-Z0-9-]/g, '')}`;
+  return (
+    <svg viewBox="8 8 48 48" aria-hidden="true" className={className}>
+      <mask id={maskId} maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">
+        <rect width="64" height="64" fill="#fff" />
+        <path d={MARK_PIN} stroke="#000" strokeWidth="3.2" strokeLinejoin="round" />
+      </mask>
+      <path d={MARK_DROP} fill="#F43F5E" mask={`url(#${maskId})`} />
+      <path d={`${MARK_PIN}${MARK_PIN_HOLE}`} fill="#9F1239" fillRule="evenodd" />
+    </svg>
+  );
+}
+
+/**
+ * Custom "bloodlink" wordmark (monoline, the i's dot is a blood drop).
+ * Inherits text colour. Keep in sync with brand/logo-horizontal.svg.
+ */
+export function Wordmark({ className }: { className?: string }) {
+  return (
+    <svg viewBox="-3 -40 202 43" aria-hidden="true" className={className}>
+      <path
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M3 -33V-3M3 -12a9 9 0 1 0 18 0a9 9 0 1 0-18 0M32 -33V-3M43 -12a9 9 0 1 0 18 0a9 9 0 1 0-18 0M70 -12a9 9 0 1 0 18 0a9 9 0 1 0-18 0M97 -12a9 9 0 1 0 18 0a9 9 0 1 0-18 0M115 -33V-3M126 -33V-3M137 -21V-3M146 -21V-3M146 -12A9 9 0 0 1 164 -12V-3M175 -33V-3M192 -21L177 -9M183 -14L193 -3"
+      />
+      <path
+        fill="#F43F5E"
+        d="M137 -36.94C137.41 -34.03 140.4 -32.45 140.4 -30A3.4 3.4 0 0 1 133.6 -30C133.6 -32.45 136.59 -34.03 137 -36.94Z"
+      />
+    </svg>
+  );
+}
+
+/** Brand lockup: the BloodLink symbol + wordmark. */
 export function Logo({ className, href = '/' }: { className?: string; href?: string }) {
   return (
-    <Link href={href} className={cn('group inline-flex items-center gap-2.5', className)}>
-      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-linear-to-tr from-red-600 to-rose-500 shadow-lg shadow-red-600/30 transition-transform group-hover:scale-105 group-hover:rotate-6 dark:shadow-red-600/50">
-        <HeartHandshake className="h-[18px] w-[18px] text-white" />
-      </span>
-      <span className="text-lg font-bold tracking-tight text-foreground">
-        Blood<span className="text-red-600">Link</span>
-      </span>
+    <Link href={href} aria-label="BloodLink home" className={cn('group inline-flex items-center gap-2', className)}>
+      <BrandMark className="h-8 w-8 transition-transform duration-300 group-hover:scale-105" />
+      <Wordmark className="h-[19px] w-auto text-foreground" />
     </Link>
   );
 }
@@ -31,10 +74,8 @@ export function PageLoader({ label = 'Loading' }: { label?: string }) {
     <div className="min-h-dvh bg-background flex items-center justify-center" role="status" aria-live="polite">
       <div className="flex flex-col items-center gap-4">
         <span className="relative flex h-12 w-12 items-center justify-center">
-          <span className="absolute inset-0 rounded-2xl bg-linear-to-tr from-red-600 to-rose-500 animate-ping opacity-25" />
-          <span className="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-linear-to-tr from-red-600 to-rose-500 shadow-lg shadow-red-600/30">
-            <HeartHandshake className="h-6 w-6 text-white" />
-          </span>
+          <span className="absolute inset-1 rounded-full bg-red-500 animate-ping opacity-20" />
+          <BrandMark className="relative h-12 w-12" />
         </span>
         <p className="text-sm text-muted-foreground">{label}…</p>
       </div>

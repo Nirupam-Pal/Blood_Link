@@ -1,0 +1,28 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="-6 -50 278 64" role="img" aria-label="BloodLink">
+  <defs>
+    <mask id="bl-gap" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">
+      <rect width="64" height="64" fill="#fff"/>
+      <path d="M39 51C40.5 40.29 51.5 34.5 51.5 25.5A12.5 12.5 0 0 0 26.5 25.5C26.5 34.5 37.5 40.29 39 51Z" stroke="#000" stroke-width="3.2" stroke-linejoin="round"/>
+    </mask>
+  </defs>
+  <!-- Symbol -->
+  <g transform="translate(-17.13 -61.84) scale(1.37)">
+    <path d="M25 13C26.5 23.71 37.5 29.5 37.5 38.5A12.5 12.5 0 0 1 12.5 38.5C12.5 29.5 23.5 23.71 25 13Z" fill="#FFFFFF" mask="url(#bl-gap)"/>
+    <path d="M39 51C40.5 40.29 51.5 34.5 51.5 25.5A12.5 12.5 0 0 0 26.5 25.5C26.5 34.5 37.5 40.29 39 51ZM34.4 25.5a4.6 4.6 0 1 0 9.2 0a4.6 4.6 0 1 0-9.2 0Z" fill="#FFFFFF" fill-rule="evenodd"/>
+  </g>
+  <!-- Wordmark: custom geometric monoline "bloodlink", baseline y=0, x-height 24, ascender 36 -->
+  <g transform="translate(70 0)">
+    <path fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" d="
+      M3 -33V-3M3 -12a9 9 0 1 0 18 0a9 9 0 1 0-18 0
+      M32 -33V-3
+      M43 -12a9 9 0 1 0 18 0a9 9 0 1 0-18 0
+      M70 -12a9 9 0 1 0 18 0a9 9 0 1 0-18 0
+      M97 -12a9 9 0 1 0 18 0a9 9 0 1 0-18 0M115 -33V-3
+      M126 -33V-3
+      M137 -21V-3
+      M146 -21V-3M146 -12A9 9 0 0 1 164 -12V-3
+      M175 -33V-3M192 -21L177 -9M183 -14L193 -3"/>
+    <!-- The dot of the i is a blood drop -->
+    <path fill="#FFFFFF" d="M137 -36.94C137.41 -34.03 140.4 -32.45 140.4 -30A3.4 3.4 0 0 1 133.6 -30C133.6 -32.45 136.59 -34.03 137 -36.94Z"/>
+  </g>
+</svg>

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="8 8 48 48" role="img" aria-label="BloodLink">
+  <!-- A blood drop (tip up) and a location pin (tip down): blood, found where it's needed.
+       The pin sits in front; a thin cut-out gap separates the two shapes. -->
+  <mask id="bl-gap" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">
+    <rect width="64" height="64" fill="#fff"/>
+    <path d="M39 51C40.5 40.29 51.5 34.5 51.5 25.5A12.5 12.5 0 0 0 26.5 25.5C26.5 34.5 37.5 40.29 39 51Z" stroke="#000" stroke-width="3.2" stroke-linejoin="round"/>
+  </mask>
+  <path d="M25 13C26.5 23.71 37.5 29.5 37.5 38.5A12.5 12.5 0 0 1 12.5 38.5C12.5 29.5 23.5 23.71 25 13Z" fill="#F43F5E" mask="url(#bl-gap)"/>
+  <path d="M39 51C40.5 40.29 51.5 34.5 51.5 25.5A12.5 12.5 0 0 0 26.5 25.5C26.5 34.5 37.5 40.29 39 51ZM34.4 25.5a4.6 4.6 0 1 0 9.2 0a4.6 4.6 0 1 0-9.2 0Z" fill="#9F1239" fill-rule="evenodd"/>
+</svg>
